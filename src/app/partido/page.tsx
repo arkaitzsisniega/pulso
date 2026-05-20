@@ -1420,7 +1420,6 @@ function ModalDisparoRival(props: {
   const [zonaCampo, setZonaCampo] = useState("");
   const [zonaPorteria, setZonaPorteria] = useState("");
   const [porteroNuestro, setPorteroNuestro] = useState("");
-  const [tirador, setTirador] = useState("");
   // Flag para que el auto-confirmar solo dispare UNA vez (evita doble-close
   // si el useEffect se ejecuta de más).
   const yaConfirmado = useRef(false);
@@ -1433,7 +1432,6 @@ function ModalDisparoRival(props: {
       equipo: "RIVAL",
       resultado,
     };
-    if (tirador) ev.jugador = tirador;
     if (porteroNuestro) ev.portero = porteroNuestro;
     if (zonaCampo) ev.zonaCampo = zonaCampo;
     if (zonaPorteria) ev.zonaPorteria = zonaPorteria;
@@ -1498,17 +1496,12 @@ function ModalDisparoRival(props: {
         </p>
       </Paso>
 
-      {resultado && (
-        <Paso n={2} titulo="Tirador rival (opcional)" activo>
-          <input className="w-full bg-zinc-800 rounded px-3 py-2 text-sm"
-            placeholder="Nombre del tirador del rival, número o vacío"
-            value={tirador}
-            onChange={(e) => setTirador(e.target.value.toUpperCase())} />
-        </Paso>
-      )}
+      {/* Paso "Tirador rival" eliminado 20/5/2026 noche: Arkaitz no
+          quiere apuntar quién es el tirador del rival, le da igual.
+          El flujo simplificado: resultado → zona campo → zona portería. */}
 
       {resultado && (
-        <Paso n={3} titulo="Zona del campo (desde donde tira el rival)" activo={!zonaCampo}>
+        <Paso n={2} titulo="Zona del campo (desde donde tira el rival)" activo={!zonaCampo}>
           <Campo
             seleccionada={zonaCampo}
             onSelect={setZonaCampo}
@@ -1524,7 +1517,7 @@ function ModalDisparoRival(props: {
       )}
 
       {resultado === "PUERTA" && zonaCampo && (
-        <Paso n={4} titulo="Zona de portería (a dónde tiró) + portero nuestro" activo>
+        <Paso n={3} titulo="Zona de portería (a dónde tiró) + portero nuestro" activo>
           <Porteria seleccionada={zonaPorteria} onSelect={setZonaPorteria} />
           <div className="mt-3">
             <h4 className="text-xs text-zinc-400 mb-1">Portero nuestro (el que paró)</h4>
