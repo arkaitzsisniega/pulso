@@ -123,21 +123,27 @@ export default function PartidoPage() {
       }));
   }
 
+  // Bug fix 20/5/2026: antes el useMemo solo dependía de partido.cronometro,
+  // que cambia únicamente en play/pausa/avanzarParte. El forceTick del store
+  // (cada TICK_MS) no toca cronometro, así que estos cronos NO avanzaban con
+  // el partido en marcha — solo "saltaban" al pausar. Pasamos el valor de
+  // segundosPartidoTotal() como dep para que cada tick recalcule.
+  const _tActualParaCronos = segundosPartidoTotal();
   const cronosInferioridad = useMemo(() => {
     const evs = partido.eventos as any[];
     const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "INTER");
     const goles = evs.filter((e) => e.tipo === "gol" && e.equipo === "RIVAL");
-    return calcularCronosActivos(rojas, goles, segundosPartidoTotal());
+    return calcularCronosActivos(rojas, goles, _tActualParaCronos);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partido.eventos, partido.cronometro]);
+  }, [partido.eventos, _tActualParaCronos]);
 
   const cronosSuperioridad = useMemo(() => {
     const evs = partido.eventos as any[];
     const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "RIVAL");
     const goles = evs.filter((e) => e.tipo === "gol" && e.equipo === "INTER");
-    return calcularCronosActivos(rojas, goles, segundosPartidoTotal());
+    return calcularCronosActivos(rojas, goles, _tActualParaCronos);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partido.eventos, partido.cronometro]);
+  }, [partido.eventos, _tActualParaCronos]);
 
   // Avisos de porteros (validaciones tácticas):
   // - 0 porteros en pista: situación normal en fin de partido perdiendo
