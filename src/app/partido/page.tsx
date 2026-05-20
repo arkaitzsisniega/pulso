@@ -441,10 +441,14 @@ export default function PartidoPage() {
         </div>
       </div>
 
-      {/* BOTONES ACCIÓN COLECTIVA */}
-      <div className="grid grid-cols-8 gap-2">
+      {/* BOTONES ACCIÓN COLECTIVA
+          A1 (20/5/2026): se retira el botón "DISP. RIVAL". Los disparos
+          del rival no se anotan en este crono — Arkaitz lo decidió así
+          para no entorpecer el flujo durante el partido. El modal
+          ModalDisparoRival se mantiene en el código por si se quiere
+          reactivar, pero ya no hay forma de invocarlo desde la UI. */}
+      <div className="grid grid-cols-7 gap-2">
         <BotonAccion label="⚽ GOL" color="bg-emerald-700" onClick={() => setModalGol(true)} />
-        <BotonAccion label="🎯 DISP. RIVAL" color="bg-red-700" onClick={() => setModalDisparoRival(true)} />
         <BotonAccion label="⚠️ FALTA" color="bg-orange-700" onClick={() => setModalFalta(true)} />
         <BotonAccion label="🟨 AMARILLA" color="bg-yellow-700" onClick={() => setModalAmarilla(true)} />
         <BotonAccion label="🟥 ROJA" color="bg-red-800" onClick={() => setModalRoja(true)} />
@@ -938,15 +942,15 @@ function ModalCambio(props: {
                 {n}
               </button>
             ))}
-            {/* Slot NADIE: deja un hueco en pista (inferioridad numérica
-                tras expulsión, p.ej.). Si después quieres meter a alguien
-                usa Cambio normal con SALE = (uno de los 4 restantes) o
-                tocando un jugador del banquillo. */}
+            {/* Slot vacío: deja un hueco en pista (inferioridad numérica
+                tras expulsión, p.ej.). B7 (20/5/2026): solo el cuadrado,
+                sin texto "Nadie" — el usuario reconoce el hueco por el
+                borde discontinuo y el espacio en blanco. */}
             <button
               onClick={() => props.onConfirmar(sale, "")}
-              className="px-4 py-3 bg-zinc-700 hover:bg-zinc-600 rounded text-base font-bold border-2 border-dashed border-zinc-500"
+              className="px-4 py-3 bg-zinc-700 hover:bg-zinc-600 rounded text-base font-bold border-2 border-dashed border-zinc-500 min-w-[80px]"
               title="Dejar slot vacío en pista (inferioridad numérica)">
-              — Nadie (hueco)
+              {/* slot vacío sin texto */}
             </button>
           </div>
         </Paso>
