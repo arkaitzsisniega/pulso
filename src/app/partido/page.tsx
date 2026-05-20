@@ -447,14 +447,12 @@ export default function PartidoPage() {
         </div>
       </div>
 
-      {/* BOTONES ACCIÓN COLECTIVA
-          A1 (20/5/2026): se retira el botón "DISP. RIVAL". Los disparos
-          del rival no se anotan en este crono — Arkaitz lo decidió así
-          para no entorpecer el flujo durante el partido. El modal
-          ModalDisparoRival se mantiene en el código por si se quiere
-          reactivar, pero ya no hay forma de invocarlo desde la UI. */}
-      <div className="grid grid-cols-7 gap-2">
+      {/* BOTONES ACCIÓN COLECTIVA — RESTAURADO 20/5/2026 noche:
+          Arkaitz aclaró que "omitir guardar" no significaba eliminar el
+          botón, sino simplificar el flujo del modal. El botón vuelve. */}
+      <div className="grid grid-cols-8 gap-2">
         <BotonAccion label="⚽ GOL" color="bg-emerald-700" onClick={() => setModalGol(true)} />
+        <BotonAccion label="🎯 DISP. RIVAL" color="bg-red-700" onClick={() => setModalDisparoRival(true)} />
         <BotonAccion label="⚠️ FALTA" color="bg-orange-700" onClick={() => setModalFalta(true)} />
         <BotonAccion label="🟨 AMARILLA" color="bg-yellow-700" onClick={() => setModalAmarilla(true)} />
         <BotonAccion label="🟥 ROJA" color="bg-red-800" onClick={() => setModalRoja(true)} />
