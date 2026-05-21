@@ -60,6 +60,10 @@ function descripcionEvento(ev: Evento, rival: string): string {
       case "tiempo_muerto":
         return `Tiempo muerto ${equipoTxt(ev.equipo)}`;
       case "cambio":
+        // entra="" → expulsión/inferioridad (sale sin reemplazo).
+        // sale=""  → reincorporación tras inferioridad (entra sin que salga nadie).
+        if (!ev.entra && ev.sale) return `Sale ${ev.sale} (inferioridad)`;
+        if (ev.entra && !ev.sale) return `Reincorporación — entra ${ev.entra}`;
         return `Cambio — entra ${ev.entra}, sale ${ev.sale}`;
       case "disparo": {
         const ext: string[] = [];

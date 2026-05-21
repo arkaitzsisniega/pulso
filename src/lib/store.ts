@@ -627,6 +627,56 @@ export function usePartido() {
   }
 
   /**
+   * Reincorpora a un jugador del banquillo a un hueco de pista SIN sacar a
+   * nadie (no es un cambio: la plaza estaba vacía por una expulsión cuya
+   * sanción ya terminó —2 min cumplidos o gol del rival—). Sube enPista de
+   * 4 a 5 (o el hueco que toque) y arranca el turno del que entra.
+   * Se registra como evento "cambio" con sale="" (simétrico a la expulsión,
+   * que usa entra="" para "Nadie entra").
+   */
+  function reincorporar(entra: string) {
+    setPartido((prev) => {
+      // Validaciones: jugador real, no duplicado y con hueco real en pista.
+      if (entra === "" || prev.enPista.includes(entra)) return prev;
+      if (prev.enPista.length >= 5) return prev;
+      const ahora = Date.now();
+      const corriendo = prev.cronometro.ultimoStart != null;
+      const tiempos = { ...prev.tiempos };
+      const tEntra = tiempos[entra];
+      if (tEntra) {
+        // Mismo tratamiento de tiempos que cuando alguien entra en un cambio:
+        // si descansó poco (<30s) y traía turno, lo retoma; si no, empieza a 0.
+        const congDesc = congelaDescanso(tEntra);
+        const segBanquillo = congDesc.segDescansoActual ?? 0;
+        const ultimoTurno = congDesc.segTurnoUltimo ?? 0;
+        const retomar = segBanquillo < UMBRAL_RETOMAR_TURNO_SEG && ultimoTurno > 0;
+        const segInicial = retomar ? ultimoTurno : 0;
+        tiempos[entra] = {
+          ...congDesc,
+          segTurnoActual: segInicial,
+          turnoStart: corriendo ? ahora : null,
+          ultimaSalida: null,
+          segDescansoActual: null,
+          descansoStart: null,
+          segTurnoUltimo: null,
+        };
+      }
+      const enPista = [...prev.enPista, entra];
+      const evento: Evento = {
+        id: uid(),
+        tipo: "cambio",
+        parte: prev.cronometro.parteActual,
+        segundosParte: segundosParte(),
+        segundosPartido: segundosPartidoTotal(),
+        timestampReal: ahora,
+        marcador: { ...prev.marcador },
+        sale: "", entra,
+      };
+      return { ...prev, enPista, tiempos, eventos: [...prev.eventos, evento] };
+    });
+  }
+
+  /**
    * Núcleo: registra un evento. Aplica TODOS los efectos automáticos
    * (marcador, contadores de disparo, goles encajados, etc.) según las
    * reglas de no-duplicación.
@@ -1136,7 +1186,7 @@ export function usePartido() {
     partido, cargado,
     segundosTurnoActual, segundosBanquillo, segundosParte, segundosPartidoTotal,
     segundosEnParte, segundosRestantesParte, duracionParteActual,
-    iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador,
+    iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual, reset,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte,

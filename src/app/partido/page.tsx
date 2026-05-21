@@ -17,7 +17,7 @@ export default function PartidoPage() {
     segundosTurnoActual, segundosBanquillo, segundosParte,
     segundosPartidoTotal, segundosEnParte,
     segundosRestantesParte, duracionParteActual,
-    play, pausa, ajustarReloj, avanzarParte, cambiarJugador,
+    play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte,
@@ -218,6 +218,12 @@ export default function PartidoPage() {
   const enPistaActivos = enPista.filter((n) => !jugadoresExpulsados.has(n));
   const banquilloActivos = banquillo.filter((n) => !jugadoresExpulsados.has(n));
 
+  // Huecos en pista cuya sanción YA terminó (pasaron los 2 min o el rival
+  // marcó y canceló la roja) → se pueden rellenar metiendo a alguien del
+  // banquillo. Plantilla completa = 5. Cada inferioridad AÚN activa justifica
+  // un hueco; los que sobran son rellenables.
+  const huecosRellenables = Math.max(0, (5 - enPista.length) - cronosInferioridad.length);
+
   const p = partido.cronometro.parteActual;
   const sFalt = partido.stats.faltas[p];
   const sAma = partido.stats.amarillas[p];
@@ -313,6 +319,40 @@ export default function PartidoPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* REINCORPORAR TRAS INFERIORIDAD — cuando una sanción termina (2 min
+          cumplidos o gol del rival) queda un hueco en pista. Aquí se ofrece
+          meter a un jugador del banquillo de un toque (rápido para el live). */}
+      {huecosRellenables > 0 && (
+        <div className="bg-emerald-700/90 border-2 border-emerald-400 rounded-lg p-3 mb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-3xl">✅</span>
+            <div>
+              <div className="text-base font-bold leading-tight">
+                Inferioridad terminada — mete a un jugador
+                {huecosRellenables > 1 ? ` (${huecosRellenables} huecos)` : ""}
+              </div>
+              <div className="text-xs text-emerald-100 mt-0.5">
+                Toca a quien entra. Vuelves a 5 en pista.
+              </div>
+            </div>
+          </div>
+          {banquilloActivos.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {banquilloActivos.map((n) => (
+                <button key={n} onClick={() => reincorporar(n)}
+                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-semibold">
+                  ➕ {n}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-emerald-100">
+              No queda nadie disponible en el banquillo.
+            </div>
+          )}
         </div>
       )}
 
