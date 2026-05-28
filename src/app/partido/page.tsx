@@ -137,19 +137,38 @@ export default function PartidoPage() {
   // (cada TICK_MS) no toca cronometro, así que estos cronos NO avanzaban con
   // el partido en marcha — solo "saltaban" al pausar. Pasamos el valor de
   // segundosPartidoTotal() como dep para que cada tick recalcule.
-  const _tActualParaCronos = segundosPartidoTotal();
+  // Reloj ABSOLUTO del partido (acumulado entre partes). Necesario para que el
+  // restante de 2 min y la cancelación por gol de los cronos de inferioridad/
+  // superioridad sean coherentes ENTRE partes: antes se comparaba el tiempo
+  // por-parte de una roja con el reloj de otra parte → crono fantasma al
+  // empezar la 2ª parte (#bug crono). Aislado aquí; el store NO cambia.
+  const _ORDEN_PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
+  const _offsetParte = (parte: ParteId): number => {
+    const g = partido.cronometro.segundosGuardadosPorParte ?? ({} as Record<ParteId, number>);
+    let off = 0;
+    for (const pid of _ORDEN_PARTES) { if (pid === parte) break; off += g[pid] ?? 0; }
+    return off;
+  };
+  const _tAbs = (ev: any): number =>
+    _offsetParte(ev.parte) + (ev.segundosPartido ?? ev.segundosParte ?? 0);
+  const _tActualParaCronos =
+    _offsetParte(partido.cronometro.parteActual) + segundosPartidoTotal();
   const cronosInferioridad = useMemo(() => {
     const evs = partido.eventos as any[];
-    const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "INTER" && e.jugador !== "#CT");
-    const goles = evs.filter((e) => e.tipo === "gol" && e.equipo === "RIVAL");
+    const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "INTER" && e.jugador !== "#CT")
+                     .map((e) => ({ ...e, segundosPartido: _tAbs(e) }));
+    const goles = evs.filter((e) => e.tipo === "gol" && e.equipo === "RIVAL")
+                     .map((e) => ({ ...e, segundosPartido: _tAbs(e) }));
     return calcularCronosActivos(rojas, goles, _tActualParaCronos);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partido.eventos, _tActualParaCronos]);
 
   const cronosSuperioridad = useMemo(() => {
     const evs = partido.eventos as any[];
-    const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "RIVAL" && e.jugador !== "#CT");
-    const goles = evs.filter((e) => e.tipo === "gol" && e.equipo === "INTER");
+    const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "RIVAL" && e.jugador !== "#CT")
+                     .map((e) => ({ ...e, segundosPartido: _tAbs(e) }));
+    const goles = evs.filter((e) => e.tipo === "gol" && e.equipo === "INTER")
+                     .map((e) => ({ ...e, segundosPartido: _tAbs(e) }));
     return calcularCronosActivos(rojas, goles, _tActualParaCronos);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partido.eventos, _tActualParaCronos]);
@@ -870,9 +889,19 @@ export default function PartidoPage() {
       {modalTM && (
         <ModalTM
           rivalNombre={cfg.rival}
+          tmInter={sTM.inter}
+          tmRival={sTM.rival}
+          esProrroga={p === "PR1" || p === "PR2"}
           onCerrar={() => setModalTM(false)}
           onConfirmar={(equipo) => {
-            registrarEvento({ tipo: "tiempo_muerto", equipo } as any);
+            // Defensa en profundidad: 1 TM por equipo y parte, ninguno en
+            // prórroga (el modal ya lo bloquea, pero reforzamos aquí).
+            const usados = partido.stats.tiemposMuerto[p];
+            const esPro = p === "PR1" || p === "PR2";
+            const yaGastado = equipo === "INTER" ? usados.inter >= 1 : usados.rival >= 1;
+            if (!esPro && !yaGastado) {
+              registrarEvento({ tipo: "tiempo_muerto", equipo } as any);
+            }
             setModalTM(false);
           }}
         />
@@ -1173,9 +1202,15 @@ function ModalFalta(props: {
 
       {equipo && (jugador || sinAsignar || rivalMano) && (
         <Paso n={3} titulo="Zona del campo donde se produce (tap = aplicar)" activo>
+          {/* La falta importa por su cercanía a portería: cuando la cometemos
+              NOSOTROS, el tiro libre lo lanza el rival hacia NUESTRA portería,
+              así que orientamos el mapa como el ataque del rival (su mapa); y
+              al revés cuando la comete el rival. Por eso usamos el equipo
+              CONTRARIO al que comete la falta. #bug faltas mapa al revés */}
           <Campo onSelect={(z) => aplicar(z)}
-            direccion={direccionAtaque(props.parteActual, equipo, props.cfg)}
-            nombreAtacante={equipo === "INTER" ? "Inter" : props.rivalNombre} />
+            direccion={direccionAtaque(props.parteActual,
+              equipo === "INTER" ? "RIVAL" : "INTER", props.cfg)}
+            nombreAtacante={equipo === "INTER" ? props.rivalNombre : "Inter"} />
           <div className="mt-2 flex justify-end">
             <button onClick={() => aplicar(undefined)}
               className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs">
@@ -1380,17 +1415,49 @@ function TecladoDorsalRival(props: {
 
 function ModalTM(props: {
   rivalNombre: string;
+  tmInter: number;
+  tmRival: number;
+  esProrroga: boolean;
   onCerrar: () => void;
   onConfirmar: (equipo: "INTER" | "RIVAL") => void;
 }) {
+  // En la prórroga no hay tiempos muertos (regla futsal).
+  if (props.esProrroga) {
+    return (
+      <ModalShell titulo="🛑 Tiempo muerto" onCerrar={props.onCerrar} maxW="max-w-md">
+        <p className="text-center text-zinc-300 py-6 text-lg">
+          En la <strong>prórroga</strong> no hay tiempos muertos.
+        </p>
+      </ModalShell>
+    );
+  }
+  // 1 tiempo muerto por equipo y parte: deshabilitar el que ya lo gastó.
+  const interUsado = props.tmInter >= 1;
+  const rivalUsado = props.tmRival >= 1;
   return (
     <ModalShell titulo="🛑 Tiempo muerto" onCerrar={props.onCerrar} maxW="max-w-md">
       <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => props.onConfirmar("INTER")}
-          className="py-6 bg-emerald-700 hover:bg-emerald-600 rounded text-xl font-bold">INTER</button>
-        <button onClick={() => props.onConfirmar("RIVAL")}
-          className="py-6 bg-red-700 hover:bg-red-600 rounded text-xl font-bold">{props.rivalNombre}</button>
+        <button disabled={interUsado}
+          onClick={() => { if (!interUsado) props.onConfirmar("INTER"); }}
+          className={`py-6 rounded text-xl font-bold ${
+            interUsado ? "bg-zinc-800 opacity-40 cursor-not-allowed"
+                       : "bg-emerald-700 hover:bg-emerald-600"}`}>
+          INTER{interUsado ? " ✓ usado" : ""}
+        </button>
+        <button disabled={rivalUsado}
+          onClick={() => { if (!rivalUsado) props.onConfirmar("RIVAL"); }}
+          className={`py-6 rounded text-xl font-bold ${
+            rivalUsado ? "bg-zinc-800 opacity-40 cursor-not-allowed"
+                       : "bg-red-700 hover:bg-red-600"}`}>
+          {props.rivalNombre}{rivalUsado ? " ✓ usado" : ""}
+        </button>
       </div>
+      {(interUsado || rivalUsado) && (
+        <p className="text-xs text-zinc-400 mt-3 text-center">
+          Cada equipo tiene 1 tiempo muerto por parte. El que ya lo gastó queda
+          deshabilitado.
+        </p>
+      )}
     </ModalShell>
   );
 }
