@@ -31,6 +31,13 @@ export default function PartidoPage() {
   const [modalGol, setModalGol] = useState(false);
   const [modalAmarilla, setModalAmarilla] = useState(false);
   const [modalRoja, setModalRoja] = useState(false);
+  // Confirmaciones encadenadas tras una tarjeta:
+  //  · confirmExpulRival: 2ª amarilla de un dorsal rival → ¿juegan con uno menos?
+  //    (no trackeamos quién está en pista del rival, así que lo preguntamos).
+  //  · confirmFaltaCT: amarilla al cuerpo técnico (cualquier equipo) → ¿suma
+  //    falta de equipo? (no toda tarjeta al banquillo conlleva falta).
+  const [confirmExpulRival, setConfirmExpulRival] = useState<{ dorsal: string } | null>(null);
+  const [confirmFaltaCT, setConfirmFaltaCT] = useState<{ equipo: "INTER" | "RIVAL" } | null>(null);
   const [modalTM, setModalTM] = useState(false);
   const [modalPen, setModalPen] = useState(false);
   const [modalTanda, setModalTanda] = useState(false);
@@ -43,7 +50,8 @@ export default function PartidoPage() {
   const jugadoresAmarilla = useMemo(() => {
     const s = new Set<string>();
     for (const ev of partido.eventos) {
-      if (ev.tipo === "amarilla" && ev.equipo === "INTER" && (ev as any).jugador) {
+      if (ev.tipo === "amarilla" && ev.equipo === "INTER" && (ev as any).jugador
+          && (ev as any).jugador !== "#CT") {
         s.add((ev as any).jugador);
       }
     }
@@ -59,7 +67,8 @@ export default function PartidoPage() {
     const rojas = new Set<string>();
     for (const ev of partido.eventos) {
       const e = ev as any;
-      if (e.tipo === "amarilla" && e.equipo === "INTER" && e.jugador) {
+      if (e.tipo === "amarilla" && e.equipo === "INTER" && e.jugador
+          && e.jugador !== "#CT") {
         cuentaAmarillas[e.jugador] = (cuentaAmarillas[e.jugador] || 0) + 1;
       }
       if (e.tipo === "roja" && e.equipo === "INTER" && e.jugador) {
@@ -131,7 +140,7 @@ export default function PartidoPage() {
   const _tActualParaCronos = segundosPartidoTotal();
   const cronosInferioridad = useMemo(() => {
     const evs = partido.eventos as any[];
-    const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "INTER");
+    const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "INTER" && e.jugador !== "#CT");
     const goles = evs.filter((e) => e.tipo === "gol" && e.equipo === "RIVAL");
     return calcularCronosActivos(rojas, goles, _tActualParaCronos);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,7 +148,7 @@ export default function PartidoPage() {
 
   const cronosSuperioridad = useMemo(() => {
     const evs = partido.eventos as any[];
-    const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "RIVAL");
+    const rojas = evs.filter((e) => e.tipo === "roja" && e.equipo === "RIVAL" && e.jugador !== "#CT");
     const goles = evs.filter((e) => e.tipo === "gol" && e.equipo === "INTER");
     return calcularCronosActivos(rojas, goles, _tActualParaCronos);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -748,12 +757,37 @@ export default function PartidoPage() {
           onCerrar={() => setModalAmarilla(false)}
           onConfirmar={(ev) => {
             const evAny = ev as any;
-            if (evAny.equipo === "INTER" && evAny.jugador) {
+            const esCT = evAny.jugador === "#CT";
+            if (evAny.equipo === "INTER" && evAny.jugador && !esCT) {
+              // Jugador nuestro: la 2ª amarilla auto-expulsa (sí sabemos quién
+              // está en pista de los nuestros).
               registrarAmarillaInter(evAny.jugador);
             } else {
               registrarEvento(evAny);
             }
             setModalAmarilla(false);
+            // ── Confirmaciones encadenadas (tras cerrar el modal) ──
+            if (esCT) {
+              // Amarilla al cuerpo técnico (cualquier equipo): no toda tarjeta
+              // al banquillo conlleva falta de equipo → preguntar.
+              setConfirmFaltaCT({ equipo: evAny.equipo });
+            } else if (evAny.equipo === "RIVAL" && evAny.jugador) {
+              // OJO: partido.eventos aún NO incluye la amarilla recién dada
+              // (setState es asíncrono), así que `previas` cuenta solo las
+              // anteriores. previas>=1 ⇒ esta es la 2ª (o más).
+              const evs = partido.eventos as any[];
+              const previas = evs.filter(
+                (e) => e.tipo === "amarilla" && e.equipo === "RIVAL" && e.jugador === evAny.jugador
+              ).length;
+              const yaExpulsado = evs.some(
+                (e) => e.tipo === "roja" && e.equipo === "RIVAL" && e.jugador === evAny.jugador
+              );
+              if (previas >= 1 && !yaExpulsado) {
+                // 2ª amarilla del rival: como no trackeamos su pista, preguntamos
+                // si se queda con uno menos (→ registra roja y dispara el crono).
+                setConfirmExpulRival({ dorsal: evAny.jugador });
+              }
+            }
           }}
         />
       )}
@@ -778,6 +812,59 @@ export default function PartidoPage() {
             setModalRoja(false);
           }}
         />
+      )}
+
+      {/* Confirmación: 2ª amarilla del rival → ¿juegan con uno menos? */}
+      {confirmExpulRival && (
+        <ModalShell titulo="🟥 2ª amarilla del rival" onCerrar={() => setConfirmExpulRival(null)} maxW="max-w-md">
+          <p className="text-zinc-300 text-base mb-4">
+            El dorsal <strong>{confirmExpulRival.dorsal}</strong> del {cfg.rival} ya tenía
+            una amarilla. ¿Se queda el rival con <strong>uno menos</strong>?
+            <span className="block text-zinc-500 text-sm mt-1">
+              (Sí = expulsión + crono de 2 min de superioridad para nosotros.)
+            </span>
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                registrarEvento({ tipo: "roja", equipo: "RIVAL", jugador: confirmExpulRival.dorsal } as any);
+                setConfirmExpulRival(null);
+              }}
+              className="py-5 bg-red-700 hover:bg-red-600 rounded text-lg font-bold">
+              Sí, uno menos
+            </button>
+            <button
+              onClick={() => setConfirmExpulRival(null)}
+              className="py-5 bg-zinc-700 hover:bg-zinc-600 rounded text-lg font-bold">
+              No, siguen igual
+            </button>
+          </div>
+        </ModalShell>
+      )}
+
+      {/* Confirmación: amarilla al cuerpo técnico → ¿suma falta de equipo? */}
+      {confirmFaltaCT && (
+        <ModalShell titulo="🟨 Amarilla al cuerpo técnico" onCerrar={() => setConfirmFaltaCT(null)} maxW="max-w-md">
+          <p className="text-zinc-300 text-base mb-4">
+            Tarjeta al banquillo de <strong>{confirmFaltaCT.equipo === "INTER" ? "INTER" : cfg.rival}</strong>.
+            ¿Conlleva <strong>falta de equipo</strong> (suma a las acumuladas de la parte)?
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                registrarEvento({ tipo: "falta", equipo: confirmFaltaCT.equipo } as any);
+                setConfirmFaltaCT(null);
+              }}
+              className="py-5 bg-orange-700 hover:bg-orange-600 rounded text-lg font-bold">
+              Sí, suma falta
+            </button>
+            <button
+              onClick={() => setConfirmFaltaCT(null)}
+              className="py-5 bg-zinc-700 hover:bg-zinc-600 rounded text-lg font-bold">
+              No
+            </button>
+          </div>
+        </ModalShell>
       )}
 
       {modalTM && (
@@ -1144,6 +1231,8 @@ function ModalAmarilla(props: {
                 </button>
               );
             })}
+            <button onClick={() => props.onConfirmar({ tipo: "amarilla", equipo: "INTER", jugador: "#CT" })}
+              className="px-3 py-2 rounded bg-purple-700 hover:bg-purple-600 font-bold">🧠 Cuerpo técnico (CT)</button>
             <button onClick={() => props.onConfirmar({ tipo: "amarilla", equipo: "INTER" })}
               className="px-3 py-2 rounded bg-zinc-700">SIN ASIGNAR</button>
           </div>
@@ -1309,7 +1398,7 @@ function ModalTM(props: {
 // ──────────────── MODAL GOL ────────────────
 
 const ACCIONES_GOL = [
-  "Córner", "Banda", "Falta", "5x4", "4x5", "Contraataque",
+  "Córner", "Banda", "Falta", "5x4", "4x5", "4x3", "3x4", "Contraataque",
   "Robo zona alta", "1x1 banda", "Ataque posicional", "10m", "Penalti",
   "Otra",
 ];
