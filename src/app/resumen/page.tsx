@@ -367,7 +367,20 @@ export default function ResumenPage() {
           <div className="bg-zinc-900 rounded-xl p-5">
             <h3 className="text-lg font-bold text-zinc-300 mb-4">⚽ Goles del partido</h3>
             {(() => {
-              const goles = eventosOrdenados.filter((ev) => ev.tipo === "gol");
+              // Incluye goles normales (tipo "gol") Y los penaltis/10 m que
+              // acabaron en GOL metidos por el botón PEN/10M (eventos
+              // "penalti"/"diezm" SIN golId; los que tienen golId son el
+              // gemelo auto-creado de un gol y ya van como "gol"). Se
+              // normalizan a forma de gol (tirador→goleador, accion).
+              const goles = eventosOrdenados
+                .filter((ev: any) => ev.tipo === "gol"
+                  || ((ev.tipo === "penalti" || ev.tipo === "diezm")
+                      && ev.resultado === "GOL" && !ev.golId))
+                .map((ev: any) => ev.tipo === "gol" ? ev : {
+                  ...ev,
+                  goleador: ev.tirador || ev.goleador || "",
+                  accion: ev.tipo === "penalti" ? "Penalti" : "10 m",
+                });
               if (goles.length === 0) {
                 return <p className="text-base text-zinc-500">Aún no hay goles registrados.</p>;
               }
