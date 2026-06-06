@@ -28,6 +28,7 @@
  * Escala: 1m = 20px → SVG 800px × 400px.
  */
 import React from "react";
+import { t } from "@/lib/i18n";
 
 interface Props {
   seleccionada?: string;
@@ -258,8 +259,8 @@ export function Campo({ seleccionada, onSelect, nombreAtacante, direccion = "der
         textAnchor={flip ? "end" : "start"} fontSize="11"
         fill="#ffffff" opacity="0.65">
         {flip
-          ? `← ${nombreAtacante ?? "Atacante"} ataca`
-          : `${nombreAtacante ?? "Atacante"} ataca →`}
+          ? t("campo_ataca_izq", { nombre: nombreAtacante ?? t("campo_atacante") })
+          : t("campo_ataca_der", { nombre: nombreAtacante ?? t("campo_atacante") })}
       </text>
     </svg>
   );

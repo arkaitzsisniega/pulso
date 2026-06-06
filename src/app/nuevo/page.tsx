@@ -6,8 +6,10 @@ import { usePartido } from "@/lib/store";
 import { ROSTER, PORTEROS, CAMPO } from "@/lib/roster";
 import { hoyISO } from "@/lib/utils";
 import { PRESETS_COMPETICION } from "@/lib/db";
+import { t, useIdioma, labelCompeticion } from "@/lib/i18n";
 
 export default function NuevoPartido() {
+  useIdioma();
   const router = useRouter();
   const { iniciarPartido } = usePartido();
 
@@ -103,24 +105,21 @@ export default function NuevoPartido() {
 
   const empezar = async () => {
     if (empezando) return;  // anti-doble-click en iPad
-    if (!rival.trim()) { alert("Pon el nombre del rival"); return; }
-    if (!partidoId.trim()) { alert("Pon el ID del partido (ej: J29.VALDEPEÑAS)"); return; }
+    if (!rival.trim()) { alert(t("nuevo_alert_rival")); return; }
+    if (!partidoId.trim()) { alert(t("nuevo_alert_id")); return; }
     if (!portero || !pista1 || !pista2 || !pista3 || !pista4) {
-      alert("Selecciona los 5 jugadores en pista (portero + 4 campo)");
+      alert(t("nuevo_alert_cinco"));
       return;
     }
     const unicos = new Set([portero, pista1, pista2, pista3, pista4]);
-    if (unicos.size < 5) { alert("Los 5 jugadores deben ser distintos"); return; }
+    if (unicos.size < 5) { alert(t("nuevo_alert_distintos")); return; }
     // Verificar que los 5 EN PISTA están en convocados.
     // Sin esto, /partido crashea al intentar acceder a tiempos[X] si X no
     // está en convocados.
     const fuera = [portero, pista1, pista2, pista3, pista4]
       .filter((n) => !convocados.includes(n));
     if (fuera.length) {
-      alert(
-        `Estos jugadores en pista NO están convocados:\n  · ${fuera.join("\n  · ")}\n\n` +
-        `Márcalos como convocados arriba o cambia el select por uno que sí esté.`
-      );
+      alert(t("nuevo_alert_no_convocados", { lista: fuera.join("\n  · ") }));
       return;
     }
 
@@ -148,44 +147,44 @@ export default function NuevoPartido() {
       router.push("/partido");
     } catch (e) {
       console.error("Error al iniciar partido:", e);
-      alert("No pude iniciar el partido. Mira la consola.");
+      alert(t("nuevo_alert_no_inicio"));
       setEmpezando(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
-      <h1 className="text-3xl font-bold mb-6">⚽ Nuevo partido</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("nuevo_titulo")}</h1>
 
       {/* Cabecera */}
       <section className="grid grid-cols-2 gap-4 mb-6">
         <label className="flex flex-col">
-          <span className="text-sm text-zinc-400 mb-1">Rival</span>
+          <span className="text-sm text-zinc-400 mb-1">{t("nuevo_rival")}</span>
           <input className="bg-zinc-900 rounded px-3 py-2 text-lg" value={rival}
-            onChange={(e) => setRival(e.target.value)} placeholder="Ej: VALDEPEÑAS" />
+            onChange={(e) => setRival(e.target.value)} placeholder={t("nuevo_rival_ph")} />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm text-zinc-400 mb-1">ID partido</span>
+          <span className="text-sm text-zinc-400 mb-1">{t("nuevo_id_partido")}</span>
           <input className="bg-zinc-900 rounded px-3 py-2 text-lg" value={partidoId}
             onChange={(e) => setPartidoId(e.target.value.toUpperCase())} placeholder="J29.VALDEPEÑAS" />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm text-zinc-400 mb-1">Fecha</span>
+          <span className="text-sm text-zinc-400 mb-1">{t("nuevo_fecha")}</span>
           <input type="date" className="bg-zinc-900 rounded px-3 py-2 text-lg" value={fecha}
             onChange={(e) => setFecha(e.target.value)} />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm text-zinc-400 mb-1">Hora</span>
+          <span className="text-sm text-zinc-400 mb-1">{t("nuevo_hora")}</span>
           <input className="bg-zinc-900 rounded px-3 py-2 text-lg" value={hora}
             onChange={(e) => setHora(e.target.value)} placeholder="18:00" />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm text-zinc-400 mb-1">Lugar</span>
+          <span className="text-sm text-zinc-400 mb-1">{t("nuevo_lugar")}</span>
           <input className="bg-zinc-900 rounded px-3 py-2 text-lg" value={lugar}
-            onChange={(e) => setLugar(e.target.value)} placeholder="Pabellón..." />
+            onChange={(e) => setLugar(e.target.value)} placeholder={t("nuevo_lugar_ph")} />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm text-zinc-400 mb-1">Competición</span>
+          <span className="text-sm text-zinc-400 mb-1">{t("nuevo_competicion")}</span>
           <select className="bg-zinc-900 rounded px-3 py-2 text-lg" value={competicion}
             onChange={(e) => onCompChange(e.target.value)}>
             <option>LIGA</option>
@@ -200,36 +199,36 @@ export default function NuevoPartido() {
         <label className="flex items-center gap-2 col-span-2">
           <input type="checkbox" className="w-5 h-5" checked={local}
             onChange={(e) => setLocal(e.target.checked)} />
-          <span>Inter juega como LOCAL</span>
+          <span>{t("nuevo_inter_local")}</span>
         </label>
       </section>
 
       {/* Duraciones (minutos) por parte + tanda */}
       <section className="mb-6 bg-zinc-900 rounded-lg p-4">
         <h2 className="text-base font-semibold mb-2 text-zinc-300">
-          Duración por parte (min) — preset: <span className="text-emerald-300">{PRESETS_COMPETICION[competicion]?.label ?? competicion}</span>
+          {t("nuevo_duracion_titulo")} <span className="text-emerald-300">{PRESETS_COMPETICION[competicion] ? labelCompeticion(competicion, PRESETS_COMPETICION[competicion].label) : competicion}</span>
         </h2>
         <div className="grid grid-cols-4 gap-3">
           <label className="flex flex-col">
-            <span className="text-xs text-zinc-400">1ª parte</span>
+            <span className="text-xs text-zinc-400">{t("nuevo_1a_parte")}</span>
             <input type="number" min={0} step={1} value={dur1T}
               onChange={(e) => setDur1T(Number(e.target.value))}
               className="bg-zinc-950 rounded px-3 py-2 text-lg" />
           </label>
           <label className="flex flex-col">
-            <span className="text-xs text-zinc-400">2ª parte</span>
+            <span className="text-xs text-zinc-400">{t("nuevo_2a_parte")}</span>
             <input type="number" min={0} step={1} value={dur2T}
               onChange={(e) => setDur2T(Number(e.target.value))}
               className="bg-zinc-950 rounded px-3 py-2 text-lg" />
           </label>
           <label className="flex flex-col">
-            <span className="text-xs text-zinc-400">Prórroga 1 (0 = no)</span>
+            <span className="text-xs text-zinc-400">{t("nuevo_prorroga1_no")}</span>
             <input type="number" min={0} step={1} value={durPR1}
               onChange={(e) => setDurPR1(Number(e.target.value))}
               className="bg-zinc-950 rounded px-3 py-2 text-lg" />
           </label>
           <label className="flex flex-col">
-            <span className="text-xs text-zinc-400">Prórroga 2 (0 = no)</span>
+            <span className="text-xs text-zinc-400">{t("nuevo_prorroga2_no")}</span>
             <input type="number" min={0} step={1} value={durPR2}
               onChange={(e) => setDurPR2(Number(e.target.value))}
               className="bg-zinc-950 rounded px-3 py-2 text-lg" />
@@ -238,12 +237,12 @@ export default function NuevoPartido() {
         <label className="flex items-center gap-2 mt-3">
           <input type="checkbox" className="w-5 h-5" checked={permiteTanda}
             onChange={(e) => setPermiteTanda(e.target.checked)} />
-          <span className="text-sm">Permite tanda de penaltis si hay empate (eliminatoria)</span>
+          <span className="text-sm">{t("nuevo_permite_tanda")}</span>
         </label>
 
         <div className="mt-4 pt-3 border-t border-zinc-800">
           <h3 className="text-sm font-semibold mb-2 text-zinc-300">
-            ¿Hacia dónde ataca INTER en la 1ª parte? (vista del banquillo)
+            {t("nuevo_direccion_pregunta")}
           </h3>
           <div className="grid grid-cols-2 gap-2">
             <button type="button"
@@ -251,24 +250,23 @@ export default function NuevoPartido() {
               style={{ touchAction: "manipulation", WebkitTapHighlightColor: "rgba(16,185,129,0.3)" }}
               className={`py-3 rounded text-base font-bold active:scale-95 transition-transform ${
                 direccionInter1T === "izq" ? "bg-emerald-700" : "bg-zinc-800"
-              }`}>← Izquierda</button>
+              }`}>{t("nuevo_izquierda")}</button>
             <button type="button"
               onClick={() => setDireccionInter1T("der")}
               style={{ touchAction: "manipulation", WebkitTapHighlightColor: "rgba(16,185,129,0.3)" }}
               className={`py-3 rounded text-base font-bold active:scale-95 transition-transform ${
                 direccionInter1T === "der" ? "bg-emerald-700" : "bg-zinc-800"
-              }`}>Derecha →</button>
+              }`}>{t("nuevo_derecha")}</button>
           </div>
           <p className="text-xs text-zinc-500 mt-2">
-            En 2ª parte cambian de campo automáticamente. El rival siempre
-            ataca en sentido contrario a Inter.
+            {t("nuevo_direccion_nota")}
           </p>
         </div>
       </section>
 
       {/* Convocados */}
       <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-3">Convocados (toca para conmutar)</h2>
+        <h2 className="text-xl font-semibold mb-3">{t("nuevo_convocados")}</h2>
         <div className="flex flex-wrap gap-2">
           {ROSTER.map((j) => {
             const on = convocados.includes(j.nombre);
@@ -287,22 +285,22 @@ export default function NuevoPartido() {
             );
           })}
         </div>
-        <p className="text-sm text-zinc-400 mt-2">{convocados.length} convocados</p>
+        <p className="text-sm text-zinc-400 mt-2">{t("nuevo_convocados_count", { n: convocados.length })}</p>
       </section>
 
       {/* Pista inicial */}
       <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-3">Pista inicial</h2>
+        <h2 className="text-xl font-semibold mb-3">{t("nuevo_pista_inicial")}</h2>
         <div className="grid grid-cols-2 gap-3">
-          <SelectJugador label="🥅 Portero" value={portero} setValue={setPortero}
+          <SelectJugador label={t("nuevo_portero")} value={portero} setValue={setPortero}
             opciones={porterosConv} />
-          <SelectJugador label="⚽ Pista 1" value={pista1} setValue={setPista1}
+          <SelectJugador label={t("nuevo_pista_n", { n: 1 })} value={pista1} setValue={setPista1}
             opciones={campoConv} />
-          <SelectJugador label="⚽ Pista 2" value={pista2} setValue={setPista2}
+          <SelectJugador label={t("nuevo_pista_n", { n: 2 })} value={pista2} setValue={setPista2}
             opciones={campoConv} />
-          <SelectJugador label="⚽ Pista 3" value={pista3} setValue={setPista3}
+          <SelectJugador label={t("nuevo_pista_n", { n: 3 })} value={pista3} setValue={setPista3}
             opciones={campoConv} />
-          <SelectJugador label="⚽ Pista 4" value={pista4} setValue={setPista4}
+          <SelectJugador label={t("nuevo_pista_n", { n: 4 })} value={pista4} setValue={setPista4}
             opciones={campoConv} />
         </div>
       </section>
@@ -313,7 +311,7 @@ export default function NuevoPartido() {
         className={`w-full py-5 rounded-xl text-2xl font-bold ${
           empezando ? "bg-zinc-700 opacity-60" : "bg-green-700 hover:bg-green-600 active:scale-95"
         } transition-transform`}>
-        {empezando ? "⏳ Iniciando…" : "🏁 EMPEZAR PARTIDO"}
+        {empezando ? t("nuevo_iniciando") : t("nuevo_empezar")}
       </button>
     </div>
   );
@@ -328,7 +326,7 @@ function SelectJugador(props: {
       <span className="text-sm text-zinc-400 mb-1">{props.label}</span>
       <select className="bg-zinc-900 rounded px-3 py-2 text-lg" value={props.value}
         onChange={(e) => props.setValue(e.target.value)}>
-        <option value="">— elige —</option>
+        <option value="">{t("nuevo_elige")}</option>
         {props.opciones.map((j) => (
           <option key={j.nombre} value={j.nombre}>
             {j.dorsal ? `#${j.dorsal} ` : ""}{j.nombre}

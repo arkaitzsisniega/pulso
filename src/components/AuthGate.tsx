@@ -18,6 +18,7 @@
  * estática y los datos NO son sensibles, esto es suficiente.
  */
 import { useEffect, useState } from "react";
+import { t, useIdioma } from "@/lib/i18n";
 
 // SHA-256 de la contraseña actual. Calculado con:
 //   echo -n "inter1977" | shasum -a 256
@@ -33,6 +34,7 @@ async function sha256(text: string): Promise<string> {
 }
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
+  useIdioma();
   // Estado: undefined = aún no comprobado (SSR / primer render), true = ok, false = pedir pass
   const [autorizado, setAutorizado] = useState<boolean | undefined>(undefined);
   const [input, setInput] = useState("");
@@ -67,11 +69,11 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         }
         setAutorizado(true);
       } else {
-        setError("Contraseña incorrecta.");
+        setError(t("login_incorrecta"));
         setInput("");
       }
     } catch (e: any) {
-      setError(`Error al validar: ${e?.message || e}`);
+      setError(t("login_error_validar", { detalle: e?.message || e }));
     } finally {
       setComprobando(false);
     }
@@ -82,7 +84,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   if (autorizado === undefined) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">
-        <span className="text-sm text-zinc-500">Cargando…</span>
+        <span className="text-sm text-zinc-500">{t("cargando")}</span>
       </div>
     );
   }
@@ -97,16 +99,16 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       <div className="bg-zinc-900 rounded-2xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">🔐</div>
-          <h1 className="text-2xl font-bold">Crono Inter FS</h1>
+          <h1 className="text-2xl font-bold">{t("login_titulo")}</h1>
           <p className="text-sm text-zinc-400 mt-2">
-            Acceso restringido al cuerpo técnico. Introduce la contraseña.
+            {t("login_subtitulo")}
           </p>
         </div>
         <form onSubmit={intentarEntrar}>
           <input type="password"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Contraseña"
+            placeholder={t("login_placeholder")}
             autoComplete="current-password"
             autoFocus
             className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-3 text-lg text-center focus:outline-none focus:border-emerald-600" />
@@ -119,11 +121,11 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
                 ? "bg-zinc-700 opacity-60"
                 : "bg-emerald-700 hover:bg-emerald-600"
             }`}>
-            {comprobando ? "Comprobando…" : "Entrar"}
+            {comprobando ? t("login_comprobando") : t("login_entrar")}
           </button>
         </form>
         <p className="text-xs text-zinc-600 text-center mt-6">
-          Si la has olvidado, pregunta a Arkaitz.
+          {t("login_olvidada")}
         </p>
       </div>
     </div>
