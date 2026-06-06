@@ -9,6 +9,7 @@
  * No es interactivo; solo lectura.
  */
 import React from "react";
+import { t } from "@/lib/i18n";
 
 export type ResD = "GOL" | "PUERTA" | "PALO" | "FUERA" | "BLOQUEADO";
 
@@ -256,8 +257,8 @@ export function CampoConteos({ conteos, direccion = "der", nombreAtacante }: Pro
         textAnchor={flip ? "end" : "start"} fontSize="11"
         fill="#ffffff" opacity="0.7">
         {flip
-          ? `← ${nombreAtacante ?? "Atacante"} ataca`
-          : `${nombreAtacante ?? "Atacante"} ataca →`}
+          ? t("campo_ataca_izq", { nombre: nombreAtacante ?? t("campo_atacante") })
+          : t("campo_ataca_der", { nombre: nombreAtacante ?? t("campo_atacante") })}
       </text>
     </svg>
   );
