@@ -19,11 +19,13 @@
  */
 import { useEffect, useState } from "react";
 import { t, useIdioma } from "@/lib/i18n";
+import { CLIENTE } from "@/lib/clientes";
 
-// SHA-256 de la contraseña actual. Calculado con:
-//   echo -n "inter1977" | shasum -a 256
-const PASS_HASH = "2198c9c222da8099db935f222ae09b1b74ffc1d0ccdbfcc830456ab0c07a013d";
-const STORAGE_KEY = "inter_crono_auth";
+// Las contraseñas válidas (hash SHA-256) salen del CLIENTE activo
+// (src/lib/clientes.ts): una por club por defecto, admite varias.
+// La clave de sesión es por cliente para no cruzar logins entre clubes.
+// Para el Inter da "inter_crono_auth", IDÉNTICO al de antes → no desloguea.
+const STORAGE_KEY = `${CLIENTE.id}_crono_auth`;
 
 async function sha256(text: string): Promise<string> {
   const buf = new TextEncoder().encode(text);
@@ -61,7 +63,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     setError("");
     try {
       const hash = await sha256(input.trim());
-      if (hash === PASS_HASH) {
+      if (CLIENTE.passHashes.includes(hash)) {
         try {
           localStorage.setItem(STORAGE_KEY, "1");
         } catch {

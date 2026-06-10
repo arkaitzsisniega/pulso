@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { usePartido } from "@/lib/store";
-import { ROSTER } from "@/lib/roster";
+import { ROSTER } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
 import { CampoConteos } from "@/components/CampoConteos";
 import type { Evento, ParteId, Partido } from "@/lib/db";

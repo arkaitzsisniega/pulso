@@ -75,9 +75,7 @@ export const ROSTER_DEMO: Jugador[] = [
   { dorsal: "", nombre: "TORRES", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
-// Interruptor: NEXT_PUBLIC_DEMO=1 → nombres falsos (para grabar). Si no, reales.
-const _DEMO = process.env.NEXT_PUBLIC_DEMO === "1";
-export const ROSTER: Jugador[] = _DEMO ? ROSTER_DEMO : ROSTER_REAL;
-
-export const PORTEROS = ROSTER.filter((j) => j.posicion === "PORTERO");
-export const CAMPO = ROSTER.filter((j) => j.posicion === "CAMPO");
+// El roster ACTIVO (ROSTER / PORTEROS / CAMPO) lo expone `@/lib/clientes` según
+// el cliente del build (NEXT_PUBLIC_CLIENTE). Aquí quedan solo los DATOS crudos
+// (ROSTER_REAL / ROSTER_DEMO) para que clientes.ts los componga SIN dependencia
+// circular (clientes.ts importa estos arrays; este módulo no importa clientes).
