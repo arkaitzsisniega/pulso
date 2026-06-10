@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
-import { ROSTER, PORTEROS, CAMPO } from "@/lib/roster";
+import { ROSTER, PORTEROS, CAMPO } from "@/lib/clientes";
 import { hoyISO } from "@/lib/utils";
 import { PRESETS_COMPETICION } from "@/lib/db";
 import { t, useIdioma, labelCompeticion } from "@/lib/i18n";

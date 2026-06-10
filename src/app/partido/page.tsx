@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
-import { ROSTER } from "@/lib/roster";
+import { ROSTER } from "@/lib/clientes";
 import { formatMMSS, colorTiempoPista, colorTiempoBanquillo } from "@/lib/utils";
 import { Campo } from "@/components/Campo";
 import { Porteria } from "@/components/Porteria";
