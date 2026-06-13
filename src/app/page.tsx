@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { db, type Partido } from "@/lib/db";
 import { t, useIdioma } from "@/lib/i18n";
+import { CLIENTE } from "@/lib/clientes";
 
 export default function Home() {
   useIdioma();
@@ -22,9 +23,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center p-6">
-      <h1 className="text-5xl font-bold mb-4">{t("home_titulo")}</h1>
+      <h1 className="text-5xl font-bold mb-4">{t("home_titulo", { marca: CLIENTE.marcaTitulo })}</h1>
       <p className="text-zinc-400 mb-10 text-center">
-        {t("home_subtitulo")}
+        {t("home_subtitulo", { club: CLIENTE.nombreLargo })}
       </p>
 
       {cargado && partidoExistente && partidoExistente.config && (
@@ -32,7 +33,7 @@ export default function Home() {
           <h2 className="text-lg font-bold mb-2">{t("home_partido_en_curso")}</h2>
           <p className="text-sm text-zinc-400 mb-2">
             <strong className="text-white">{partidoExistente.config.partido_id}</strong> ·
-            INTER {partidoExistente.marcador.inter}-{partidoExistente.marcador.rival} {partidoExistente.config.rival}
+            {CLIENTE.nombreCorto} {partidoExistente.marcador.inter}-{partidoExistente.marcador.rival} {partidoExistente.config.rival}
             <br />
             {partidoExistente.config.fecha} · {partidoExistente.cronometro.parteActual}
           </p>

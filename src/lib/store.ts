@@ -41,7 +41,7 @@ import {
   type TiroTanda,
 } from "./db";
 import { uid } from "./utils";
-import { ROSTER } from "./roster";
+import { ROSTER } from "./clientes";
 
 const ID_PARTIDO = "current";
 const TICK_MS = 250;

@@ -2,11 +2,11 @@
  * Roster oficial del Inter (canónicos según JUGADORES_ROSTER del Sheet).
  * Sincronizado a 12/05/2026 — HERRERO, GARCIA, GONZALO (sin J. ni Gonza).
  *
- * MODO DEMO: con la variable de entorno NEXT_PUBLIC_DEMO=1 se usa ROSTER_DEMO
- * (nombres FALSOS, mismo mapeo que el dashboard MODO_DEMO y el bot Stats) para
- * grabar vídeos comerciales sin exponer nombres reales. Sin la variable (build
- * de producción / despliegue normal) van los nombres REALES.
- *   Grabar la demo:  NEXT_PUBLIC_DEMO=1 npm run dev   (y abre http://localhost:3000)
+ * Aquí solo viven los DATOS crudos (ROSTER_REAL y ROSTER_DEMO). Qué roster usa
+ * cada build lo decide `clientes.ts` según NEXT_PUBLIC_CLIENTE: "inter" → reales,
+ * "pulso" → ROSTER_DEMO (nombres FALSOS, mismo mapeo que el dashboard MODO_DEMO
+ * y el bot Stats) para grabar vídeos comerciales sin exponer nombres reales.
+ *   Arrancar la demo en local:  npm run demo   (= NEXT_PUBLIC_CLIENTE=pulso)
  */
 
 export type Posicion = "PORTERO" | "CAMPO";
@@ -49,7 +49,7 @@ export const ROSTER_REAL: Jugador[] = [
 ];
 
 // Roster DEMO — nombres FALSOS (mismo mapeo que dashboard/bot: HERRERO→REYES,
-// GARCIA→SERRANO, JAVI→CANO…). Solo se usa con NEXT_PUBLIC_DEMO=1.
+// GARCIA→SERRANO, JAVI→CANO…). Lo selecciona clientes.ts con NEXT_PUBLIC_CLIENTE=pulso.
 export const ROSTER_DEMO: Jugador[] = [
   { dorsal: "1", nombre: "REYES", posicion: "PORTERO", equipo: "PRIMER" },
   { dorsal: "27", nombre: "SERRANO", posicion: "PORTERO", equipo: "PRIMER" },

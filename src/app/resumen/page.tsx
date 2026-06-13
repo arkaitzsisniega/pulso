@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { usePartido } from "@/lib/store";
-import { ROSTER } from "@/lib/clientes";
+import { ROSTER, CLIENTE, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
 import { CampoConteos } from "@/components/CampoConteos";
 import type { Evento, ParteId, Partido } from "@/lib/db";
@@ -37,7 +37,7 @@ function emojiEvento(ev: Evento): string {
 }
 
 function descripcionEvento(ev: Evento, rival: string): string {
-  const equipoTxt = (e: "INTER" | "RIVAL") => e === "INTER" ? "INTER" : rival;
+  const equipoTxt = (e: "INTER" | "RIVAL") => e === "INTER" ? CLIENTE.nombreCorto : rival;
   try {
     switch (ev.tipo) {
       case "gol": {
@@ -246,7 +246,7 @@ export default function ResumenPage() {
             {cfg.partido_id} · {cfg.competicion} · {cfg.fecha} {cfg.hora} · {cfg.lugar || "—"}
           </div>
           <div className="text-4xl font-bold tabular-nums flex items-center justify-center gap-3">
-            <span className="text-emerald-400">INTER</span>
+            <span className="text-emerald-400">{CLIENTE.nombreCorto}</span>
             <span className="text-5xl">{partido.marcador.inter}</span>
             <span className="text-zinc-500">-</span>
             <span className="text-5xl">{partido.marcador.rival}</span>
@@ -293,7 +293,7 @@ export default function ResumenPage() {
             <div className="grid grid-cols-2 gap-5">
               {/* INTER */}
               <div className="bg-emerald-900/30 rounded-lg p-5">
-                <div className="text-xl text-emerald-300 font-bold mb-3">INTER</div>
+                <div className="text-xl text-emerald-300 font-bold mb-3">{CLIENTE.nombreCorto}</div>
                 <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-lg">
                   <div className="flex justify-between"><span>{t("res_puerta")}</span><strong>{totalesEquipo.dpp}</strong></div>
                   <div className="flex justify-between"><span>{t("res_palo")}</span><strong>{totalesEquipo.dpa}</strong></div>
@@ -324,7 +324,7 @@ export default function ResumenPage() {
 
           {/* SEGUNDA FILA — Pérdidas, Recuperaciones, Divididos del INTER */}
           <div className="bg-zinc-900 rounded-xl p-6">
-            <h3 className="text-2xl font-bold text-zinc-300 mb-4">{t("res_stats_inter")}</h3>
+            <h3 className="text-2xl font-bold text-zinc-300 mb-4">{t("res_stats_inter", { corto: CLIENTE.nombreCorto })}</h3>
             <div className="grid grid-cols-3 gap-4">
               {/* Pérdidas */}
               <div className="bg-red-900/30 rounded-lg p-5">
@@ -769,7 +769,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       marcas.push({
         x, tipo: "gol", equipo: eq || "—",
         etiqueta: "⚽",
-        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_gol")} ${eq === "INTER" ? "Inter" : cfg.rival} (${jug})`,
+        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_gol")} ${eq === "INTER" ? NOMBRE_CORTO_TC : cfg.rival} (${jug})`,
         clase: `${colorEq} ring-2 ring-white/50`,
         alturaPct: 95,
       });
@@ -787,7 +787,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       marcas.push({
         x, tipo: "falta", equipo: eq || "—",
         etiqueta: "F",
-        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_falta")} ${eq === "INTER" ? "Inter (" + jug + ")" : cfg.rival}`,
+        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_falta")} ${eq === "INTER" ? NOMBRE_CORTO_TC + " (" + jug + ")" : cfg.rival}`,
         clase: `${colorEq} opacity-80`,
         alturaPct: 55,
       });
@@ -797,7 +797,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       marcas.push({
         x, tipo: "disparo", equipo: eq || "—",
         etiqueta: "•",
-        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_disparo")} ${eq === "INTER" ? "Inter (" + jug + ")" : cfg.rival} → ${res}`,
+        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_disparo")} ${eq === "INTER" ? NOMBRE_CORTO_TC + " (" + jug + ")" : cfg.rival} → ${res}`,
         clase: `${colorEq} opacity-60`,
         alturaPct: 30,
       });
@@ -837,7 +837,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
 
       {/* Leyenda */}
       <div className="flex flex-wrap gap-3 text-[11px] mb-2 text-zinc-400">
-        <span><span className="inline-block w-3 h-3 bg-emerald-500 rounded-sm align-middle mr-1"></span>Inter</span>
+        <span><span className="inline-block w-3 h-3 bg-emerald-500 rounded-sm align-middle mr-1"></span>{NOMBRE_CORTO_TC}</span>
         <span><span className="inline-block w-3 h-3 bg-red-500 rounded-sm align-middle mr-1"></span>{cfg.rival}</span>
         <span><span className="inline-block w-3 h-3 bg-emerald-600/70 rounded-sm align-middle mr-1"></span>{t("res_crono_tramo_pista")}</span>
         <span className="text-zinc-600">{t("res_crono_leyenda_iconos")}</span>
@@ -1130,7 +1130,7 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
         <div className="flex gap-1">
           <button onClick={() => setEquipo("INTER")}
             className={`px-4 py-2 rounded text-base font-bold ${equipo === "INTER" ? "bg-emerald-700" : "bg-zinc-800 hover:bg-zinc-700"}`}>
-            Inter
+            {NOMBRE_CORTO_TC}
           </button>
           <button onClick={() => setEquipo("RIVAL")}
             className={`px-4 py-2 rounded text-base font-bold ${equipo === "RIVAL" ? "bg-red-700" : "bg-zinc-800 hover:bg-zinc-700"}`}>
@@ -1197,7 +1197,7 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
           <CampoConteos
             conteos={contCampo}
             direccion={direccionAtaque("1T", equipo, cfg)}
-            nombreAtacante={equipo === "INTER" ? "Inter" : cfg.rival} />
+            nombreAtacante={equipo === "INTER" ? NOMBRE_CORTO_TC : cfg.rival} />
         </div>
         {sinZonaCampo > 0 && (
           <p className="text-[10px] text-zinc-500 mt-2 italic text-center">

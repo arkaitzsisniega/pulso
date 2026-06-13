@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
-import { ROSTER } from "@/lib/clientes";
+import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
 import { formatMMSS, colorTiempoPista, colorTiempoBanquillo } from "@/lib/utils";
 import { Campo } from "@/components/Campo";
 import { Porteria } from "@/components/Porteria";
@@ -278,7 +278,7 @@ export default function PartidoPage() {
           </div>
         </div>
         <div className="text-4xl font-bold tabular-nums">
-          <span className="text-emerald-400">INTER {partido.marcador.inter}</span>
+          <span className="text-emerald-400">{CLIENTE.nombreCorto} {partido.marcador.inter}</span>
           <span className="text-zinc-500 mx-2">-</span>
           <span className="text-red-400">{partido.marcador.rival} {cfg.rival}</span>
         </div>
@@ -618,17 +618,17 @@ export default function PartidoPage() {
             6ª (ya es 10m). Solo mostramos el más alto que aplique. */}
         {sFalt.inter === 4 && (
           <div className="mt-2 bg-amber-600 rounded px-3 py-1 text-center font-bold">
-            {t("part_inter_4falta")}
+            {t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}
           </div>
         )}
         {sFalt.inter === 5 && (
           <div className="mt-2 bg-orange-600 rounded px-3 py-1 text-center font-bold">
-            {t("part_inter_5falta")}
+            {t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC })}
           </div>
         )}
         {sFalt.inter >= 6 && (
           <div className="mt-2 bg-red-700 rounded px-3 py-1 text-center font-bold">
-            {t("part_inter_6falta", { n: sFalt.inter })}
+            {t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC })}
           </div>
         )}
         {sFalt.rival === 4 && (
@@ -643,7 +643,7 @@ export default function PartidoPage() {
         )}
         {sFalt.rival >= 6 && (
           <div className="mt-2 bg-emerald-700 rounded px-3 py-1 text-center font-bold">
-            {t("part_rival_6falta", { n: sFalt.rival })}
+            {t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC })}
           </div>
         )}
       </div>
@@ -865,7 +865,7 @@ export default function PartidoPage() {
       {confirmFaltaCT && (
         <ModalShell titulo={t("conf_ama_ct_titulo")} onCerrar={() => setConfirmFaltaCT(null)} maxW="max-w-md">
           <p className="text-zinc-300 text-base mb-4">
-            {t("conf_ama_ct_texto", { equipo: confirmFaltaCT.equipo === "INTER" ? "INTER" : cfg.rival })}
+            {t("conf_ama_ct_texto", { equipo: confirmFaltaCT.equipo === "INTER" ? CLIENTE.nombreCorto : cfg.rival })}
           </p>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -1209,7 +1209,7 @@ function ModalFalta(props: {
           <Campo onSelect={(z) => aplicar(z)}
             direccion={direccionAtaque(props.parteActual,
               equipo === "INTER" ? "RIVAL" : "INTER", props.cfg)}
-            nombreAtacante={equipo === "INTER" ? props.rivalNombre : "Inter"} />
+            nombreAtacante={equipo === "INTER" ? props.rivalNombre : NOMBRE_CORTO_TC} />
           <div className="mt-2 flex justify-end">
             <button onClick={() => aplicar(undefined)}
               className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs">
@@ -1242,7 +1242,7 @@ function ModalAmarilla(props: {
           <button onClick={() => setEquipo("INTER")}
             className={`py-4 rounded text-lg font-bold ${
               equipo === "INTER" ? "bg-emerald-700" : "bg-zinc-800"
-            }`}>INTER</button>
+            }`}>{CLIENTE.nombreCorto}</button>
           <button onClick={() => { setEquipo("RIVAL"); }}
             className={`py-4 rounded text-lg font-bold ${
               equipo === "RIVAL" ? "bg-red-700" : "bg-zinc-800"
@@ -1306,7 +1306,7 @@ function ModalRoja(props: {
           <button onClick={() => setEquipo("INTER")}
             className={`py-4 rounded text-lg font-bold ${
               equipo === "INTER" ? "bg-emerald-700" : "bg-zinc-800"
-            }`}>INTER</button>
+            }`}>{CLIENTE.nombreCorto}</button>
           <button onClick={() => setEquipo("RIVAL")}
             className={`py-4 rounded text-lg font-bold ${
               equipo === "RIVAL" ? "bg-red-700" : "bg-zinc-800"
@@ -1520,7 +1520,7 @@ function ModalGol(props: {
           <button onClick={() => setEquipo("INTER")}
             className={`py-4 rounded text-lg font-bold ${
               equipo === "INTER" ? "bg-emerald-700" : "bg-zinc-800"
-            }`}>INTER</button>
+            }`}>{CLIENTE.nombreCorto}</button>
           <button onClick={() => setEquipo("RIVAL")}
             className={`py-4 rounded text-lg font-bold ${
               equipo === "RIVAL" ? "bg-red-700" : "bg-zinc-800"
@@ -1570,7 +1570,7 @@ function ModalGol(props: {
         <Paso n={5} titulo={t("mg_zona_tira")} activo={!zonaCampo}>
           <Campo seleccionada={zonaCampo} onSelect={setZonaCampo}
             direccion={equipo ? direccionAtaque(props.parteActual, equipo, props.cfg) : "der"}
-            nombreAtacante={equipo === "INTER" ? "Inter" : props.rivalNombre} />
+            nombreAtacante={equipo === "INTER" ? NOMBRE_CORTO_TC : props.rivalNombre} />
           <div className="mt-1 text-right">
             <button onClick={() => setZonaCampo("__skip__")}
               className="px-3 py-1 bg-zinc-700 rounded text-xs">{t("saltar_zona_campo_corto")}</button>
@@ -1791,7 +1791,7 @@ function ModalPenalti(props: {
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => setEquipo("INTER")}
               className={`py-3 rounded font-bold ${equipo === "INTER" ? "bg-emerald-700" : "bg-zinc-800"}`}>
-              {t("mp_a_favor")}</button>
+              {t("mp_a_favor", { equipo: NOMBRE_CORTO_TC })}</button>
             <button onClick={() => setEquipo("RIVAL")}
               className={`py-3 rounded font-bold ${equipo === "RIVAL" ? "bg-red-700" : "bg-zinc-800"}`}>
               {t("mp_en_contra", { rival: props.rivalNombre })}</button>
@@ -1953,7 +1953,7 @@ function ModalAccionIndividual(props: {
           <Campo
             onSelect={(z) => props.onAccionConZona(accionPendiente, z)}
             direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
-            nombreAtacante="Inter" />
+            nombreAtacante={NOMBRE_CORTO_TC} />
           <div className="mt-2 flex justify-between">
             <button onClick={() => { setAccionPendiente(null); setPaso("menu"); }}
               className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
@@ -1994,7 +1994,7 @@ function ModalAccionIndividual(props: {
             else props.onDisparo({ resultado: disparoRes, zonaCampo: z, zonaPorteria: "" });
           }}
           direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
-          nombreAtacante="Inter" />
+          nombreAtacante={NOMBRE_CORTO_TC} />
           <div className="mt-2 flex justify-between">
             <button onClick={() => setPaso("disparoTipo")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
             <button onClick={() => {
@@ -2351,7 +2351,7 @@ function ModalCambioParte(props: {
       {/* Marcador actual + estado */}
       <div className="text-center bg-zinc-950 rounded-lg p-5 mb-4">
         <div className="text-5xl font-bold tabular-nums">
-          <span className="text-emerald-400">INTER {partido.marcador.inter}</span>
+          <span className="text-emerald-400">{CLIENTE.nombreCorto} {partido.marcador.inter}</span>
           <span className="text-zinc-500 mx-2">-</span>
           <span className="text-red-400">{partido.marcador.rival} {cfg.rival}</span>
         </div>
@@ -2379,7 +2379,7 @@ function ModalCambioParte(props: {
         <div className="grid grid-cols-2 gap-3">
           {/* INTER */}
           <div className="bg-emerald-900/40 rounded-lg p-4 border border-emerald-700/40">
-            <div className="text-base text-emerald-300 font-bold mb-2 uppercase tracking-wide">INTER</div>
+            <div className="text-base text-emerald-300 font-bold mb-2 uppercase tracking-wide">{CLIENTE.nombreCorto}</div>
             <div className="flex items-baseline gap-2">
               <span className="text-5xl font-bold text-white tabular-nums">{totalDispINTER}</span>
               <span className="text-sm text-emerald-300">{t("mcp_total")}</span>

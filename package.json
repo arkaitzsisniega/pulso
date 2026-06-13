@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "demo": "NEXT_PUBLIC_DEMO=1 next dev",
+    "demo": "NEXT_PUBLIC_CLIENTE=pulso next dev",
     "build": "next build",
     "start": "next start"
   },

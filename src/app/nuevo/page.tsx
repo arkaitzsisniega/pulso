@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
-import { ROSTER, PORTEROS, CAMPO } from "@/lib/clientes";
+import { ROSTER, PORTEROS, CAMPO, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { hoyISO } from "@/lib/utils";
 import { PRESETS_COMPETICION } from "@/lib/db";
 import { t, useIdioma, labelCompeticion } from "@/lib/i18n";
@@ -199,7 +199,7 @@ export default function NuevoPartido() {
         <label className="flex items-center gap-2 col-span-2">
           <input type="checkbox" className="w-5 h-5" checked={local}
             onChange={(e) => setLocal(e.target.checked)} />
-          <span>{t("nuevo_inter_local")}</span>
+          <span>{t("nuevo_inter_local", { equipo: NOMBRE_CORTO_TC })}</span>
         </label>
       </section>
 
@@ -259,7 +259,7 @@ export default function NuevoPartido() {
               }`}>{t("nuevo_derecha")}</button>
           </div>
           <p className="text-xs text-zinc-500 mt-2">
-            {t("nuevo_direccion_nota")}
+            {t("nuevo_direccion_nota", { equipo: NOMBRE_CORTO_TC })}
           </p>
         </div>
       </section>
