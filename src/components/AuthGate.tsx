@@ -101,7 +101,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       <div className="bg-zinc-900 rounded-2xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">🔐</div>
-          <h1 className="text-2xl font-bold">{t("login_titulo")}</h1>
+          <h1 className="text-2xl font-bold">{t("login_titulo", { marca: CLIENTE.marcaTitulo })}</h1>
           <p className="text-sm text-zinc-400 mt-2">
             {t("login_subtitulo")}
           </p>

@@ -15,9 +15,11 @@
  *   • Idioma por defecto = **español** ("es"). Si NEXT_PUBLIC_IDIOMA no está
  *     definido o vale "es", el comportamiento es EXACTAMENTE el de antes
  *     (mismas frases ES, palabra por palabra). El crono del Inter NO cambia.
- *   • "INTER" / "Inter" es el NOMBRE PROPIO del equipo (Movistar Inter FS), NO
- *     texto de interfaz: nunca se traduce. El nombre del rival viene de la
- *     config del partido (cfg.rival), tampoco se toca aquí.
+ *   • El nombre del equipo NO se traduce: es el NOMBRE PROPIO del club y viene
+ *     de la config por cliente (CLIENTE.marcaTitulo / nombreLargo / nombreCorto),
+ *     inyectado como parámetro {marca}/{club}/{corto} en las claves de título.
+ *     Para el Inter da "Inter FS" / "Movistar Inter FS" / "INTER" (texto idéntico
+ *     al de antes); la demo da "CD Pulso" / "PULSO". El rival viene de cfg.rival.
  *
  * ═══════════════════════════════════════════════════════════════════════════
  * CÓMO SE USA
@@ -40,15 +42,15 @@
  *   - Si se pasan params, sustituye {var} por su valor (string/number).
  *
  * ═══════════════════════════════════════════════════════════════════════════
- * SELECTOR DE IDIOMA (solo demo)
+ * SELECTOR DE IDIOMA (según el cliente)
  * ═══════════════════════════════════════════════════════════════════════════
- *   - Idioma INICIAL = NEXT_PUBLIC_IDIOMA (default "es").
- *   - En la DEMO (NEXT_PUBLIC_DEMO=1) se renderiza <SelectorIdioma/> y el
- *     usuario puede cambiar a EN/IT en caliente; setIdioma() avisa a todos los
- *     componentes suscritos vía useIdioma() y re-renderizan con el nuevo texto.
- *   - En el build del Inter (sin NEXT_PUBLIC_DEMO) el selector NO aparece y el
- *     idioma queda fijo al de la variable de entorno (es). Comportamiento
- *     idéntico al de antes de i18n.
+ *   - Idioma INICIAL = CLIENTE.idiomaFijo si está definido; si no, la env
+ *     NEXT_PUBLIC_IDIOMA (default "es"). Ver idiomaInicial().
+ *   - Si CLIENTE.idiomaFijo === null (demo) se renderiza <SelectorIdioma/> y el
+ *     usuario cambia a EN/IT en caliente; setIdioma() avisa a los componentes
+ *     suscritos vía useIdioma() y re-renderizan con el nuevo texto.
+ *   - Si CLIENTE.idiomaFijo tiene valor (el Inter = "es") el selector NO aparece
+ *     y el idioma queda fijo. Comportamiento idéntico al de antes de i18n.
  *
  * ═══════════════════════════════════════════════════════════════════════════
  * CÓMO AÑADIR UN IDIOMA NUEVO  (lo hace Claude solo)
@@ -64,6 +66,7 @@
  * traducciones de una misma clave.
  */
 import { useSyncExternalStore } from "react";
+import { CLIENTE } from "@/lib/clientes";
 
 export type Idioma = "es" | "en" | "it";
 
@@ -90,7 +93,17 @@ function normaliza(val: string | undefined | null): Idioma {
 // Estado del idioma activo + suscripción (para que el selector demo re-renderice
 // los componentes en caliente). En el Inter (sin selector) nunca cambia.
 // ─────────────────────────────────────────────────────────────────────────────
-let _idioma: Idioma = normaliza(process.env.NEXT_PUBLIC_IDIOMA);
+/**
+ * Idioma con el que arranca la app. Si el cliente tiene idioma fijo
+ * (CLIENTE.idiomaFijo; p.ej. el Inter en "es"), arranca en ese y sin selector.
+ * Si es null (demo), cae al de la env NEXT_PUBLIC_IDIOMA (default "es") y el
+ * usuario puede cambiarlo en caliente con <SelectorIdioma/>.
+ */
+function idiomaInicial(): Idioma {
+  return CLIENTE.idiomaFijo ?? normaliza(process.env.NEXT_PUBLIC_IDIOMA);
+}
+
+let _idioma: Idioma = idiomaInicial();
 const _subs = new Set<() => void>();
 
 export function idiomaActivo(): Idioma {
@@ -121,7 +134,7 @@ export function useIdioma(): Idioma {
       };
     },
     () => _idioma,
-    () => normaliza(process.env.NEXT_PUBLIC_IDIOMA),
+    () => idiomaInicial(),
   );
 }
 
@@ -175,11 +188,11 @@ export const CATALOGO: Record<string, Entrada> = {
   cuerpo_tecnico: { es: "🧠 Cuerpo técnico (CT)", en: "🧠 Coaching staff (CS)", it: "🧠 Staff tecnico (ST)" },
 
   // ══════════════════ HOME (page.tsx) ══════════════════
-  home_titulo: { es: "⚽ Crono Inter FS", en: "⚽ Inter FS Timer", it: "⚽ Cronometro Inter FS" },
+  home_titulo: { es: "⚽ Crono {marca}", en: "⚽ {marca} Timer", it: "⚽ Cronometro {marca}" },
   home_subtitulo: {
-    es: "Cronómetro y registro en directo para el banquillo del Movistar Inter FS.",
-    en: "Live match timer and event tracker for the Movistar Inter FS bench.",
-    it: "Cronometro e registro in diretta per la panchina del Movistar Inter FS.",
+    es: "Cronómetro y registro en directo para el banquillo del {club}.",
+    en: "Live match timer and event tracker for the {club} bench.",
+    it: "Cronometro e registro in diretta per la panchina del {club}.",
   },
   home_partido_en_curso: { es: "⏳ Hay un partido en curso", en: "⏳ A match is in progress", it: "⏳ C'è una partita in corso" },
   home_continuar: { es: "⏯ Continuar partido", en: "⏯ Resume match", it: "⏯ Riprendi partita" },
@@ -191,7 +204,7 @@ export const CATALOGO: Record<string, Entrada> = {
   },
 
   // ══════════════════ LOGIN (AuthGate.tsx) ══════════════════
-  login_titulo: { es: "Crono Inter FS", en: "Inter FS Timer", it: "Cronometro Inter FS" },
+  login_titulo: { es: "Crono {marca}", en: "{marca} Timer", it: "Cronometro {marca}" },
   login_subtitulo: {
     es: "Acceso restringido al cuerpo técnico. Introduce la contraseña.",
     en: "Restricted access for the coaching staff. Enter the password.",
@@ -218,7 +231,7 @@ export const CATALOGO: Record<string, Entrada> = {
   nuevo_lugar: { es: "Lugar", en: "Venue", it: "Luogo" },
   nuevo_lugar_ph: { es: "Pabellón...", en: "Arena...", it: "Palazzetto..." },
   nuevo_competicion: { es: "Competición", en: "Competition", it: "Competizione" },
-  nuevo_inter_local: { es: "Inter juega como LOCAL", en: "Inter plays at HOME", it: "L'Inter gioca in CASA" },
+  nuevo_inter_local: { es: "{equipo} juega como LOCAL", en: "{equipo} plays at HOME", it: "{equipo} gioca in CASA" },
   nuevo_duracion_titulo: { es: "Duración por parte (min) — preset:", en: "Period length (min) — preset:", it: "Durata per tempo (min) — preset:" },
   nuevo_1a_parte: { es: "1ª parte", en: "1st period", it: "1º tempo" },
   nuevo_2a_parte: { es: "2ª parte", en: "2nd period", it: "2º tempo" },
@@ -237,9 +250,9 @@ export const CATALOGO: Record<string, Entrada> = {
   nuevo_izquierda: { es: "← Izquierda", en: "← Left", it: "← Sinistra" },
   nuevo_derecha: { es: "Derecha →", en: "Right →", it: "Destra →" },
   nuevo_direccion_nota: {
-    es: "En 2ª parte cambian de campo automáticamente. El rival siempre ataca en sentido contrario a Inter.",
-    en: "In the 2nd period they switch ends automatically. The opponent always attacks the opposite way to Inter.",
-    it: "Nel 2º tempo cambiano campo automaticamente. L'avversario attacca sempre nel senso opposto all'Inter.",
+    es: "En 2ª parte cambian de campo automáticamente. El rival siempre ataca en sentido contrario a {equipo}.",
+    en: "In the 2nd period they switch ends automatically. The opponent always attacks the opposite way to {equipo}.",
+    it: "Nel 2º tempo cambiano campo automaticamente. L'avversario attacca sempre nel senso opposto a {equipo}.",
   },
   nuevo_convocados: { es: "Convocados (toca para conmutar)", en: "Squad (tap to toggle)", it: "Convocati (tocca per cambiare)" },
   nuevo_convocados_count: { es: "{n} convocados", en: "{n} called up", it: "{n} convocati" },
@@ -374,16 +387,16 @@ export const CATALOGO: Record<string, Entrada> = {
   part_faltas: { es: "Faltas", en: "Fouls", it: "Falli" },
   part_ama_rival: { es: "🟨 {rival}:", en: "🟨 {rival}:", it: "🟨 {rival}:" },
   part_roja_rival_exp: { es: "🟥 {rival} expulsado:", en: "🟥 {rival} sent off:", it: "🟥 {rival} espulso:" },
-  part_inter_4falta: { es: "⚠️ Inter: 4ª falta. Ojo.", en: "⚠️ Inter: 4th foul. Careful.", it: "⚠️ Inter: 4º fallo. Attenzione." },
+  part_inter_4falta: { es: "⚠️ {equipo}: 4ª falta. Ojo.", en: "⚠️ {equipo}: 4th foul. Careful.", it: "⚠️ {equipo}: 4º fallo. Attenzione." },
   part_inter_5falta: {
-    es: "⚠️ Inter: 5ª falta. La siguiente es 10 m.",
-    en: "⚠️ Inter: 5th foul. The next one is a 10 m.",
-    it: "⚠️ Inter: 5º fallo. Il prossimo è un tiro libero dai 10 m.",
+    es: "⚠️ {equipo}: 5ª falta. La siguiente es 10 m.",
+    en: "⚠️ {equipo}: 5th foul. The next one is a 10 m.",
+    it: "⚠️ {equipo}: 5º fallo. Il prossimo è un tiro libero dai 10 m.",
   },
   part_inter_6falta: {
-    es: "⚠️ Inter {n}ª falta → 10 m a favor del rival",
-    en: "⚠️ Inter {n}th foul → 10 m for the opponent",
-    it: "⚠️ Inter {n}º fallo → 10 m a favore dell'avversario",
+    es: "⚠️ {equipo} {n}ª falta → 10 m a favor del rival",
+    en: "⚠️ {equipo} {n}th foul → 10 m for the opponent",
+    it: "⚠️ {equipo} {n}º fallo → 10 m a favore dell'avversario",
   },
   part_rival_4falta: { es: "⚠️ Rival: 4ª falta. Ojo.", en: "⚠️ Opponent: 4th foul. Careful.", it: "⚠️ Avversario: 4º fallo. Attenzione." },
   part_rival_5falta: {
@@ -392,9 +405,9 @@ export const CATALOGO: Record<string, Entrada> = {
     it: "⚠️ Avversario: 5º fallo. Il prossimo è un tiro libero dai 10 m.",
   },
   part_rival_6falta: {
-    es: "⚠️ Rival {n}ª falta → 10 m a favor del Inter",
-    en: "⚠️ Opponent {n}th foul → 10 m for Inter",
-    it: "⚠️ Avversario {n}º fallo → 10 m a favore dell'Inter",
+    es: "⚠️ Rival {n}ª falta → 10 m a favor del {equipo}",
+    en: "⚠️ Opponent {n}th foul → 10 m for {equipo}",
+    it: "⚠️ Avversario {n}º fallo → 10 m a favore di {equipo}",
   },
 
   // ══════════════════ MODAL CONFIRMACIONES (expulsión rival / falta CT) ══════════════════
@@ -547,7 +560,7 @@ export const CATALOGO: Record<string, Entrada> = {
   mp_penalti_6m: { es: "Penalti (6m)", en: "Penalty (6m)", it: "Rigore (6m)" },
   mp_10m: { es: "10 metros", en: "10 metres", it: "10 metri" },
   mp_favor_contra: { es: "¿A favor o en contra?", en: "For or against?", it: "A favore o contro?" },
-  mp_a_favor: { es: "A FAVOR (lo tira Inter)", en: "FOR (Inter takes it)", it: "A FAVORE (lo tira l'Inter)" },
+  mp_a_favor: { es: "A FAVOR (lo tira {equipo})", en: "FOR ({equipo} takes it)", it: "A FAVORE (lo tira {equipo})" },
   mp_en_contra: { es: "EN CONTRA (lo tira {rival})", en: "AGAINST ({rival} takes it)", it: "CONTRO (lo tira il {rival})" },
   mp_tirador_nuestro: { es: "Tirador nuestro (tap)", en: "Our taker (tap)", it: "Nostro tiratore (tocca)" },
   mp_portero_rival_ph: { es: "Portero rival (opcional)", en: "Opponent goalkeeper (optional)", it: "Portiere avversario (facoltativo)" },
@@ -694,7 +707,7 @@ export const CATALOGO: Record<string, Entrada> = {
   res_fuera: { es: "Fuera", en: "Wide", it: "Fuori" },
   res_bloqueados: { es: "Bloqueados", en: "Blocked", it: "Murati" },
   res_total: { es: "Total", en: "Total", it: "Totale" },
-  res_stats_inter: { es: "📊 Stats INTER", en: "📊 INTER stats", it: "📊 Statistiche INTER" },
+  res_stats_inter: { es: "📊 Stats {corto}", en: "📊 {corto} stats", it: "📊 Statistiche {corto}" },
   res_perdidas: { es: "❌ Pérdidas", en: "❌ Turnovers", it: "❌ Palle perse" },
   res_forzada: { es: "Forzada", en: "Forced", it: "Forzata" },
   res_no_forzada: { es: "No forzada", en: "Unforced", it: "Non forzata" },

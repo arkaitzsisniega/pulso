@@ -31,7 +31,9 @@ export interface ConfigCliente {
   nombreCorto: string;
   /** Nombre largo del club (p.ej. "Movistar Inter FS", "CD Pulso"). */
   nombreLargo: string;
-  /** Título de la app / cabecera del login. */
+  /** Marca para los títulos de Home/Login (p.ej. "Inter FS", "CD Pulso"). */
+  marcaTitulo: string;
+  /** Título de pestaña / PWA (metadata). P.ej. "Inter Crono", "Crono CD Pulso". */
   appTitulo: string;
   /** Roster de jugadores de este cliente. */
   roster: Jugador[];
@@ -58,7 +60,8 @@ const CLIENTES: Record<string, ConfigCliente> = {
     id: "inter",
     nombreCorto: "INTER",
     nombreLargo: "Movistar Inter FS",
-    appTitulo: "Crono Inter",
+    marcaTitulo: "Inter FS",
+    appTitulo: "Inter Crono",
     roster: ROSTER_REAL,
     passHashes: [HASH_INTER],
     idiomaFijo: "es", // el Inter va siempre en español, sin selector
@@ -68,6 +71,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     id: "pulso",
     nombreCorto: "PULSO",
     nombreLargo: "CD Pulso",
+    marcaTitulo: "CD Pulso",
     appTitulo: "Crono CD Pulso",
     roster: ROSTER_DEMO,
     passHashes: [HASH_PULSO],
@@ -89,3 +93,14 @@ export const CLIENTE: ConfigCliente = CLIENTES[_ID] ?? CLIENTES.inter;
 export const ROSTER: Jugador[] = CLIENTE.roster;
 export const PORTEROS: Jugador[] = ROSTER.filter((j) => j.posicion === "PORTERO");
 export const CAMPO: Jugador[] = ROSTER.filter((j) => j.posicion === "CAMPO");
+
+/**
+ * Variante title-case del nombre corto para etiquetas dentro de texto normal
+ * (p.ej. "Inter ataca →" del campo, tooltip de gol del resumen). Deriva de
+ * nombreCorto: "INTER" → "Inter", "PULSO" → "Pulso". El nombre corto en
+ * MAYÚSCULAS (CLIENTE.nombreCorto) se sigue usando en el marcador y en
+ * "Stats INTER" (donde el original iba en mayúsculas).
+ */
+export const NOMBRE_CORTO_TC: string =
+  CLIENTE.nombreCorto.charAt(0).toUpperCase() +
+  CLIENTE.nombreCorto.slice(1).toLowerCase();

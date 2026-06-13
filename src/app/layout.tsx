@@ -4,6 +4,7 @@ import "./globals.css";
 import AuthGate from "@/components/AuthGate";
 import SWRegister from "@/components/SWRegister";
 import SelectorIdioma from "@/components/SelectorIdioma";
+import { CLIENTE } from "@/lib/clientes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,15 +19,20 @@ const geistMono = Geist_Mono({
 // Cuando se hace `output: 'export'` con basePath, Next NO prefija
 // automáticamente los paths absolutos de manifest/iconos en `metadata`.
 // Hay que añadir el prefijo a mano (en dev no hay prefijo, queda igual).
-const BP = process.env.NEXT_EXPORT === "1" ? "/arkaitz-2526/crono" : "";
+const BP = process.env.NEXT_EXPORT === "1" ? (process.env.CRONO_BASEPATH || "/arkaitz-2526/crono") : "";
+
+// Cada cliente referencia su propio manifest (mismas rutas relativas, solo
+// cambia el nombre del PWA al instalarlo). El Inter mantiene "manifest.json"
+// intacto; los demás usan "manifest-<id>.json" (p.ej. la demo → manifest-pulso.json).
+const MANIFEST = `${BP}/manifest${CLIENTE.id === "inter" ? "" : `-${CLIENTE.id}`}.json`;
 
 export const metadata: Metadata = {
-  title: "Inter Crono",
-  description: "Crono de partido en directo para el cuerpo técnico de Movistar Inter FS",
-  manifest: `${BP}/manifest.json`,
+  title: CLIENTE.appTitulo,
+  description: `Crono de partido en directo para el cuerpo técnico de ${CLIENTE.nombreLargo}`,
+  manifest: MANIFEST,
   appleWebApp: {
     capable: true,
-    title: "Inter Crono",
+    title: CLIENTE.appTitulo,
     statusBarStyle: "black-translucent",
   },
   icons: {
