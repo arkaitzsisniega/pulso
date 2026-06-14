@@ -42,6 +42,7 @@ import {
 } from "./db";
 import { uid } from "./utils";
 import { ROSTER } from "./clientes";
+import { reconstruirAgregados } from "./reconstruir";
 
 const ID_PARTIDO = "current";
 const TICK_MS = 250;
@@ -127,6 +128,10 @@ function campoDisparoRival(r: ResultadoDisparo): keyof Partido["disparosRival"] 
     case "BLOQUEADO": return "bloqueado";
   }
 }
+
+/** ¿Es portero según el roster del cliente activo? (para reconstruirAgregados). */
+const esPorteroRoster = (nombre: string): boolean =>
+  ROSTER.find((j) => j.nombre === nombre)?.posicion === "PORTERO";
 
 /** Localiza el portero nuestro en pista (asume hay 1 portero por norma). */
 function porteroEnPista(enPista: string[]): string | null {
@@ -709,6 +714,9 @@ export function usePartido() {
       let next: Partido = { ...prev, eventos: [...prev.eventos, evento] };
 
       // ─── Aplicar efectos según tipo ─────────────────────────────────
+      // (ESPEJO: estas mismas reglas de auto-conteo viven en reconstruir.ts,
+      //  que las re-aplica al editar post-partido. Si cambias algo aquí,
+      //  actualízalo allí y en reconstruir.test.ts.)
       if (evento.tipo === "gol") {
         // Marcador
         next.marcador = {
@@ -989,6 +997,54 @@ export function usePartido() {
     });
   }
 
+  // ───── EDICIÓN POST-PARTIDO (Fase 2) ────────────────────────────────────
+  // Editar / borrar / añadir un evento CUALQUIERA tras finalizar. A diferencia
+  // de deshacerUltimoEvento (LIFO), aquí se muta la lista y se RE-DERIVAN todos
+  // los agregados desde cero con reconstruirAgregados (marcador, stats,
+  // acciones, disparosRival + re-sellado de snapshots). NO recalcula los minutos
+  // por jugador (van aparte, opción D del plan). Para el modo edición, no en vivo.
+
+  /** Edita los atributos de un evento (jugador, tipo, zona, minuto, parte…). */
+  function editarEvento(id: string, cambios: Partial<Evento>) {
+    setPartido((prev) => {
+      const eventos = prev.eventos.map((e) =>
+        e.id === id ? ({ ...e, ...cambios } as Evento) : e
+      );
+      return reconstruirAgregados({ ...prev, eventos }, esPorteroRoster);
+    });
+  }
+
+  /** Borra un evento. Si es un gol con penalti enlazado (o al revés), borra el
+   *  par completo (coherente con deshacerUltimoEvento). */
+  function borrarEvento(id: string) {
+    setPartido((prev) => {
+      const ev = prev.eventos.find((e) => e.id === id);
+      if (!ev) return prev;
+      const ids = new Set<string>([id]);
+      if (ev.tipo === "gol" && ev.penaltiId) ids.add(ev.penaltiId);
+      if ((ev.tipo === "penalti" || ev.tipo === "diezm") && ev.golId) ids.add(ev.golId);
+      const eventos = prev.eventos.filter((e) => !ids.has(e.id));
+      return reconstruirAgregados({ ...prev, eventos }, esPorteroRoster);
+    });
+  }
+
+  /** Añade un evento nuevo en una parte/minuto concretos. reconstruirAgregados
+   *  lo coloca cronológicamente y re-sella los marcadores. */
+  function anadirEvento(
+    datos: Omit<Evento, "id" | "segundosPartido" | "timestampReal" | "marcador">,
+  ) {
+    setPartido((prev) => {
+      const nuevo = {
+        ...(datos as Evento),
+        id: uid(),
+        segundosPartido: datos.segundosParte,
+        timestampReal: Date.now(),
+        marcador: { inter: 0, rival: 0 },
+      } as Evento;
+      return reconstruirAgregados({ ...prev, eventos: [...prev.eventos, nuevo] }, esPorteroRoster);
+    });
+  }
+
   function reset() {
     setPartido(partidoVacio(ID_PARTIDO));
   }
@@ -1188,6 +1244,7 @@ export function usePartido() {
     segundosEnParte, segundosRestantesParte, duracionParteActual,
     iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual, reset,
+    editarEvento, borrarEvento, anadirEvento,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte,
   };
