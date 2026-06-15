@@ -7,6 +7,7 @@ import { usePartido } from "@/lib/store";
 import { ROSTER, CLIENTE, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
 import { CampoConteos } from "@/components/CampoConteos";
+import { EditorEventos } from "@/components/EditorEventos";
 import type { Evento, ParteId, Partido } from "@/lib/db";
 import { direccionAtaque } from "@/lib/db";
 import { t, useIdioma, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
@@ -146,8 +147,8 @@ function colorSemaforoMin(seg: number, max: number): string {
 export default function ResumenPage() {
   useIdioma();
   const router = useRouter();
-  const { partido, cargado } = usePartido();
-  const [tab, setTab] = useState<"general" | "tiempos" | "individual" | "cronograma" | "disparos" | "analisis">("general");
+  const { partido, cargado, editarEvento, borrarEvento, anadirEvento } = usePartido();
+  const [tab, setTab] = useState<"general" | "tiempos" | "individual" | "cronograma" | "disparos" | "analisis" | "editar">("general");
 
   if (!cargado) {
     return <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">{t("cargando")}</div>;
@@ -275,6 +276,7 @@ export default function ResumenPage() {
           { id: "cronograma", lbl: t("res_tab_cronograma") },
           { id: "disparos",   lbl: t("res_tab_disparos") },
           { id: "analisis",   lbl: t("res_tab_analisis") },
+          { id: "editar",     lbl: t("res_tab_editar") },
         ].map((tabItem) => (
           <button key={tabItem.id}
             onClick={() => setTab(tabItem.id as any)}
@@ -630,6 +632,12 @@ export default function ResumenPage() {
       {/* TAB: ANÁLISIS — datos derivados de los eventos del partido */}
       {tab === "analisis" && (
         <PestanaAnalisis partido={partido} partesJugadas={partesJugadas} />
+      )}
+
+      {/* TAB: EDITAR — edición post-partido (Fase 2) */}
+      {tab === "editar" && (
+        <EditorEventos partido={partido} partesJugadas={partesJugadas}
+          editarEvento={editarEvento} borrarEvento={borrarEvento} anadirEvento={anadirEvento} />
       )}
 
       {/* FOOTER — acciones */}
