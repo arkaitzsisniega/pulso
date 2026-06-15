@@ -742,6 +742,10 @@ export const CATALOGO: Record<string, Entrada> = {
   ed_t_accion_individual: { es: "Acción individual", en: "Individual action", it: "Azione individuale" },
   ed_t_penalti: { es: "Penalti", en: "Penalty", it: "Rigore" },
   ed_t_diezm: { es: "10 metros", en: "10 metres", it: "10 metri" },
+  ed_min_titulo: { es: "⏱ Minutos por jugador", en: "⏱ Minutes per player", it: "⏱ Minuti per giocatore" },
+  ed_min_recalcular: { es: "🔄 Recalcular (aprox.)", en: "🔄 Recompute (approx.)", it: "🔄 Ricalcola (appross.)" },
+  ed_min_nota: { es: "Recálculo aproximado (ignora pausas). Ajusta a mano lo que haga falta.", en: "Approximate recompute (ignores pauses). Adjust by hand as needed.", it: "Ricalcolo approssimato (ignora le pause). Regola a mano se serve." },
+  ed_min_total: { es: "Total", en: "Total", it: "Totale" },
 
   // ══════════════════ RESUMEN — GENERAL ══════════════════
   res_disparos: { es: "🎯 Disparos", en: "🎯 Shots", it: "🎯 Tiri" },

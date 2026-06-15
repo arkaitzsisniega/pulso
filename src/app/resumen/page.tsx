@@ -147,7 +147,7 @@ function colorSemaforoMin(seg: number, max: number): string {
 export default function ResumenPage() {
   useIdioma();
   const router = useRouter();
-  const { partido, cargado, editarEvento, borrarEvento, anadirEvento } = usePartido();
+  const { partido, cargado, editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador } = usePartido();
   const [tab, setTab] = useState<"general" | "tiempos" | "individual" | "cronograma" | "disparos" | "analisis" | "editar">("general");
 
   if (!cargado) {
@@ -637,7 +637,8 @@ export default function ResumenPage() {
       {/* TAB: EDITAR — edición post-partido (Fase 2) */}
       {tab === "editar" && (
         <EditorEventos partido={partido} partesJugadas={partesJugadas}
-          editarEvento={editarEvento} borrarEvento={borrarEvento} anadirEvento={anadirEvento} />
+          editarEvento={editarEvento} borrarEvento={borrarEvento} anadirEvento={anadirEvento}
+          recalcularMinutos={recalcularMinutos} setMinutosJugador={setMinutosJugador} />
       )}
 
       {/* FOOTER — acciones */}

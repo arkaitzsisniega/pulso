@@ -7,7 +7,7 @@
  * el NO-doble-conteo del par gol+penalti enlazado y la atribución al portero.
  */
 import type { Partido, Evento, ParteId } from "./db";
-import { reconstruirAgregados } from "./reconstruir.ts";
+import { reconstruirAgregados, recomputarMinutos } from "./reconstruir.ts";
 
 const esPortero = (n: string) => n === "HERRERO";
 
@@ -91,5 +91,21 @@ const p6 = r.eventos.find((e) => e.id === "p6")!;
 check("snapshot g6 (pre-gol)", g6.marcador, { inter: 1, rival: 1 });
 check("snapshot p6 = snapshot g6", p6.marcador, { inter: 1, rival: 1 });
 
-if (fallos === 0) { console.log("\n✅ TODO OK (12 checks)"); }
+// ── Test recomputarMinutos (opción D) ──────────────────────────────────────
+// 2×20' (1200s/parte). Pista inicial HERRERO,A,B,C,D. Cambio 1T@600: sale A, entra E.
+// → A juega 0-600 (600); E entra y sigue toda la 2ª parte; B/C/D/HERRERO completos.
+const pMin = base([
+  ev({ tipo: "cambio", parte: "1T", segundosParte: 600, sale: "A", entra: "E" } as any),
+]);
+const tm = recomputarMinutos(pMin);
+console.log("\nTest recomputarMinutos:");
+check("A total = 600 (sale al min 10)", tm["A"]?.totalSegundos, 600);
+check("E total = 1800 (entra min 10 + toda la 2ª)", tm["E"]?.totalSegundos, 1800);
+check("B total = 2400 (completo)", tm["B"]?.totalSegundos, 2400);
+check("HERRERO total = 2400", tm["HERRERO"]?.totalSegundos, 2400);
+check("A en 2T = 0", tm["A"]?.porParte["2T"], 0);
+check("E en 1T = 600", tm["E"]?.porParte["1T"], 600);
+check("E en 2T = 1200", tm["E"]?.porParte["2T"], 1200);
+
+if (fallos === 0) { console.log("\n✅ TODO OK (19 checks)"); }
 else { console.error(`\n❌ ${fallos} fallo(s)`); process.exit(1); }
