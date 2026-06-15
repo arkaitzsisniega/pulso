@@ -257,3 +257,67 @@ function aplicarEfecto(
     // "roja" no tiene efecto de conteo (espejo de registrarEvento).
   }
 }
+
+/**
+ * Recálculo APROXIMADO de los minutos por jugador (opción D de la edición
+ * post-partido). Reparte el tiempo de cada parte entre quienes estaban en pista,
+ * usando la pista inicial + los eventos `cambio` (ordenados) como fronteras.
+ *
+ * Es una APROXIMACIÓN: asume que el reloj corrió de forma continua en cada parte
+ * (ignora pausas y tiempos muertos) y que cada parte duró `duracionParte`. Sirve
+ * como punto de partida tras editar sustituciones; el usuario puede afinar los
+ * minutos a mano (campo editable en el editor). NO toca los contadores ni el
+ * marcador (eso es reconstruirAgregados).
+ *
+ * Devuelve un nuevo mapa `tiempos`. Como el partido está finalizado, los campos
+ * de seguimiento en vivo (turnoStart, segDescansoActual…) quedan a null/0.
+ */
+export function recomputarMinutos(partido: Partido): Partido["tiempos"] {
+  const cfg = partido.config;
+  const partes: ParteId[] = ["1T", "2T", "PR1", "PR2"];
+  const tiempos: Partido["tiempos"] = {};
+  const init = (n: string) => {
+    if (!n || tiempos[n]) return;
+    tiempos[n] = {
+      nombre: n, totalSegundos: 0,
+      porParte: { "1T": 0, "2T": 0, PR1: 0, PR2: 0 },
+      segTurnoActual: null, turnoStart: null, ultimaSalida: null,
+      segDescansoActual: null, descansoStart: null, segTurnoUltimo: null,
+    };
+  };
+  (cfg?.convocados ?? []).forEach(init);
+  if (!cfg) return tiempos;
+
+  let enPista = [cfg.pista_inicial.portero, cfg.pista_inicial.pista1,
+    cfg.pista_inicial.pista2, cfg.pista_inicial.pista3, cfg.pista_inicial.pista4].filter(Boolean);
+  enPista.forEach(init);
+
+  for (const p of partes) {
+    const Tp = cfg.duracionParte[p] ?? 0;
+    if (Tp <= 0) continue;
+    const cambios = partido.eventos
+      .filter((e) => e.tipo === "cambio" && e.parte === p)
+      .sort((a, b) => (a.segundosParte || 0) - (b.segundosParte || 0)) as Array<Evento & { tipo: "cambio" }>;
+
+    let cursor = 0;
+    const acumula = (hasta: number) => {
+      const fin = Math.min(Math.max(hasta, 0), Tp);
+      const dt = fin - cursor;
+      if (dt > 0) { for (const j of enPista) { init(j); tiempos[j].porParte[p] += dt; } cursor = fin; }
+    };
+
+    for (const c of cambios) {
+      acumula(c.segundosParte || 0);
+      init(c.entra); init(c.sale);
+      if (c.entra === "") enPista = enPista.filter((n) => n !== c.sale);
+      else if (c.sale === "") enPista = [...enPista, c.entra];
+      else enPista = enPista.map((n) => (n === c.sale ? c.entra : n));
+    }
+    acumula(Tp);
+  }
+
+  for (const n of Object.keys(tiempos)) {
+    tiempos[n].totalSegundos = partes.reduce((s, p) => s + tiempos[n].porParte[p], 0);
+  }
+  return tiempos;
+}

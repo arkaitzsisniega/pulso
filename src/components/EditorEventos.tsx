@@ -60,10 +60,14 @@ export function EditorEventos(props: {
   editarEvento: (id: string, cambios: Partial<Evento>) => void;
   borrarEvento: (id: string) => void;
   anadirEvento: (datos: Omit<Evento, "id" | "segundosPartido" | "timestampReal" | "marcador">) => void;
+  recalcularMinutos: () => void;
+  setMinutosJugador: (nombre: string, porParte: Record<ParteId, number>) => void;
 }) {
   const { partido, partesJugadas } = props;
   const rival = partido.config?.rival ?? "RIVAL";
   const partes = partesJugadas.length ? partesJugadas : (["1T", "2T"] as ParteId[]);
+  const convocados = partido.config?.convocados ?? [];
+  const [recalcKey, setRecalcKey] = useState(0);
 
   const [draft, setDraft] = useState<Draft | null>(null);   // edición/añadido en curso
   const [esNuevo, setEsNuevo] = useState(false);
@@ -199,6 +203,29 @@ export function EditorEventos(props: {
         ))}
       </div>
 
+      {/* MINUTOS POR JUGADOR (opción D: recálculo aprox. + edición a mano) */}
+      <div className="bg-zinc-900 rounded-xl p-4 mt-3">
+        <div className="flex items-center justify-between mb-1 gap-2">
+          <h3 className="text-lg font-bold">{t("ed_min_titulo")}</h3>
+          <button onClick={() => { props.recalcularMinutos(); setRecalcKey((k) => k + 1); }}
+            className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-semibold whitespace-nowrap">
+            {t("ed_min_recalcular")}
+          </button>
+        </div>
+        <p className="text-xs text-zinc-500 mb-3">{t("ed_min_nota")}</p>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-[11px] text-zinc-500 px-1">
+            <div className="flex-1">{t("ed_jugador")}</div>
+            {partes.map((p) => <div key={p} className="w-14 text-center">{p}</div>)}
+            <div className="w-14 text-center">{t("ed_min_total")}</div>
+          </div>
+          {convocados.map((n) => (
+            <FilaMinutos key={n + ":" + recalcKey} nombre={n} partes={partes}
+              porParte={partido.tiempos[n]?.porParte} onCommit={(pp) => props.setMinutosJugador(n, pp)} />
+          ))}
+        </div>
+      </div>
+
       {/* MODAL EDITAR / AÑADIR */}
       {draft && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-3"
@@ -331,6 +358,38 @@ export function EditorEventos(props: {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Fila editable de minutos de un jugador (mm:ss por parte + total). El estado
+ *  local arranca de los props y se confirma al salir del campo (onBlur). Se
+ *  remonta (key con recalcKey) cuando se pulsa "Recalcular" para reflejar los
+ *  nuevos valores. */
+function FilaMinutos(props: {
+  nombre: string;
+  partes: ParteId[];
+  porParte?: Record<ParteId, number>;
+  onCommit: (porParte: Record<ParteId, number>) => void;
+}) {
+  const inicial: Record<string, string> = {};
+  for (const p of props.partes) inicial[p] = formatMMSS(props.porParte?.[p] ?? 0);
+  const [val, setVal] = useState<Record<string, string>>(inicial);
+  const total = props.partes.reduce((s, p) => s + mmssASeg(val[p] ?? "0"), 0);
+  const commit = () => {
+    const pp: Record<ParteId, number> = { "1T": 0, "2T": 0, PR1: 0, PR2: 0 };
+    for (const p of props.partes) pp[p] = mmssASeg(val[p] ?? "0");
+    props.onCommit(pp);
+  };
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 text-sm truncate">{props.nombre}</div>
+      {props.partes.map((p) => (
+        <input key={p} value={val[p] ?? "0:00"} inputMode="numeric"
+          onChange={(e) => setVal((v) => ({ ...v, [p]: e.target.value }))} onBlur={commit}
+          className="w-14 bg-zinc-950 border border-zinc-700 rounded px-1 py-1 text-center text-sm tabular-nums" />
+      ))}
+      <div className="w-14 text-center text-sm tabular-nums text-zinc-400">{formatMMSS(total)}</div>
     </div>
   );
 }

@@ -42,7 +42,7 @@ import {
 } from "./db";
 import { uid } from "./utils";
 import { ROSTER } from "./clientes";
-import { reconstruirAgregados } from "./reconstruir";
+import { reconstruirAgregados, recomputarMinutos } from "./reconstruir";
 
 const ID_PARTIDO = "current";
 const TICK_MS = 250;
@@ -1045,6 +1045,32 @@ export function usePartido() {
     });
   }
 
+  /** Recalcula (aprox.) los minutos por jugador desde la pista inicial + los
+   *  cambios (opción D). Ignora pausas; el usuario puede afinar con setMinutosJugador. */
+  function recalcularMinutos() {
+    setPartido((prev) => ({ ...prev, tiempos: recomputarMinutos(prev) }));
+  }
+
+  /** Fija a mano los minutos (por parte, en segundos) de un jugador. Recalcula el total. */
+  function setMinutosJugador(nombre: string, porParte: Record<ParteId, number>) {
+    setPartido((prev) => {
+      const orden: ParteId[] = ["1T", "2T", "PR1", "PR2"];
+      const total = orden.reduce((s, p) => s + Math.max(0, porParte[p] ?? 0), 0);
+      const t = prev.tiempos[nombre] ?? {
+        nombre, totalSegundos: 0, porParte: { "1T": 0, "2T": 0, PR1: 0, PR2: 0 },
+        segTurnoActual: null, turnoStart: null, ultimaSalida: null,
+        segDescansoActual: null, descansoStart: null, segTurnoUltimo: null,
+      };
+      return {
+        ...prev,
+        tiempos: {
+          ...prev.tiempos,
+          [nombre]: { ...t, porParte: { ...porParte }, totalSegundos: total, segTurnoActual: null, turnoStart: null },
+        },
+      };
+    });
+  }
+
   function reset() {
     setPartido(partidoVacio(ID_PARTIDO));
   }
@@ -1244,7 +1270,7 @@ export function usePartido() {
     segundosEnParte, segundosRestantesParte, duracionParteActual,
     iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual, reset,
-    editarEvento, borrarEvento, anadirEvento,
+    editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte,
   };
