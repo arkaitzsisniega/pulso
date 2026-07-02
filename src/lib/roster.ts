@@ -1,6 +1,8 @@
 /**
  * Roster oficial del Inter (canónicos según JUGADORES_ROSTER del Sheet).
- * Sincronizado a 12/05/2026 — JUGADOR, JUGADOR, JUGADOR (sin J. ni Gonza).
+ * Actualizado a la plantilla 26/27 (25/06/2026): altas JUGADOR, JUGADOR
+ * (Jugador), JUGADOR, JUGADOR (Jugador), JUGADOR; bajas JUGADOR, JUGADOR,
+ * JUGADOR, JUGADOR, JUGADOR, JUGADOR, JUGADOR.
  *
  * Aquí solo viven los DATOS crudos (ROSTER_REAL y ROSTER_DEMO). Qué roster usa
  * cada build lo decide `clientes.ts` según NEXT_PUBLIC_CLIENTE: "inter" → reales,
@@ -32,17 +34,15 @@ export const ROSTER_REAL: Jugador[] = [
   { dorsal: "10", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "11", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "17", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "18", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "20", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "14", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "12", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "39", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "4", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
   // Portero filial
   { dorsal: "28", nombre: "JUGADOR", posicion: "PORTERO", equipo: "FILIAL" },
   // Campo filial
-  { dorsal: "14", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "15", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "22", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "25", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "31", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
