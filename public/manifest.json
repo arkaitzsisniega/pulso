@@ -1,7 +1,7 @@
 {
-  "name": "Inter Crono - Movistar Inter FS",
+  "name": "Inter Crono - Inter JP Financial",
   "short_name": "Inter Crono",
-  "description": "Crono de partido en directo para el cuerpo técnico de Movistar Inter FS",
+  "description": "Crono de partido en directo para el cuerpo técnico de Inter JP Financial",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -29,7 +29,7 @@ export interface ConfigCliente {
   id: string;
   /** Nombre corto para marcador y cabeceras (p.ej. "INTER", "PULSO"). */
   nombreCorto: string;
-  /** Nombre largo del club (p.ej. "Movistar Inter FS", "CD Pulso"). */
+  /** Nombre largo del club (p.ej. "Inter JP Financial", "CD Pulso"). */
   nombreLargo: string;
   /** Marca para los títulos de Home/Login (p.ej. "Inter FS", "CD Pulso"). */
   marcaTitulo: string;
@@ -59,7 +59,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
   inter: {
     id: "inter",
     nombreCorto: "INTER",
-    nombreLargo: "Movistar Inter FS",
+    nombreLargo: "Inter JP Financial",
     marcaTitulo: "Inter FS",
     appTitulo: "Inter Crono",
     roster: ROSTER_REAL,
