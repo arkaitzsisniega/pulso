@@ -18,7 +18,7 @@
  *   • El nombre del equipo NO se traduce: es el NOMBRE PROPIO del club y viene
  *     de la config por cliente (CLIENTE.marcaTitulo / nombreLargo / nombreCorto),
  *     inyectado como parámetro {marca}/{club}/{corto} en las claves de título.
- *     Para el Inter da "Inter FS" / "Movistar Inter FS" / "INTER" (texto idéntico
+ *     Para el Inter da "Inter FS" / "Inter JP Financial" / "INTER" (texto idéntico
  *     al de antes); la demo da "CD Pulso" / "PULSO". El rival viene de cfg.rival.
  *
  * ═══════════════════════════════════════════════════════════════════════════
