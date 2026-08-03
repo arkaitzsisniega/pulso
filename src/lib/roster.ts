@@ -41,6 +41,7 @@ export const ROSTER_REAL: Jugador[] = [
   { dorsal: "99", nombre: "MARVIN", posicion: "CAMPO", equipo: "PRIMER" },
   // Portero filial
   { dorsal: "28", nombre: "OSCAR", posicion: "PORTERO", equipo: "FILIAL" },
+  { dorsal: "", nombre: "ANDRES", posicion: "PORTERO", equipo: "FILIAL" },
   // Campo filial
   { dorsal: "15", nombre: "JAIME", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "", nombre: "GABRI", posicion: "CAMPO", equipo: "FILIAL" },
