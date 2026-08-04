@@ -52,8 +52,10 @@ export const ROSTER_REAL: Jugador[] = [
 // Roster DEMO — nombres FALSOS (mismo mapeo que dashboard/bot: HERRERO→REYES,
 // GARCIA→SERRANO, JAVI→CANO…). Lo selecciona clientes.ts con NEXT_PUBLIC_CLIENTE=pulso.
 export const ROSTER_DEMO: Jugador[] = [
+  // Porteros primer equipo
   { dorsal: "1", nombre: "REYES", posicion: "PORTERO", equipo: "PRIMER" },
   { dorsal: "27", nombre: "SERRANO", posicion: "PORTERO", equipo: "PRIMER" },
+  // Campo primer equipo
   { dorsal: "2", nombre: "PRIETO", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "5", nombre: "IBAÑEZ", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "6", nombre: "SOTO", posicion: "CAMPO", equipo: "PRIMER" },
@@ -62,18 +64,19 @@ export const ROSTER_DEMO: Jugador[] = [
   { dorsal: "10", nombre: "CANO", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "11", nombre: "DUARTE", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "17", nombre: "NEGRO", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "18", nombre: "VIDAL", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "20", nombre: "SOLER", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "14", nombre: "CALVO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "12", nombre: "SUAREZ", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "39", nombre: "ORTEGA", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "4", nombre: "MARIN", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "99", nombre: "LEON", posicion: "CAMPO", equipo: "PRIMER" },
+  // Portero filial
   { dorsal: "28", nombre: "PASTOR", posicion: "PORTERO", equipo: "FILIAL" },
-  { dorsal: "14", nombre: "BRAVO", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "", nombre: "MENDEZ", posicion: "PORTERO", equipo: "FILIAL" },
+  // Campo filial
   { dorsal: "15", nombre: "LOZANO", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "22", nombre: "GIL", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "25", nombre: "GALLEGO", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "31", nombre: "CAMPOS", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "VEGA", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "", nombre: "MOLINA", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "ROMAN", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "", nombre: "TORRES", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "", nombre: "VEGA", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
 // El roster ACTIVO (ROSTER / PORTEROS / CAMPO) lo expone `@/lib/clientes` según
