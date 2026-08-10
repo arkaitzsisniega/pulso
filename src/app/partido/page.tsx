@@ -187,6 +187,18 @@ export default function PartidoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partido.enPista]);
 
+  // OFFLINE: precargar la pantalla de Resumen (y la home) mientras haya conexión,
+  // para que el botón "Resumen" funcione también SIN internet (en el pabellón).
+  // Antes fallaba con "couldn't load, try again" al navegar a una ruta cuyos
+  // recursos aún no estaban en la caché del service worker. Con el prefetch, el
+  // SW cachea /resumen en cuanto entras al partido → luego funciona offline.
+  useEffect(() => {
+    try {
+      router.prefetch("/resumen");
+      router.prefetch("/");
+    } catch { /* prefetch best-effort */ }
+  }, [router]);
+
   // Helper central para EXPULSAR a un jugador INTER: registra evento
   // roja + si el jugador está en pista, lo saca automáticamente
   // dejando un slot vacío (inferioridad numérica). Si está en banquillo,
@@ -589,7 +601,9 @@ export default function PartidoPage() {
           className="py-4 bg-green-800 hover:bg-green-700 rounded-lg text-lg font-bold">
           {t("btn_recuperacion_equipo")}
         </button>
-        <button onClick={() => registrarAccionIndividual(JUGADOR_EQUIPO, "pnf")}
+        {/* Pérdida de EQUIPO = SIEMPRE forzada (pf). La no forzada siempre es
+            de un jugador concreto (decisión de Arkaitz 10/8). */}
+        <button onClick={() => registrarAccionIndividual(JUGADOR_EQUIPO, "pf")}
           className="py-4 bg-rose-900 hover:bg-rose-800 rounded-lg text-lg font-bold">
           {t("btn_perdida_equipo")}
         </button>
@@ -824,6 +838,7 @@ export default function PartidoPage() {
 
       {modalGol && (
         <ModalGol
+          directo={directo}
           enPista={enPistaActivos}
           rivalNombre={cfg.rival}
           cfg={cfg}
@@ -1563,6 +1578,7 @@ const ACCIONES_GOL = [
 ];
 
 function ModalGol(props: {
+  directo: boolean;
   enPista: string[]; rivalNombre: string;
   cfg: ConfigPartido; parteActual: ParteId;
   onCerrar: () => void;
@@ -1595,6 +1611,24 @@ function ModalGol(props: {
           penaltiTipo: (accion === "10m" ? "diezm" : "penalti") as "penalti" | "diezm",
           penaltiPorteroRival: porteroRival || undefined,
         }
+      : undefined;
+    props.onConfirmar(ev, extra);
+  };
+
+  // DIRECTO: al elegir la acción, guardar el gol YA, sin pedir zona de campo ni
+  // de portería (regla: en directo, cero zonas en nada). Usa `acc` directamente
+  // para no depender del setState asíncrono. Goleador/asistente ya están fijados.
+  const aplicarDirecto = (acc: string) => {
+    const ev: any = { tipo: "gol", equipo };
+    if (equipo === "INTER") {
+      ev.goleador = goleador;
+      if (asistente && asistente !== "OMIT") ev.asistente = asistente;
+      ev.cuarteto = props.enPista.filter((n) => n !== goleador);
+    }
+    ev.accion = acc;
+    const esPenOAcc = acc === "Penalti" || acc === "10m";
+    const extra = esPenOAcc
+      ? { penaltiTipo: (acc === "10m" ? "diezm" : "penalti") as "penalti" | "diezm", penaltiPorteroRival: undefined }
       : undefined;
     props.onConfirmar(ev, extra);
   };
@@ -1643,7 +1677,10 @@ function ModalGol(props: {
         <Paso n={equipo === "RIVAL" ? 2 : 4} titulo={t("mg_accion_gol")} activo={!accion}>
           <div className="flex flex-wrap gap-2">
             {ACCIONES_GOL.map((a) => (
-              <button key={a} onClick={() => setAccion(a)}
+              <button key={a} onClick={() => {
+                  if (props.directo) { aplicarDirecto(a); return; }
+                  setAccion(a);
+                }}
                 className={`px-3 py-2 rounded text-sm ${
                   accion === a ? "bg-emerald-700" : "bg-zinc-800"
                 }`}>{labelAccionGol(a)}</button>
@@ -2426,9 +2463,9 @@ function ModalCambioParte(props: {
     .filter((x): x is NonNullable<typeof x> => x !== null && (x.totalParte > 0 || x.total > 0))
     .sort((a, b) => b.totalParte - a.totalParte);
 
-  // Totales de equipo (acumulados a TODO el partido, no solo a esta parte).
-  // Incluye #EQUIPO (recuperación/pérdida colectiva) además de cada jugador.
-  const tot = [...cfg.convocados, JUGADOR_EQUIPO].reduce((acc, n) => {
+  // Totales por JUGADOR (acumulados a TODO el partido). Las acciones colectivas
+  // de equipo (#EQUIPO) van aparte, más abajo (recEquipo / perdEquipo).
+  const tot = cfg.convocados.reduce((acc, n) => {
     const c = partido.acciones.porJugador[n];
     if (!c) return acc;
     return {
@@ -2444,6 +2481,11 @@ function ModalCambioParte(props: {
       bdp: acc.bdp + (c.bdp || 0),
     };
   }, { dpp:0,dpa:0,dpf:0,dpb:0,pf:0,pnf:0,robos:0,cortes:0,bdg:0,bdp:0 });
+  // Acciones colectivas de equipo (aparte de los jugadores): recuperación de
+  // equipo = robos; pérdida de equipo = pf (forzada).
+  const _cEq = partido.acciones.porJugador[JUGADOR_EQUIPO];
+  const recEquipo = _cEq?.robos ?? 0;
+  const perdEquipo = _cEq?.pf ?? 0;
 
   const totalDispINTER = tot.dpp + tot.dpa + tot.dpf + tot.dpb;
   const r = partido.disparosRival;
@@ -2547,16 +2589,18 @@ function ModalCambioParte(props: {
           <div className="text-red-300 font-bold mb-2 text-base">{t("mcp_perdidas")}</div>
           <div className="flex justify-between"><span>{t("mcp_forzada")}</span><strong>{tot.pf}</strong></div>
           <div className="flex justify-between"><span>{t("mcp_no_forzada")}</span><strong>{tot.pnf}</strong></div>
+          <div className="flex justify-between text-red-300/80"><span>{t("res_de_equipo")}</span><strong>{perdEquipo}</strong></div>
           <div className="border-t border-red-700/40 mt-2 pt-2 flex justify-between text-red-200 text-base">
-            <span>{t("mcp_total_lbl")}</span><strong>{tot.pf + tot.pnf}</strong>
+            <span>{t("mcp_total_lbl")}</span><strong>{tot.pf + tot.pnf + perdEquipo}</strong>
           </div>
         </div>
         <div className="bg-green-900/20 rounded-lg p-3 border border-green-700/20">
           <div className="text-green-300 font-bold mb-2 text-base">{t("mcp_recuperaciones")}</div>
           <div className="flex justify-between"><span>{t("mcp_robos")}</span><strong>{tot.robos}</strong></div>
           <div className="flex justify-between"><span>{t("mcp_cortes")}</span><strong>{tot.cortes}</strong></div>
+          <div className="flex justify-between text-green-300/80"><span>{t("res_de_equipo")}</span><strong>{recEquipo}</strong></div>
           <div className="border-t border-green-700/40 mt-2 pt-2 flex justify-between text-green-200 text-base">
-            <span>{t("mcp_total_lbl")}</span><strong>{tot.robos + tot.cortes}</strong>
+            <span>{t("mcp_total_lbl")}</span><strong>{tot.robos + tot.cortes + recEquipo}</strong>
           </div>
         </div>
         <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-700/20">

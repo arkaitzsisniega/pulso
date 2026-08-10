@@ -210,25 +210,24 @@ export default function ResumenPage() {
     return { nombre, c, r, esPortero };
   });
 
-  // Totales del equipo (para tab General — bloque principal). Incluye, además
-  // de cada jugador, las acciones COLECTIVAS del pseudo-jugador #EQUIPO
-  // (recuperación / pérdida de equipo), para que sumen a robos/pnf del equipo.
-  const _contadoresTotales = [
-    ...filasIndiv.map((f) => f.c),
-    partido.acciones.porJugador[JUGADOR_EQUIPO] ?? null,
-  ];
-  const totalesEquipo = _contadoresTotales.reduce((acc, c) => ({
-    dpp: acc.dpp + (c?.dpp || 0),
-    dpa: acc.dpa + (c?.dpa || 0),
-    dpf: acc.dpf + (c?.dpf || 0),
-    dpb: acc.dpb + (c?.dpb || 0),
-    pf:  acc.pf  + (c?.pf  || 0),
-    pnf: acc.pnf + (c?.pnf || 0),
-    robos:  acc.robos  + (c?.robos  || 0),
-    cortes: acc.cortes + (c?.cortes || 0),
-    bdg: acc.bdg + (c?.bdg || 0),
-    bdp: acc.bdp + (c?.bdp || 0),
+  // Totales del equipo por JUGADOR (sin las acciones colectivas #EQUIPO).
+  const totalesEquipo = filasIndiv.reduce((acc, f) => ({
+    dpp: acc.dpp + (f.c?.dpp || 0),
+    dpa: acc.dpa + (f.c?.dpa || 0),
+    dpf: acc.dpf + (f.c?.dpf || 0),
+    dpb: acc.dpb + (f.c?.dpb || 0),
+    pf:  acc.pf  + (f.c?.pf  || 0),
+    pnf: acc.pnf + (f.c?.pnf || 0),
+    robos:  acc.robos  + (f.c?.robos  || 0),
+    cortes: acc.cortes + (f.c?.cortes || 0),
+    bdg: acc.bdg + (f.c?.bdg || 0),
+    bdp: acc.bdp + (f.c?.bdp || 0),
   }), { dpp:0,dpa:0,dpf:0,dpb:0,pf:0,pnf:0,robos:0,cortes:0,bdg:0,bdp:0 });
+  // Acciones COLECTIVAS de equipo (pseudo-jugador #EQUIPO), mostradas APARTE:
+  // recuperación de equipo = robos; pérdida de equipo = pf (forzada).
+  const _cEquipo = partido.acciones.porJugador[JUGADOR_EQUIPO];
+  const recEquipo = _cEquipo?.robos ?? 0;
+  const perdEquipo = _cEquipo?.pf ?? 0;
 
   // Marcador final (incluye tanda si la hubo)
   const tanda = partido.tanda;
@@ -340,8 +339,9 @@ export default function ResumenPage() {
                 <div className="text-lg space-y-2">
                   <div className="flex justify-between"><span>{t("res_forzada")}</span><strong>{totalesEquipo.pf}</strong></div>
                   <div className="flex justify-between"><span>{t("res_no_forzada")}</span><strong>{totalesEquipo.pnf}</strong></div>
+                  <div className="flex justify-between text-red-300/90"><span>{t("res_de_equipo")}</span><strong>{perdEquipo}</strong></div>
                   <div className="border-t border-red-700/50 mt-3 pt-3 flex justify-between text-red-200 text-xl font-bold">
-                    <span>{t("res_total")}</span><strong>{totalesEquipo.pf+totalesEquipo.pnf}</strong>
+                    <span>{t("res_total")}</span><strong>{totalesEquipo.pf+totalesEquipo.pnf+perdEquipo}</strong>
                   </div>
                 </div>
               </div>
@@ -351,8 +351,9 @@ export default function ResumenPage() {
                 <div className="text-lg space-y-2">
                   <div className="flex justify-between"><span>{t("res_robos")}</span><strong>{totalesEquipo.robos}</strong></div>
                   <div className="flex justify-between"><span>{t("res_cortes")}</span><strong>{totalesEquipo.cortes}</strong></div>
+                  <div className="flex justify-between text-green-300/90"><span>{t("res_de_equipo")}</span><strong>{recEquipo}</strong></div>
                   <div className="border-t border-green-700/50 mt-3 pt-3 flex justify-between text-green-200 text-xl font-bold">
-                    <span>{t("res_total")}</span><strong>{totalesEquipo.robos+totalesEquipo.cortes}</strong>
+                    <span>{t("res_total")}</span><strong>{totalesEquipo.robos+totalesEquipo.cortes+recEquipo}</strong>
                   </div>
                 </div>
               </div>
