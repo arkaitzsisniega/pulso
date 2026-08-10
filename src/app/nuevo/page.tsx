@@ -37,6 +37,10 @@ export default function NuevoPartido() {
   // Hacia dónde ataca INTER en la 1ª parte (vista del banquillo).
   const [direccionInter1T, setDireccionInter1T] = useState<"izq" | "der">("der");
 
+  // Modo de captura: "directo" (por defecto, rápido, sin zonas) o "video"
+  // (revisión con la grabación, todo el detalle).
+  const [modo, setModo] = useState<"directo" | "video">("directo");
+
   // Al cambiar competición, aplicar preset (el usuario puede ajustar manualmente después).
   const onCompChange = (c: string) => {
     setCompeticion(c);
@@ -143,7 +147,7 @@ export default function NuevoPartido() {
         },
         permiteTanda,
         direccionInter1T,
-      });
+      }, modo);
       router.push("/partido");
     } catch (e) {
       console.error("Error al iniciar partido:", e);
@@ -155,6 +159,23 @@ export default function NuevoPartido() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
       <h1 className="text-3xl font-bold mb-6">{t("nuevo_titulo")}</h1>
+
+      {/* MODO DE CAPTURA — directo (por defecto) o vídeo. */}
+      <section className="mb-6">
+        <span className="text-sm text-zinc-400 mb-2 block">{t("nuevo_modo")}</span>
+        <div className="grid grid-cols-2 gap-3">
+          <button type="button" onClick={() => setModo("directo")}
+            className={`py-4 rounded-xl text-lg font-bold border-2 ${modo === "directo" ? "bg-red-800 border-red-400 text-white" : "bg-zinc-900 border-zinc-700 text-zinc-400"}`}>
+            🔴 {t("nuevo_modo_directo")}
+            <span className="block text-xs font-normal opacity-80">{t("nuevo_modo_directo_sub")}</span>
+          </button>
+          <button type="button" onClick={() => setModo("video")}
+            className={`py-4 rounded-xl text-lg font-bold border-2 ${modo === "video" ? "bg-sky-800 border-sky-400 text-white" : "bg-zinc-900 border-zinc-700 text-zinc-400"}`}>
+            🎥 {t("nuevo_modo_video")}
+            <span className="block text-xs font-normal opacity-80">{t("nuevo_modo_video_sub")}</span>
+          </button>
+        </div>
+      </section>
 
       {/* Cabecera */}
       <section className="grid grid-cols-2 gap-4 mb-6">
