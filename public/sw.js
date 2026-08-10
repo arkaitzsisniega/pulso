@@ -15,7 +15,7 @@
  * Es un SW escrito a mano a propósito: next-pwa 5.x no soporta Next 16 +
  * app router + output:export, y para una app estática esto es más robusto.
  */
-const CACHE = "inter-crono-v2";
+const CACHE = "inter-crono-v3";
 // Carpeta donde vive la app: "/arkaitz-2526/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 const APP_SHELL = [
@@ -26,13 +26,39 @@ const APP_SHELL = [
   `${BASE}/manifest.json`,
 ];
 
+// Precachea una página HTML Y todos los assets (_next JS/CSS) que referencia.
+// Así, cada pantalla (incluido el Resumen, al que se navega desde /partido)
+// funciona SIN conexión: antes solo se cacheaba el HTML, pero los chunks de JS
+// de esa ruta se pedían por red y offline fallaban ("couldn't load, try again").
+async function precachePaginaYAssets(cache, url) {
+  try {
+    const res = await fetch(url, { cache: "reload" });
+    if (!res || !res.ok) return;
+    await cache.put(url, res.clone());
+    const html = await res.text();
+    const urls = new Set();
+    const re = /(?:src|href)="([^"]+)"/g;
+    let m;
+    while ((m = re.exec(html))) {
+      const a = m[1];
+      if (a.includes("/_next/")) urls.add(a);
+    }
+    await Promise.allSettled([...urls].map((a) => cache.add(a).catch(() => {})));
+  } catch { /* best-effort */ }
+}
+
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE).then((cache) =>
+    caches.open(CACHE).then(async (cache) => {
+      // manifest aparte (no es HTML con assets).
+      await cache.add(`${BASE}/manifest.json`).catch(() => {});
       // allSettled: que un fallo puntual no aborte la instalación.
-      Promise.allSettled(APP_SHELL.map((u) => cache.add(u)))
-    )
+      await Promise.allSettled(
+        APP_SHELL.filter((u) => !u.endsWith("manifest.json"))
+          .map((u) => precachePaginaYAssets(cache, u))
+      );
+    })
   );
 });
 

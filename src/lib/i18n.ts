@@ -768,6 +768,7 @@ export const CATALOGO: Record<string, Entrada> = {
   res_no_forzada: { es: "No forzada", en: "Unforced", it: "Non forzata" },
   res_recuperaciones: { es: "✅ Recuperaciones", en: "✅ Recoveries", it: "✅ Recuperi" },
   res_robos: { es: "Robos", en: "Steals", it: "Recuperi palla" },
+  res_de_equipo: { es: "De equipo", en: "Team", it: "Di squadra" },
   res_cortes: { es: "Cortes", en: "Interceptions", it: "Intercetti" },
   res_divididos: { es: "⚖️ Balones divididos", en: "⚖️ Loose balls", it: "⚖️ Contrasti" },
   res_ganados: { es: "Ganados", en: "Won", it: "Vinti" },
