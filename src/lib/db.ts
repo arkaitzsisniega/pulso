@@ -7,6 +7,13 @@ import Dexie, { type Table } from "dexie";
 
 export type ParteId = "1T" | "2T" | "PR1" | "PR2";
 
+/** Pseudo-jugador para acciones COLECTIVAS de equipo (recuperación / pérdida
+ *  que NO se asignan a un jugador concreto, sino al trabajo del equipo).
+ *  Análogo al "#CT" (cuerpo técnico) usado en tarjetas. Nunca es un convocado
+ *  real → no aparece en plantilla, minutos ni tablas por-jugador; solo suma a
+ *  los totales de equipo de recuperaciones / pérdidas. */
+export const JUGADOR_EQUIPO = "#EQUIPO";
+
 export interface ConfigPartido {
   rival: string;
   fecha: string;             // YYYY-MM-DD
@@ -249,6 +256,15 @@ export interface Partido {
   /** Id estable del partido para Dexie. Por defecto "current". */
   id: string;
   estado: "configurando" | "en_curso" | "finalizado";
+  /** Modo de captura de estadísticas:
+   *   - "directo": partido EN VIVO, rápido — robos, cortes, pérdidas, faltas y
+   *     disparos solo registran QUE ocurrieron (sin zona del campo ni lado de
+   *     portería), porque no da tiempo.
+   *   - "video": revisión de la grabación — se captura TODO el detalle (lo del
+   *     directo + zona de campo + zona de portería).
+   *  Solo cambia qué pasos piden los modales; NO altera los agregados. Los
+   *  partidos antiguos sin este campo se tratan como "directo". */
+  modo?: "directo" | "video";
   config: ConfigPartido | null;
   cronometro: EstadoCronometro;
   /** Plantilla en pista actual + tiempos por jugador. */
@@ -293,6 +309,7 @@ export function partidoVacio(id = "current"): Partido {
   return {
     id,
     estado: "configurando",
+    modo: "directo",
     config: null,
     cronometro: {
       parteActual: "1T",
