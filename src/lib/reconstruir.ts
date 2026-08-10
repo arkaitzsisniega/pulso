@@ -213,6 +213,8 @@ function aplicarEfecto(
     }
     case "accion_individual": {
       bump(acciones, ev.jugador, ev.accion, 1);
+      // Conexión con pívot: el receptor (pívot) suma "recibePivot".
+      if (ev.accion === "conexPivot" && ev.receptor) bump(acciones, ev.receptor, "recibePivot", 1);
       break;
     }
     case "disparo": {

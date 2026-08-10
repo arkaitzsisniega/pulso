@@ -35,6 +35,7 @@ import {
   type ParteId,
   type ConfigPartido,
   type Evento,
+  type AccionIndTipo,
   type TiempoJugador,
   type ContadoresJugador,
   type ResultadoDisparo,
@@ -983,6 +984,9 @@ export function usePartido() {
         // acciones colectivas de equipo (jugador "#EQUIPO"). bumpContador
         // ya hace clamp a 0.
         next.acciones = bumpContador(next.acciones, ev.jugador, ev.accion, -1);
+        if (ev.accion === "conexPivot" && ev.receptor) {
+          next.acciones = bumpContador(next.acciones, ev.receptor, "recibePivot", -1);
+        }
       }
       return next;
     });
@@ -1006,8 +1010,9 @@ export function usePartido() {
    */
   function registrarAccionIndividual(
     jugador: string,
-    accion: "pf" | "pnf" | "robos" | "cortes" | "bdg" | "bdp",
+    accion: AccionIndTipo,
     zonaCampo?: string,
+    receptor?: string,   // solo para "conexPivot": el pívot que recibe
   ) {
     setPartido((prev) => {
       const ahora = Date.now();
@@ -1028,9 +1033,15 @@ export function usePartido() {
         marcador: { ...prev.marcador },
         jugador,
         accion,
+        ...(receptor ? { receptor } : {}),
         zonaCampo,
       };
-      const acciones = bumpContador(prev.acciones, jugador, accion, 1);
+      let acciones = bumpContador(prev.acciones, jugador, accion, 1);
+      // Conexión con pívot: además del pasador (conexPivot), el receptor suma
+      // "recibePivot". Puede no haber corte tras la conexión (evento aparte).
+      if (accion === "conexPivot" && receptor) {
+        acciones = bumpContador(acciones, receptor, "recibePivot", 1);
+      }
       return { ...prev, acciones, eventos: [...prev.eventos, evento] };
     });
   }

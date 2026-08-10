@@ -7,7 +7,7 @@ import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
 import { formatMMSS, colorTiempoPista, colorTiempoBanquillo } from "@/lib/utils";
 import { Campo } from "@/components/Campo";
 import { Porteria } from "@/components/Porteria";
-import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido } from "@/lib/db";
+import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo } from "@/lib/db";
 import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelResultadoDisparo, labelAccionGol } from "@/lib/i18n";
 
@@ -801,8 +801,8 @@ export default function PartidoPage() {
             incAccion(modalAccionInd.jugador, tipo, 1);
             setModalAccionInd(null);
           }}
-          onAccionConZona={(tipo, zona) => {
-            registrarAccionIndividual(modalAccionInd.jugador, tipo, zona);
+          onAccionConZona={(tipo, zona, receptor) => {
+            registrarAccionIndividual(modalAccionInd.jugador, tipo, zona, receptor);
             setModalAccionInd(null);
           }}
           onDisparo={(detalles) => {
@@ -1624,6 +1624,7 @@ function ModalGol(props: {
   const [accion, setAccion] = useState("");
   const [zonaCampo, setZonaCampo] = useState("");
   const [zonaPorteria, setZonaPorteria] = useState("");
+  const [zonaAsistencia, setZonaAsistencia] = useState("");
   const [porteroRival, setPorteroRival] = useState("");
 
   const esPenaltiOAccion = accion === "Penalti" || accion === "10m";
@@ -1636,6 +1637,7 @@ function ModalGol(props: {
       ev.cuarteto = props.enPista.filter((n) => n !== goleador);
     }
     if (accion) ev.accion = accion;
+    if (zonaAsistencia) ev.zonaAsistencia = zonaAsistencia;
     if (zonaCampo) ev.zonaCampo = zonaCampo;
     if (zp) ev.zonaPorteria = zp;
     if (porteroRival && equipo === "INTER") ev.portero = porteroRival;
@@ -1722,8 +1724,24 @@ function ModalGol(props: {
         </Paso>
       )}
 
-      {accion && !esPenaltiOAccion && (
-        <Paso n={5} titulo={t("mg_zona_tira")} activo={!zonaCampo}>
+      {/* Zona de la ASISTENCIA (desde dónde el pase de gol) — solo gol INTER con
+          asistente, antes del remate. */}
+      {accion && !esPenaltiOAccion && equipo === "INTER" && asistente && asistente !== "OMIT" && !zonaAsistencia && (
+        <Paso n={5} titulo={t("mg_zona_asistencia")} activo>
+          <Campo seleccionada={zonaAsistencia} onSelect={setZonaAsistencia}
+            direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
+            nombreAtacante={NOMBRE_CORTO_TC} />
+          <div className="mt-1 text-right">
+            <button onClick={() => setZonaAsistencia("__skip__")}
+              className="px-3 py-1 bg-zinc-700 rounded text-xs">{t("saltar_zona_campo_corto")}</button>
+          </div>
+        </Paso>
+      )}
+      {/* Zona del REMATE (desde dónde se remató). Tras la asistencia, o directo
+          si no hay asistente / es gol del rival. */}
+      {accion && !esPenaltiOAccion
+        && (!(equipo === "INTER" && asistente && asistente !== "OMIT") || zonaAsistencia) && (
+        <Paso n={6} titulo={t("mg_zona_tira")} activo={!zonaCampo}>
           <Campo seleccionada={zonaCampo} onSelect={setZonaCampo}
             direccion={equipo ? direccionAtaque(props.parteActual, equipo, props.cfg) : "der"}
             nombreAtacante={equipo === "INTER" ? NOMBRE_CORTO_TC : props.rivalNombre} />
@@ -2028,37 +2046,56 @@ function ModalAccionIndividual(props: {
   onAmarilla: () => void;
   onRoja: () => void;
   onFalta: () => void;
-  /** TODAS las acciones individuales con mapa: PF/PNF/Robo/Corte/BDG/BDP. */
-  onAccionConZona: (tipo: AccionConZonaTipo, zonaCampo?: string) => void;
+  /** Acciones individuales con zona (básicas + stats de vídeo). `receptor` solo
+   *  para conexPivot (el pívot que recibe). */
+  onAccionConZona: (tipo: AccionIndTipo, zonaCampo?: string, receptor?: string) => void;
   onContador: (tipo: keyof ContadoresJugador) => void;
   onDisparo: (detalles: { resultado: ResultadoDisparo; zonaCampo: string; zonaPorteria: string }) => void;
 }) {
-  const [paso, setPaso] = useState<"menu" | "accionZona" | "disparoTipo" | "disparoCampo" | "disparoPorteria">("menu");
+  const [paso, setPaso] = useState<"menu" | "accionZona" | "disparoTipo" | "disparoCampo" | "disparoPorteria" | "videoMenu" | "videoResultado" | "videoConexion">("menu");
   const [disparoRes, setDisparoRes] = useState<ResultadoDisparo>("PUERTA");
   const [zonaCampo, setZonaCampo] = useState("");
-  const [accionPendiente, setAccionPendiente] = useState<AccionConZonaTipo | null>(null);
+  const [accionPendiente, setAccionPendiente] = useState<AccionIndTipo | null>(null);
+  const [receptorPendiente, setReceptorPendiente] = useState<string>("");
+  const [videoGrupo, setVideoGrupo] = useState<string>("");
 
-  // Mapeo amigable acción → etiqueta + emoji (traducido al idioma activo).
-  const LBL_ACCION: Record<AccionConZonaTipo, string> = {
-    pf:     t("lblacc_pf"),
-    pnf:    t("lblacc_pnf"),
-    robos:  t("lblacc_robos"),
-    cortes: t("lblacc_cortes"),
-    bdg:    t("lblacc_bdg"),
-    bdp:    t("lblacc_bdp"),
+  const esPortero = ROSTER.find((j) => j.nombre === props.jugador)?.posicion === "PORTERO";
+
+  // Etiqueta de cada subtipo (título del paso de zona).
+  const LBL_ACCION: Record<string, string> = {
+    pf: t("lblacc_pf"), pnf: t("lblacc_pnf"), robos: t("lblacc_robos"),
+    cortes: t("lblacc_cortes"), bdg: t("lblacc_bdg"), bdp: t("lblacc_bdp"),
+    duelC_g: `${t("vid_duelC")} ✅`, duelC_p: `${t("vid_duelC")} ❌`,
+    duelP_g: `${t("vid_duelP")} ✅`, duelP_p: `${t("vid_duelP")} ❌`,
+    unoAtq_g: `${t("vid_unoAtq")} ✅`, unoAtq_p: `${t("vid_unoAtq")} ❌`,
+    unoDef_g: `${t("vid_unoDef")} ✅`, unoDef_p: `${t("vid_unoDef")} ❌`,
+    ultCob: t("vid_ultCob"), corteConex: t("vid_corteConex"), conexPivot: t("vid_conexPivot"),
+    saqueB: `${t("vid_saque")} ✅`, saqueM: `${t("vid_saque")} ❌`, achique: t("vid_achique"),
+    cobBR: `${t("vid_cob")} B+R`, cobBN: `${t("vid_cob")} B`, cobMR: `${t("vid_cob")} M+R`, cobMN: `${t("vid_cob")} M`,
+    paseB: `${t("vid_pase")} ✅`, paseM: `${t("vid_pase")} ❌`,
   };
 
-  // Pulsar una acción → ir a la pantalla del mapa para elegir zona.
-  // Después se aplica la acción + zona.
-  const irAAccionZona = (a: AccionConZonaTipo) => {
-    if (props.directo) {
-      // DIRECTO: guardar la acción sin pedir la zona del campo (el padre
-      // registra y cierra el modal). Solo cuenta que ocurrió.
-      props.onAccionConZona(a, undefined);
-      return;
-    }
+  // Grupos de stat de vídeo con "resultado" (2 o 4 opciones) → subtipo final.
+  const GRUPOS: Record<string, { label: string; ops: [AccionIndTipo, string][] }> = {
+    duelC: { label: t("vid_duelC"), ops: [["duelC_g", t("vid_ganado")], ["duelC_p", t("vid_perdido")]] },
+    duelP: { label: t("vid_duelP"), ops: [["duelP_g", t("vid_ganado")], ["duelP_p", t("vid_perdido")]] },
+    unoAtq: { label: t("vid_unoAtq"), ops: [["unoAtq_g", t("vid_ganado")], ["unoAtq_p", t("vid_perdido")]] },
+    unoDef: { label: t("vid_unoDef"), ops: [["unoDef_g", t("vid_ganado")], ["unoDef_p", t("vid_perdido")]] },
+    saque: { label: t("vid_saque"), ops: [["saqueB", t("vid_bueno")], ["saqueM", t("vid_malo")]] },
+    pase: { label: t("vid_pase"), ops: [["paseB", t("vid_bueno")], ["paseM", t("vid_malo")]] },
+    cob: { label: t("vid_cob"), ops: [["cobBR", t("vid_cob_br")], ["cobBN", t("vid_cob_bn")], ["cobMR", t("vid_cob_mr")], ["cobMN", t("vid_cob_mn")]] },
+  };
+
+  // Ir a elegir la zona con un subtipo ya decidido (+ receptor opcional).
+  const irAZona = (a: AccionIndTipo, receptor?: string) => {
     setAccionPendiente(a);
+    setReceptorPendiente(receptor || "");
     setPaso("accionZona");
+  };
+
+  const irAAccionZona = (a: AccionIndTipo) => {
+    if (props.directo) { props.onAccionConZona(a, undefined); return; }
+    irAZona(a);
   };
 
   if (paso === "menu") {
@@ -2078,6 +2115,13 @@ function ModalAccionIndividual(props: {
         <div className="grid grid-cols-1 gap-2 mb-2">
           <BotonGrande label={t("mai_disparo")} color="bg-pink-700" onClick={() => setPaso("disparoTipo")} />
         </div>
+
+        {/* Stats de VÍDEO — solo en modo vídeo (duelos, 1x1, coberturas...). */}
+        {!props.directo && (
+          <div className="grid grid-cols-1 gap-2 mb-2">
+            <BotonGrande label={t("vid_menu_btn")} color="bg-sky-800" onClick={() => setPaso("videoMenu")} />
+          </div>
+        )}
 
         {/* Disciplina: amarilla + roja + falta (cometida POR este jugador). */}
         <div className="grid grid-cols-3 gap-2">
@@ -2119,13 +2163,13 @@ function ModalAccionIndividual(props: {
         onCerrar={props.onCerrar}>
         <Paso n={1} titulo={t("mai_en_que_zona")} activo>
           <Campo
-            onSelect={(z) => props.onAccionConZona(accionPendiente, z)}
+            onSelect={(z) => props.onAccionConZona(accionPendiente, z, receptorPendiente || undefined)}
             direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
             nombreAtacante={NOMBRE_CORTO_TC} />
           <div className="mt-2 flex justify-between">
-            <button onClick={() => { setAccionPendiente(null); setPaso("menu"); }}
+            <button onClick={() => { setAccionPendiente(null); setReceptorPendiente(""); setPaso("menu"); }}
               className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
-            <button onClick={() => props.onAccionConZona(accionPendiente, undefined)}
+            <button onClick={() => props.onAccionConZona(accionPendiente, undefined, receptorPendiente || undefined)}
               className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs">
               {t("saltar_zona_guardar")}
             </button>
@@ -2196,6 +2240,69 @@ function ModalAccionIndividual(props: {
             } className="px-4 py-2 bg-zinc-700 rounded text-xs">{t("saltar_zona_porteria")}</button>
           </div>
         </Paso>
+      </ModalShell>
+    );
+  }
+
+  // ── STATS DE VÍDEO (solo modo vídeo) ──
+  if (paso === "videoMenu") {
+    return (
+      <ModalShell titulo={`📹 ${props.jugador}`} onCerrar={props.onCerrar}>
+        <p className="text-sm text-zinc-400 mb-3">{t("vid_menu_intro")}</p>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <BotonGrande label={GRUPOS.duelC.label} onClick={() => { setVideoGrupo("duelC"); setPaso("videoResultado"); }} />
+          <BotonGrande label={GRUPOS.duelP.label} onClick={() => { setVideoGrupo("duelP"); setPaso("videoResultado"); }} />
+          <BotonGrande label={GRUPOS.unoAtq.label} onClick={() => { setVideoGrupo("unoAtq"); setPaso("videoResultado"); }} />
+          <BotonGrande label={GRUPOS.unoDef.label} onClick={() => { setVideoGrupo("unoDef"); setPaso("videoResultado"); }} />
+          <BotonGrande label={t("vid_conexPivot")} color="bg-emerald-800" onClick={() => setPaso("videoConexion")} />
+          <BotonGrande label={t("vid_corteConex")} onClick={() => irAZona("corteConex")} />
+          <BotonGrande label={t("vid_ultCob")} onClick={() => irAZona("ultCob")} />
+          <BotonGrande label={t("mai_btn_bdg")} subtitle={t("mai_btn_bdg_sub")} onClick={() => irAZona("bdg")} />
+          <BotonGrande label={t("mai_btn_bdp")} subtitle={t("mai_btn_bdp_sub")} onClick={() => irAZona("bdp")} />
+        </div>
+        {esPortero && (
+          <>
+            <h3 className="text-sm font-semibold text-sky-300 mb-2">{t("vid_portero")}</h3>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <BotonGrande label={GRUPOS.saque.label} color="bg-sky-900" onClick={() => { setVideoGrupo("saque"); setPaso("videoResultado"); }} />
+              <BotonGrande label={GRUPOS.pase.label} color="bg-sky-900" onClick={() => { setVideoGrupo("pase"); setPaso("videoResultado"); }} />
+              <BotonGrande label={GRUPOS.cob.label} color="bg-sky-900" onClick={() => { setVideoGrupo("cob"); setPaso("videoResultado"); }} />
+              <BotonGrande label={t("vid_achique")} color="bg-sky-900" onClick={() => irAZona("achique")} />
+            </div>
+          </>
+        )}
+        <button onClick={() => setPaso("menu")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+      </ModalShell>
+    );
+  }
+
+  if (paso === "videoResultado" && GRUPOS[videoGrupo]) {
+    const g = GRUPOS[videoGrupo];
+    return (
+      <ModalShell titulo={`${g.label} · ${props.jugador}`} onCerrar={props.onCerrar}>
+        <Paso n={1} titulo={t("vid_elige_resultado")} activo>
+          <div className="grid grid-cols-2 gap-2">
+            {g.ops.map(([sub, lbl]) => (
+              <button key={sub} onClick={() => irAZona(sub)}
+                className="py-4 rounded-lg font-bold bg-zinc-700 hover:bg-zinc-600">{lbl}</button>
+            ))}
+          </div>
+        </Paso>
+        <button onClick={() => setPaso("videoMenu")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+      </ModalShell>
+    );
+  }
+
+  if (paso === "videoConexion") {
+    return (
+      <ModalShell titulo={`${t("vid_conexPivot")} · ${props.jugador}`} onCerrar={props.onCerrar}>
+        <Paso n={1} titulo={t("vid_conex_receptor")} activo>
+          <ChipsJugador
+            opciones={props.enPista.filter((n) => n !== props.jugador)}
+            seleccionado={receptorPendiente}
+            onSelect={(n) => irAZona("conexPivot", n)} />
+        </Paso>
+        <button onClick={() => setPaso("videoMenu")} className="px-4 py-2 bg-zinc-700 rounded mt-3">{t("atras")}</button>
       </ModalShell>
     );
   }
