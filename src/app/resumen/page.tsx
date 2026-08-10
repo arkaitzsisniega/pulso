@@ -419,6 +419,86 @@ export default function ResumenPage() {
             })()}
           </div>
 
+          {/* ESTADÍSTICAS DE VÍDEO — solo si hay datos capturados en modo vídeo. */}
+          {(() => {
+            const conDatosCampo = filasIndiv.filter((f) => f.c && (
+              (f.c.duelC_g||0)+(f.c.duelC_p||0)+(f.c.duelP_g||0)+(f.c.duelP_p||0)+
+              (f.c.unoAtq_g||0)+(f.c.unoAtq_p||0)+(f.c.unoDef_g||0)+(f.c.unoDef_p||0)+
+              (f.c.conexPivot||0)+(f.c.recibePivot||0)+(f.c.corteConex||0)+(f.c.ultCob||0) > 0
+            ));
+            const conDatosPort = filasIndiv.filter((f) => f.c && (
+              (f.c.saqueB||0)+(f.c.saqueM||0)+(f.c.paseB||0)+(f.c.paseM||0)+(f.c.achique||0)+
+              (f.c.cobBR||0)+(f.c.cobBN||0)+(f.c.cobMR||0)+(f.c.cobMN||0) > 0
+            ));
+            if (conDatosCampo.length === 0 && conDatosPort.length === 0) return null;
+            const gp = (g?: number, p?: number) => `${g||0}-${p||0}`;
+            return (
+              <div className="bg-zinc-900 rounded-xl p-5">
+                <h3 className="text-lg font-bold text-sky-300 mb-1">📹 {t("res_stats_video")}</h3>
+                <p className="text-xs text-zinc-500 mb-4">{t("res_video_leyenda")}</p>
+                {conDatosCampo.length > 0 && (
+                  <div className="overflow-x-auto mb-5">
+                    <table className="w-full text-base">
+                      <thead className="text-xs text-zinc-400 border-b border-zinc-800">
+                        <tr>
+                          <th className="text-left py-2 px-2">{t("res_jugador")}</th>
+                          <th className="px-2">{t("vid_duelC")}</th>
+                          <th className="px-2">{t("vid_duelP")}</th>
+                          <th className="px-2">{t("vid_unoAtq")}</th>
+                          <th className="px-2">{t("vid_unoDef")}</th>
+                          <th className="px-2">{t("res_video_conex")}</th>
+                          <th className="px-2">✂️</th>
+                          <th className="px-2">🛡️</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {conDatosCampo.map((f) => (
+                          <tr key={f.nombre} className="border-b border-zinc-900 text-center">
+                            <td className="text-left py-1.5 px-2 font-bold">{f.nombre}</td>
+                            <td className="px-2 font-mono">{gp(f.c?.duelC_g, f.c?.duelC_p)}</td>
+                            <td className="px-2 font-mono">{gp(f.c?.duelP_g, f.c?.duelP_p)}</td>
+                            <td className="px-2 font-mono">{gp(f.c?.unoAtq_g, f.c?.unoAtq_p)}</td>
+                            <td className="px-2 font-mono">{gp(f.c?.unoDef_g, f.c?.unoDef_p)}</td>
+                            <td className="px-2 font-mono">{(f.c?.conexPivot||0)}/{(f.c?.recibePivot||0)}</td>
+                            <td className="px-2 font-mono">{f.c?.corteConex||0}</td>
+                            <td className="px-2 font-mono">{f.c?.ultCob||0}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {conDatosPort.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <h4 className="text-sm font-bold text-yellow-300 mb-2">🥅 {t("vid_portero")}</h4>
+                    <table className="w-full text-base">
+                      <thead className="text-xs text-zinc-400 border-b border-zinc-800">
+                        <tr>
+                          <th className="text-left py-2 px-2">{t("res_jugador")}</th>
+                          <th className="px-2">{t("vid_saque")}</th>
+                          <th className="px-2">{t("vid_pase")}</th>
+                          <th className="px-2">{t("vid_achique")}</th>
+                          <th className="px-2">{t("vid_cob")} (BR/BN/MR/MN)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {conDatosPort.map((f) => (
+                          <tr key={f.nombre} className="border-b border-zinc-900 text-center">
+                            <td className="text-left py-1.5 px-2 font-bold text-yellow-400">{f.nombre}</td>
+                            <td className="px-2 font-mono">{gp(f.c?.saqueB, f.c?.saqueM)}</td>
+                            <td className="px-2 font-mono">{gp(f.c?.paseB, f.c?.paseM)}</td>
+                            <td className="px-2 font-mono">{f.c?.achique||0}</td>
+                            <td className="px-2 font-mono">{(f.c?.cobBR||0)}/{(f.c?.cobBN||0)}/{(f.c?.cobMR||0)}/{(f.c?.cobMN||0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* CRONOLOGÍA DE GOLES */}
           <div className="bg-zinc-900 rounded-xl p-5">
             <h3 className="text-lg font-bold text-zinc-300 mb-4">{t("res_goles_partido")}</h3>
