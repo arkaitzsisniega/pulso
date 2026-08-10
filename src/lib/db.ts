@@ -138,6 +138,18 @@ export const UMBRAL_RETOMAR_TURNO_SEG = 30;
 /** Resultado posible de un disparo (a puerta = entró marco, parada portero o gol). */
 export type ResultadoDisparo = "PUERTA" | "PALO" | "FUERA" | "BLOQUEADO";
 
+/** Subtipos de accion_individual: los básicos (directo) + los de vídeo. El
+ *  nombre del subtipo coincide con el campo de ContadoresJugador que incrementa,
+ *  salvo "recibePivot" que se deriva del receptor de una conexPivot. */
+export type AccionIndTipo =
+  | "pf" | "pnf" | "robos" | "cortes" | "bdg" | "bdp"
+  | "duelC_g" | "duelC_p" | "duelP_g" | "duelP_p"
+  | "unoAtq_g" | "unoAtq_p" | "unoDef_g" | "unoDef_p"
+  | "ultCob" | "corteConex" | "conexPivot"
+  | "saqueB" | "saqueM" | "achique"
+  | "cobBR" | "cobBN" | "cobMR" | "cobMN"
+  | "paseB" | "paseM";
+
 export interface EventoBase {
   id: string;
   parte: ParteId;
@@ -152,6 +164,9 @@ export type Evento =
   | (EventoBase & { tipo: "gol"; equipo: "INTER" | "RIVAL"; goleador: string;
       asistente?: string; cuarteto: string[]; portero?: string;
       accion?: string; zonaCampo?: string; zonaPorteria?: string;
+      /** Zona del campo desde donde se dio la ASISTENCIA (pase de gol). El
+       *  remate va en zonaCampo. Solo se pide en modo vídeo y si hay asistente. */
+      zonaAsistencia?: string;
       descripcion?: string;
       /** Si este gol vino de un penalti/10m, id del evento penalti enlazado. */
       penaltiId?: string })
@@ -164,8 +179,9 @@ export type Evento =
   | (EventoBase & { tipo: "cambio"; sale: string; entra: string })
   | (EventoBase & { tipo: "accion_individual";
       jugador: string;
-      /** Subtipo: pf, pnf, robos, cortes, bdg, bdp. */
-      accion: "pf" | "pnf" | "robos" | "cortes" | "bdg" | "bdp";
+      accion: AccionIndTipo;
+      /** Solo para "conexPivot": jugador que RECIBE el pase (el pívot). */
+      receptor?: string;
       zonaCampo?: string })
   | (EventoBase & { tipo: "disparo"; equipo: "INTER" | "RIVAL";
       jugador?: string;            // tirador (si INTER); si RIVAL puede no estar
@@ -218,6 +234,31 @@ export interface ContadoresJugador {
   // Solo porteros
   golesEncajados: number;
   paradas: number;          // disparos a puerta del rival que el portero detuvo
+
+  // ── ESTADÍSTICAS DE VÍDEO (solo modo vídeo, todas con zona en el campo) ──
+  // Jugadores de campo:
+  duelC_g?: number;         // Duelo de nuestro CIERRE con su pívot — ganado
+  duelC_p?: number;         //   "     "     "     "     "    "   — perdido
+  duelP_g?: number;         // Duelo de nuestro PÍVOT con su cierre — ganado
+  duelP_p?: number;         //   "     "     "     "     "    "   — perdido
+  unoAtq_g?: number;        // 1x1 en ataque — ganado
+  unoAtq_p?: number;        // 1x1 en ataque — perdido
+  unoDef_g?: number;        // 1x1 en defensa — ganado
+  unoDef_p?: number;        // 1x1 en defensa — perdido
+  ultCob?: number;          // Última cobertura sin posesión (solo jug. de campo)
+  corteConex?: number;      // Corte tras conexión con pívot (el que inicia el mov.)
+  conexPivot?: number;      // Conexiones con pívot DADAS (pasador; puede ser portero)
+  recibePivot?: number;     // Veces que RECIBIÓ como pívot (receptor de la conexión)
+  // Solo porteros:
+  saqueB?: number;          // Saque bueno
+  saqueM?: number;          // Saque malo
+  achique?: number;         // Achiques
+  cobBR?: number;           // Cobertura buena + recupera posesión
+  cobBN?: number;           // Cobertura buena + NO recupera
+  cobMR?: number;           // Cobertura mala + recupera
+  cobMN?: number;           // Cobertura mala + NO recupera
+  paseB?: number;           // Pase con el pie bueno
+  paseM?: number;           // Pase con el pie malo
 }
 
 export interface AccionesIndividuales {
