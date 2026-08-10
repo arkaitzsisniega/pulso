@@ -44,9 +44,102 @@ import { uid } from "./utils";
 import { ROSTER } from "./clientes";
 import { reconstruirAgregados, recomputarMinutos } from "./reconstruir";
 
-const ID_PARTIDO = "current";
+const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
 const TICK_MS = 250;
 const SAVE_DEBOUNCE_MS = 300;
+
+// ─────────────────── MULTI-PARTIDO (guardar todos) ──────────────────────────
+// Antes solo existía UN partido (id "current"). Ahora se guardan todos y hay un
+// "partido activo" (el que abren /partido y /resumen), cuyo id vive en
+// localStorage. Migración: si aún no hay activo pero existe el "current" legacy
+// (partido en curso de la versión antigua), se usa ese para no perderlo.
+const ACTIVO_KEY = "crono_partido_activo";
+
+function leerActivoId(): string {
+  if (typeof window === "undefined") return ID_PARTIDO;
+  try { return localStorage.getItem(ACTIVO_KEY) || ID_PARTIDO; } catch { return ID_PARTIDO; }
+}
+function escribirActivoId(id: string) {
+  try { localStorage.setItem(ACTIVO_KEY, id); } catch { /* ignore */ }
+}
+function nuevoIdPartido(): string {
+  return `p_${Date.now().toString(36)}_${uid().slice(0, 6)}`;
+}
+
+/** Construye un Partido NUEVO desde cero desde una config (crono a 0, sin
+ *  eventos). `modo`: "directo" (por defecto) o "video". Reutilizado por
+ *  iniciarPartido y por rehacerPartido. */
+function construirPartidoNuevo(id: string, config: ConfigPartido, modo: "directo" | "video"): Partido {
+  const ahora = Date.now();
+  const pi = config.pista_inicial;
+  const enPistaIni = [pi.portero, pi.pista1, pi.pista2, pi.pista3, pi.pista4];
+  const tiempos: Record<string, TiempoJugador> = {};
+  for (const j of config.convocados) {
+    const enPista = enPistaIni.includes(j);
+    tiempos[j] = {
+      nombre: j, totalSegundos: 0,
+      porParte: { "1T": 0, "2T": 0, PR1: 0, PR2: 0 },
+      segTurnoActual: enPista ? 0 : null,
+      turnoStart: null,
+      ultimaSalida: enPista ? null : ahora,
+      segDescansoActual: enPista ? null : 0,
+      descansoStart: null,
+      segTurnoUltimo: null,
+    };
+  }
+  const acciones: { porJugador: Record<string, ContadoresJugador> } = { porJugador: {} };
+  for (const j of config.convocados) acciones.porJugador[j] = contadoresVacios();
+  return {
+    id,
+    estado: "en_curso",
+    modo,
+    config,
+    cronometro: {
+      parteActual: "1T",
+      segundosParte: 0,
+      ultimoStart: null,
+      segundosGuardadosPorParte: { "1T": 0, "2T": 0, PR1: 0, PR2: 0 } as Record<ParteId, number>,
+    },
+    enPista: enPistaIni,
+    tiempos,
+    marcador: { inter: 0, rival: 0 },
+    stats: {
+      faltas: { "1T": { inter: 0, rival: 0 }, "2T": { inter: 0, rival: 0 }, PR1: { inter: 0, rival: 0 }, PR2: { inter: 0, rival: 0 } },
+      amarillas: { "1T": { inter: 0, rival: 0 }, "2T": { inter: 0, rival: 0 }, PR1: { inter: 0, rival: 0 }, PR2: { inter: 0, rival: 0 } },
+      tiemposMuerto: { "1T": { inter: 0, rival: 0 }, "2T": { inter: 0, rival: 0 }, PR1: { inter: 0, rival: 0 }, PR2: { inter: 0, rival: 0 } },
+    },
+    eventos: [],
+    acciones,
+    disparosRival: { puerta: 0, fuera: 0, palo: 0, bloqueado: 0 },
+    tanda: { activa: false, tiros: [], marcador: { inter: 0, rival: 0 } },
+    actualizado: ahora,
+  };
+}
+
+/** Lista todos los partidos guardados (más reciente primero). */
+export async function listarPartidos(): Promise<Partido[]> {
+  const todos = await db.partidos.toArray();
+  return todos.sort((a, b) => (b.actualizado ?? 0) - (a.actualizado ?? 0));
+}
+/** Marca un partido como el activo (el que abren /partido y /resumen). */
+export function marcarPartidoActivo(id: string) { escribirActivoId(id); }
+/** Id del partido activo actual. */
+export function idPartidoActivo(): string { return leerActivoId(); }
+/** Borra un partido guardado. Si era el activo, limpia el activo. */
+export async function borrarPartido(id: string): Promise<void> {
+  await db.partidos.delete(id);
+  try { if (localStorage.getItem(ACTIVO_KEY) === id) localStorage.removeItem(ACTIVO_KEY); } catch { /* ignore */ }
+}
+/** Rehace un partido: crea uno NUEVO desde cero (crono a 0, sin eventos) con la
+ *  MISMA config, en modo VÍDEO. Lo marca activo y devuelve su id (o null). */
+export async function rehacerPartido(id: string): Promise<string | null> {
+  const orig = await db.partidos.get(id);
+  if (!orig || !orig.config) return null;
+  const nuevoId = nuevoIdPartido();
+  await db.partidos.put(construirPartidoNuevo(nuevoId, orig.config, "video"));
+  escribirActivoId(nuevoId);
+  return nuevoId;
+}
 
 /** Si el reloj corre y el jugador tiene turnoStart, suma el tramo en vivo. */
 function vivoSegTurno(t: TiempoJugador): number {
@@ -187,7 +280,11 @@ export function usePartido() {
 
   useEffect(() => {
     (async () => {
-      const p = await db.partidos.get(ID_PARTIDO);
+      // Resolver el partido ACTIVO (localStorage). Migración: si no hay activo
+      // guardado pero existe el "current" legacy, se usa y se fija como activo.
+      const id = leerActivoId();
+      escribirActivoId(id);
+      const p = await db.partidos.get(id);
       if (p) {
         // Migración suave: añadir campos nuevos si vienen de versión antigua.
         const cfgOrig = p.config;
@@ -313,81 +410,15 @@ export function usePartido() {
 
   // ────────────────── acciones ─────────────────────────────────────────
 
-  async function iniciarPartido(config: ConfigPartido): Promise<void> {
-    // CRÍTICO: este flujo se llama desde /nuevo justo antes de router.push("/partido").
-    // /partido es otra ruta y monta SU PROPIO hook usePartido() que lee de Dexie.
-    // Si la escritura a Dexie no termina antes de que /partido cargue,
-    // /partido ve estado="configurando" y muestra "No hay partido en curso".
-    //
-    // Solución: persistencia SÍNCRONA primero, setState después.
-    // Si Dexie falla, no actualizamos React (consistencia).
-    const ahora = Date.now();
-    const pi = config.pista_inicial;
-    const enPistaIni = [pi.portero, pi.pista1, pi.pista2, pi.pista3, pi.pista4];
-    const tiempos: Record<string, TiempoJugador> = {};
-    for (const j of config.convocados) {
-      const enPista = enPistaIni.includes(j);
-      tiempos[j] = {
-        nombre: j,
-        totalSegundos: 0,
-        porParte: { "1T": 0, "2T": 0, PR1: 0, PR2: 0 },
-        segTurnoActual: enPista ? 0 : null,
-        turnoStart: null,
-        ultimaSalida: enPista ? null : ahora,
-        segDescansoActual: enPista ? null : 0,
-        descansoStart: null,
-        segTurnoUltimo: null,
-      };
-    }
-    const acciones: { porJugador: Record<string, ContadoresJugador> } = {
-      porJugador: {},
-    };
-    for (const j of config.convocados) {
-      acciones.porJugador[j] = contadoresVacios();
-    }
-
-    // Construir el partido SIN depender del state previo (es un partido NUEVO).
-    const nuevo: Partido = {
-      id: ID_PARTIDO,
-      estado: "en_curso",
-      modo: "directo",   // por defecto se cronometra EN DIRECTO (rápido, sin zonas)
-      config,
-      cronometro: {
-        parteActual: "1T",
-        segundosParte: 0,
-        ultimoStart: null,
-        segundosGuardadosPorParte: { "1T": 0, "2T": 0, PR1: 0, PR2: 0 } as Record<ParteId, number>,
-      },
-      enPista: enPistaIni,
-      tiempos,
-      marcador: { inter: 0, rival: 0 },
-      stats: {
-        faltas: { "1T": { inter: 0, rival: 0 }, "2T": { inter: 0, rival: 0 },
-                   PR1: { inter: 0, rival: 0 }, PR2: { inter: 0, rival: 0 } },
-        amarillas: { "1T": { inter: 0, rival: 0 }, "2T": { inter: 0, rival: 0 },
-                       PR1: { inter: 0, rival: 0 }, PR2: { inter: 0, rival: 0 } },
-        tiemposMuerto: { "1T": { inter: 0, rival: 0 }, "2T": { inter: 0, rival: 0 },
-                            PR1: { inter: 0, rival: 0 }, PR2: { inter: 0, rival: 0 } },
-      },
-      eventos: [],
-      acciones,
-      disparosRival: { puerta: 0, fuera: 0, palo: 0, bloqueado: 0 },
-      tanda: { activa: false, tiros: [], marcador: { inter: 0, rival: 0 } },
-      actualizado: ahora,
-    };
-
-    // Cancelar timer pendiente de autosave por si tiene un valor obsoleto.
-    if (saveTimer.current) {
-      clearTimeout(saveTimer.current);
-      saveTimer.current = null;
-    }
-
-    // PASO 1: persistir a Dexie ANTES de actualizar React state. Si falla,
-    // no actualizamos React. Esto resuelve la race condition con /partido.
+  async function iniciarPartido(config: ConfigPartido, modo: "directo" | "video" = "directo"): Promise<void> {
+    // CRÍTICO: /nuevo llama esto y luego navega a /partido, que monta OTRO hook
+    // y lee de Dexie. Por eso persistimos a Dexie ANTES de setState (evita la
+    // race). Genera un id ÚNICO (multi-partido) y lo marca como activo.
+    const nuevoId = nuevoIdPartido();
+    const nuevo = construirPartidoNuevo(nuevoId, config, modo);
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     await db.partidos.put(nuevo);
-
-    // PASO 2: actualizar React state local del hook actual. /partido al
-    // montar leerá de Dexie y verá el mismo valor.
+    escribirActivoId(nuevoId);
     setPartido(nuevo);
   }
 
