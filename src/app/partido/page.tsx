@@ -1090,6 +1090,39 @@ function ModalShell(props: { titulo: string; onCerrar: () => void; children: Rea
   );
 }
 
+// Portería como OVERLAY (aparece POR ENCIMA del campo, sin scroll). Pedido
+// Arkaitz 10/8: al pinchar la zona de campo, la portería sale encima como si
+// pasaras de una pantalla a otra (en vez de bajar haciendo scroll). z-[70] va
+// por encima del ModalShell (z-50).
+function PorteriaOverlay(props: {
+  titulo: string;
+  onSelect: (z: string) => void;
+  onSaltar: () => void;
+  onAtras: () => void;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4"
+      onClick={props.onAtras}>
+      <div className="bg-zinc-900 rounded-xl p-5 w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={props.onAtras} className="text-zinc-400 text-2xl leading-none px-2">←</button>
+          <h2 className="text-xl font-bold text-center flex-1">{props.titulo}</h2>
+          <span className="w-8" />
+        </div>
+        <Porteria onSelect={props.onSelect} />
+        {props.extra}
+        <div className="mt-3 text-right">
+          <button onClick={props.onSaltar}
+            className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs">
+            {t("saltar_zona_porteria_guardar")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ChipsJugador(props: {
   opciones: string[];
   seleccionado: string;
@@ -1702,26 +1735,20 @@ function ModalGol(props: {
       )}
 
       {accion && (zonaCampo || esPenaltiOAccion) && (
-        <Paso n={6}
-          titulo={
-            esPenaltiOAccion
-              ? t("mg_porteria_entra_accion", { accion: labelAccionGol(accion).toLowerCase() })
-              : t("mg_porteria_entra")
-          }
-          activo>
-          <Porteria seleccionada={zonaPorteria}
-            onSelect={(z) => aplicar(z)} />
-          <div className="mt-2 flex items-center gap-2 justify-between">
-            {equipo === "INTER" && esPenaltiOAccion && (
-              <input className="flex-1 bg-zinc-800 rounded px-3 py-2 text-sm"
-                placeholder={t("mg_portero_rival_ph")}
-                value={porteroRival}
-                onChange={(e) => setPorteroRival(e.target.value.toUpperCase())} />
-            )}
-            <button onClick={() => aplicar("")}
-              className="px-3 py-1 bg-zinc-700 rounded text-xs">{t("saltar_zona_porteria_guardar")}</button>
-          </div>
-        </Paso>
+        <PorteriaOverlay
+          titulo={esPenaltiOAccion
+            ? t("mg_porteria_entra_accion", { accion: labelAccionGol(accion).toLowerCase() })
+            : t("mg_porteria_entra")}
+          onSelect={(z) => aplicar(z)}
+          onSaltar={() => aplicar("")}
+          onAtras={() => { if (!esPenaltiOAccion) setZonaCampo(""); else setAccion(""); }}
+          extra={equipo === "INTER" && esPenaltiOAccion ? (
+            <input className="w-full mt-2 bg-zinc-800 rounded px-3 py-2 text-sm"
+              placeholder={t("mg_portero_rival_ph")}
+              value={porteroRival}
+              onChange={(e) => setPorteroRival(e.target.value.toUpperCase())} />
+          ) : undefined}
+        />
       )}
     </ModalShell>
   );
@@ -1849,19 +1876,22 @@ function ModalDisparoRival(props: {
       )}
 
       {resultado === "PUERTA" && zonaCampo && (
-        <Paso n={3} titulo={t("mdr_zona_porteria_portero")} activo>
-          <Porteria seleccionada={zonaPorteria} onSelect={setZonaPorteria} />
-          <div className="mt-3">
-            <h4 className="text-xs text-zinc-400 mb-1">{t("mdr_portero_paro")}</h4>
-            <ChipsJugador
-              opciones={porterosPista}
-              seleccionado={porteroNuestro}
-              onSelect={setPorteroNuestro} />
-          </div>
-          <p className="text-xs text-zinc-500 mt-2 italic">
-            {t("mdr_guarda_auto_porteria")}
-          </p>
-        </Paso>
+        <PorteriaOverlay
+          titulo={t("mdr_zona_porteria_portero")}
+          onSelect={(z) => setZonaPorteria(z)}
+          onSaltar={() => aplicar()}
+          onAtras={() => setZonaCampo("")}
+          extra={
+            <div className="mt-3">
+              <h4 className="text-xs text-zinc-400 mb-1">{t("mdr_portero_paro")}</h4>
+              <ChipsJugador
+                opciones={porterosPista}
+                seleccionado={porteroNuestro}
+                onSelect={setPorteroNuestro} />
+              <p className="text-xs text-zinc-500 mt-2 italic">{t("mdr_guarda_auto_porteria")}</p>
+            </div>
+          }
+        />
       )}
 
       {resultado && resultado !== "PUERTA" && !zonaCampo && (

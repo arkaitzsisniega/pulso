@@ -1,29 +1,23 @@
 "use client";
 
 /**
- * Campo de fútbol sala HORIZONTAL con zonas clicables (zero-confirm).
+ * Campo de fútbol sala HORIZONTAL COMPLETO con zonas clicables (zero-confirm).
  *
- * ⚠️ REGLA FIJA: el campo se dibuja SIEMPRE en HORIZONTAL (40m × 20m,
- *    proporción 2:1). NUNCA en vertical. Lo único que cambia entre
- *    contextos es a qué lado apunta el atacante (izq o der), pero la
- *    orientación general es siempre horizontal.
+ * ⚠️ REGLA FIJA: el campo se dibuja SIEMPRE en HORIZONTAL (40m × 20m, 2:1).
+ *    Lo único que cambia entre contextos es a qué lado ataca el equipo.
  *
- * Pista 40m × 20m. La dirección de ataque va hacia la DERECHA (default).
- * La portería rival está a la derecha (x=W); la propia a la izquierda.
+ * Desde 10/8/2026 se dividen LAS DOS mitades con el mismo detalle (antes solo
+ * la ofensiva). Nomenclatura relativa al equipo que ataca hacia la derecha:
+ *   - A1..A10 = mitad de ATAQUE (derecha). Portería rival a la derecha.
+ *   - D1..D10 = mitad de DEFENSA (izquierda). Portería propia a la izquierda.
+ *   (D1..D10 son el espejo horizontal de A1..A10.)
  *
- * Como las zonas A1-A11 son relativas al equipo que ataca:
- *  - A3 = "banda izquierda" del atacante.
- *    Mirando hacia la portería rival (derecha), tu izquierda visual es
- *    la banda SUPERIOR del dibujo. Así que A3 está arriba.
- *  - A6 = banda derecha del atacante → banda INFERIOR del dibujo.
- *  - A1 = mitad izquierda del área (del atacante) → mitad superior del área.
- *  - A2 = mitad derecha del área → mitad inferior.
- *
- * Geometría exacta (audio de Arkaitz, 2026-04-28):
- *  - Portería rival 3m centrada en la línea de fondo derecha.
- *  - Área = cuartos de círculo radio 6m con CENTRO EN CADA POSTE +
- *    recta de 3m a 6m de la línea de fondo (paralela a ella).
- *  - A11 = TODA la mitad del campo opuesta (mitad izquierda del dibujo).
+ * Correspondencia por media pista (misma forma, lado espejado):
+ *   1 = mitad SUP del área · 2 = mitad INF del área
+ *   3 = banda SUP primeros 10m · 6 = banda INF primeros 10m
+ *   4 = central SUP primeros 10m · 5 = central INF primeros 10m
+ *   7 = banda SUP segundos 10m · 10 = banda INF segundos 10m
+ *   8 = central SUP segundos 10m · 9 = central INF segundos 10m
  *
  * Escala: 1m = 20px → SVG 800px × 400px.
  */
@@ -34,9 +28,8 @@ interface Props {
   seleccionada?: string;
   onSelect: (zona: string) => void;
   nombreAtacante?: string;
-  /** Dirección de ataque visual. "der" = portería rival a la derecha
-   *  (vista por defecto). "izq" = espejo horizontal (portería rival a
-   *  la izquierda). Útil para 2ª parte / equipo rival. */
+  /** Dirección de ataque visual. "der" = portería rival a la derecha (vista por
+   *  defecto). "izq" = espejo horizontal (portería rival a la izquierda). */
   direccion?: "izq" | "der";
 }
 
@@ -45,218 +38,126 @@ const M = 20;
 const W = 40 * M;   // 800
 const H = 20 * M;   // 400
 
-// Portería rival a la derecha, centrada en y = H/2
 const POSTE_SUP_Y = H / 2 - 1.5 * M;   // 170
 const POSTE_INF_Y = H / 2 + 1.5 * M;   // 230
-
-// Área: cuartos de círculo 6m desde cada poste; techo a 6m de la línea de fondo derecha
 const R_AREA = 6 * M;                  // 120
-const AREA_BORDE_X = W - R_AREA;       // 680  (techo del área, paralelo a portería)
-
-// Bandas 2,5m
 const BANDA_SUP_Y = 2.5 * M;           // 50
 const BANDA_INF_Y = H - 2.5 * M;       // 350
-
-// Línea a 10m de la portería rival
-const X_10 = W - 10 * M;               // 600
-
-// Línea media del campo (a 20m de cada portería)
-const X_MEDIA = W - 20 * M;            // 400
-
-// Centro vertical del campo (para dividir A1/A2 y la línea de 4m central)
+const X_MEDIA = W / 2;                 // 400
 const Y_CENTRO = H / 2;                // 200
+
+/** Geometría de una media pista (der = ataque, izq = defensa). */
+function geoMedia(lado: "der" | "izq") {
+  const der = lado === "der";
+  const XP = der ? W : 0;                       // línea de fondo (portería)
+  const XAREA = der ? W - R_AREA : R_AREA;      // techo del área (paralelo a portería)
+  const X10 = der ? W - 10 * M : 10 * M;        // línea de 10m
+  const sweep = der ? 0 : 1;                    // sweep flag del arco (se invierte al espejar)
+  const pre = der ? "A" : "D";
+  // Bandas (rects): primeros 10m entre XP y X10; segundos 10m entre X10 y X_MEDIA.
+  const b1x = Math.min(XP, X10);                // primeros 10m: x de inicio
+  const b1w = Math.abs(XP - X10);               // ancho 10m (200)
+  const b2x = Math.min(X10, X_MEDIA);           // segundos 10m
+  const b2w = Math.abs(X10 - X_MEDIA);          // ancho 10m (200)
+  // Área (paths con arco de 6m centrado en cada poste).
+  const p1 = `M ${XP} ${BANDA_SUP_Y} A ${R_AREA} ${R_AREA} 0 0 ${sweep} ${XAREA} ${POSTE_SUP_Y} L ${XAREA} ${Y_CENTRO} L ${XP} ${Y_CENTRO} Z`;
+  const p2 = `M ${XP} ${Y_CENTRO} L ${XAREA} ${Y_CENTRO} L ${XAREA} ${POSTE_INF_Y} A ${R_AREA} ${R_AREA} 0 0 ${sweep} ${XP} ${BANDA_INF_Y} Z`;
+  // Central primeros 10m (envuelve el área): sup (4) e inf (5).
+  const p4 = `M ${X10} ${BANDA_SUP_Y} L ${XP} ${BANDA_SUP_Y} A ${R_AREA} ${R_AREA} 0 0 ${sweep} ${XAREA} ${POSTE_SUP_Y} L ${XAREA} ${Y_CENTRO} L ${X10} ${Y_CENTRO} Z`;
+  const p5 = `M ${X10} ${Y_CENTRO} L ${XAREA} ${Y_CENTRO} L ${XAREA} ${POSTE_INF_Y} A ${R_AREA} ${R_AREA} 0 0 ${sweep} ${XP} ${BANDA_INF_Y} L ${X10} ${BANDA_INF_Y} Z`;
+  // Contorno del área (línea blanca, no clicable).
+  const pArea = `M ${XP} ${BANDA_SUP_Y} A ${R_AREA} ${R_AREA} 0 0 ${sweep} ${XAREA} ${POSTE_SUP_Y} L ${XAREA} ${POSTE_INF_Y} A ${R_AREA} ${R_AREA} 0 0 ${sweep} ${XP} ${BANDA_INF_Y}`;
+  return { pre, XP, XAREA, X10, b1x, b1w, b2x, b2w, p1, p2, p4, p5, pArea };
+}
 
 export function Campo({ seleccionada, onSelect, nombreAtacante, direccion = "der" }: Props) {
   const sel = (z: string) => seleccionada === z;
-  const colorZona = (z: string) => sel(z) ? "#1d4ed8" : "#ffffff";
-  const opZona = (z: string) => sel(z) ? 0.55 : 0.05;
+  const colorZona = (z: string) => (sel(z) ? "#1d4ed8" : "#ffffff");
+  const opZona = (z: string) => (sel(z) ? 0.55 : 0.05);
 
-  // Path del CONTORNO del área (línea blanca, no clicable).
-  // Recorrido: esquina sup derecha → arco → techo (recta) → arco → esquina inf derecha.
-  // Ambos arcos con CENTRO en su respectivo POSTE (sweep=0 en SVG con Y abajo).
-  const pathArea = `
-    M ${W} ${BANDA_SUP_Y}
-    A ${R_AREA} ${R_AREA} 0 0 0 ${AREA_BORDE_X} ${POSTE_SUP_Y}
-    L ${AREA_BORDE_X} ${POSTE_INF_Y}
-    A ${R_AREA} ${R_AREA} 0 0 0 ${W} ${BANDA_INF_Y}
-  `.trim();
-
-  // A1 = mitad SUPERIOR del área (izquierda del atacante).
-  // Polígono cerrado: (W, BANDA_SUP_Y) → arco → (AREA_BORDE_X, POSTE_SUP_Y)
-  //                  → (AREA_BORDE_X, Y_CENTRO) → (W, Y_CENTRO) → close.
-  const pathA1 = `
-    M ${W} ${BANDA_SUP_Y}
-    A ${R_AREA} ${R_AREA} 0 0 0 ${AREA_BORDE_X} ${POSTE_SUP_Y}
-    L ${AREA_BORDE_X} ${Y_CENTRO}
-    L ${W} ${Y_CENTRO}
-    Z
-  `.trim();
-
-  // A2 = mitad INFERIOR del área.
-  const pathA2 = `
-    M ${W} ${Y_CENTRO}
-    L ${AREA_BORDE_X} ${Y_CENTRO}
-    L ${AREA_BORDE_X} ${POSTE_INF_Y}
-    A ${R_AREA} ${R_AREA} 0 0 0 ${W} ${BANDA_INF_Y}
-    Z
-  `.trim();
-
-  // A4 = TODO el espacio central SUPERIOR de los primeros 10m que NO sea
-  // área ni banda. Encierra desde la línea de 10m (x=X_10) por arriba,
-  // bordea la curva del área del rival, y vuelve por la mitad horizontal.
-  // Diferencia respecto a antes (rectángulo simple): ahora incluye lo que
-  // estaba "vacío" entre A1/A3 y A4. A5 simétrico abajo.
-  const pathA4 = `
-    M ${X_10} ${BANDA_SUP_Y}
-    L ${W} ${BANDA_SUP_Y}
-    A ${R_AREA} ${R_AREA} 0 0 0 ${AREA_BORDE_X} ${POSTE_SUP_Y}
-    L ${AREA_BORDE_X} ${Y_CENTRO}
-    L ${X_10} ${Y_CENTRO}
-    Z
-  `.trim();
-  const pathA5 = `
-    M ${X_10} ${Y_CENTRO}
-    L ${AREA_BORDE_X} ${Y_CENTRO}
-    L ${AREA_BORDE_X} ${POSTE_INF_Y}
-    A ${R_AREA} ${R_AREA} 0 0 0 ${W} ${BANDA_INF_Y}
-    L ${X_10} ${BANDA_INF_Y}
-    Z
-  `.trim();
-
-  // Si el atacante va hacia la izquierda, rotamos GEOMETRICAMENTE el SVG
-  // 180° (con <g transform> SVG, no CSS) y contra-rotamos cada texto para
-  // que siga legible. Así A3 queda físicamente en la banda inferior (que
-  // es la izquierda del atacante cuando ataca hacia la izquierda) y los
-  // textos "A1", "A11" etc. se siguen leyendo del derecho.
   const flip = direccion === "izq";
   const gTransform = flip ? `rotate(180 ${W / 2} ${H / 2})` : undefined;
-  // Helper para contra-rotar un texto ubicado en (x, y).
-  const tT = (x: number, y: number) =>
-    flip ? `rotate(180 ${x} ${y})` : undefined;
+
+  // Zonas clicables de una media pista (rects para bandas/central 2º tramo,
+  // paths para área y central 1º tramo).
+  const zonasMedia = (lado: "der" | "izq") => {
+    const g = geoMedia(lado);
+    const Z = (n: number) => `${g.pre}${n}`;
+    const zonaPath = (id: string, d: string) => (
+      <g key={id} onClick={() => onSelect(id)} className="cursor-pointer">
+        <path d={d} fill={colorZona(id)} fillOpacity={opZona(id)}
+          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
+      </g>
+    );
+    const zonaRect = (id: string, x: number, y: number, w: number, h: number) => (
+      <g key={id} onClick={() => onSelect(id)} className="cursor-pointer">
+        <rect x={x} y={y} width={w} height={h} fill={colorZona(id)} fillOpacity={opZona(id)}
+          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
+      </g>
+    );
+    return [
+      // bandas primeros 10m: sup (3) e inf (6)
+      zonaRect(Z(3), g.b1x, 0, g.b1w, BANDA_SUP_Y),
+      zonaRect(Z(6), g.b1x, BANDA_INF_Y, g.b1w, H - BANDA_INF_Y),
+      // central primeros 10m: sup (4) e inf (5) — envuelven el área
+      zonaPath(Z(4), g.p4),
+      zonaPath(Z(5), g.p5),
+      // bandas segundos 10m: sup (7) e inf (10)
+      zonaRect(Z(7), g.b2x, 0, g.b2w, BANDA_SUP_Y),
+      zonaRect(Z(10), g.b2x, BANDA_INF_Y, g.b2w, H - BANDA_INF_Y),
+      // central segundos 10m: sup (8) e inf (9)
+      zonaRect(Z(8), g.b2x, BANDA_SUP_Y, g.b2w, Y_CENTRO - BANDA_SUP_Y),
+      zonaRect(Z(9), g.b2x, Y_CENTRO, g.b2w, BANDA_INF_Y - Y_CENTRO),
+      // área: sup (1) e inf (2) — encima para que capten el click
+      zonaPath(Z(1), g.p1),
+      zonaPath(Z(2), g.p2),
+    ];
+  };
+
+  const gDer = geoMedia("der");
+  const gIzq = geoMedia("izq");
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto select-none"
       style={{ maxHeight: "60vh" }}>
       <g transform={gTransform}>
-      {/* Césped */}
-      <rect x="0" y="0" width={W} height={H} fill="#1b5e20" rx="8" />
+        {/* Césped */}
+        <rect x="0" y="0" width={W} height={H} fill="#1b5e20" rx="8" />
+        {/* Borde exterior */}
+        <rect x="2" y="2" width={W - 4} height={H - 4} fill="none" stroke="#ffffff" strokeWidth="3" rx="6" />
 
-      {/* Borde exterior */}
-      <rect x="2" y="2" width={W - 4} height={H - 4}
-        fill="none" stroke="#ffffff" strokeWidth="3" rx="6" />
+        {/* ── ZONAS: media pista de DEFENSA (izq) y de ATAQUE (der) ── */}
+        {zonasMedia("izq")}
+        {zonasMedia("der")}
 
-      {/* Línea media (vertical) */}
-      <line x1={X_MEDIA} y1="0" x2={X_MEDIA} y2={H}
-        stroke="#ffffff" strokeWidth="3" />
-      {/* Círculo central */}
-      <circle cx={X_MEDIA} cy={Y_CENTRO} r={3 * M}
-        fill="none" stroke="#ffffff" strokeWidth="2" />
-      <circle cx={X_MEDIA} cy={Y_CENTRO} r="3" fill="#ffffff" />
-
-      {/* ── ZONAS ── */}
-
-      {/* A11 = TODA la mitad izquierda */}
-      <g onClick={() => onSelect("A11")} className="cursor-pointer">
-        <rect x="0" y="0" width={X_MEDIA} height={H}
-          fill={colorZona("A11")} fillOpacity={opZona("A11")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-                      </g>
-
-      {/* A3 = banda IZQUIERDA del atacante = banda SUPERIOR del dibujo, primeros 10m */}
-      <g onClick={() => onSelect("A3")} className="cursor-pointer">
-        <rect x={X_10} y="0" width={W - X_10} height={BANDA_SUP_Y}
-          fill={colorZona("A3")} fillOpacity={opZona("A3")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-              </g>
-
-      {/* A6 = banda derecha del atacante = banda INFERIOR del dibujo, primeros 10m */}
-      <g onClick={() => onSelect("A6")} className="cursor-pointer">
-        <rect x={X_10} y={BANDA_INF_Y} width={W - X_10} height={H - BANDA_INF_Y}
-          fill={colorZona("A6")} fillOpacity={opZona("A6")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-              </g>
-
-      {/* A4 = TODO el espacio central SUPERIOR (primeros 10m) sin área ni banda.
-          Incluye la zona que antes quedaba "vacía" entre A1/A3 y A4. */}
-      <g onClick={() => onSelect("A4")} className="cursor-pointer">
-        <path d={pathA4}
-          fill={colorZona("A4")} fillOpacity={opZona("A4")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-              </g>
-
-      {/* A5 = TODO el espacio central INFERIOR (primeros 10m) sin área ni banda. */}
-      <g onClick={() => onSelect("A5")} className="cursor-pointer">
-        <path d={pathA5}
-          fill={colorZona("A5")} fillOpacity={opZona("A5")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-              </g>
-
-      {/* A7 = banda SUP, segundos 10m (de 10m a 20m de portería rival) */}
-      <g onClick={() => onSelect("A7")} className="cursor-pointer">
-        <rect x={X_MEDIA} y="0" width={X_10 - X_MEDIA} height={BANDA_SUP_Y}
-          fill={colorZona("A7")} fillOpacity={opZona("A7")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-              </g>
-
-      {/* A10 = banda INF, segundos 10m */}
-      <g onClick={() => onSelect("A10")} className="cursor-pointer">
-        <rect x={X_MEDIA} y={BANDA_INF_Y} width={X_10 - X_MEDIA} height={H - BANDA_INF_Y}
-          fill={colorZona("A10")} fillOpacity={opZona("A10")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-              </g>
-
-      {/* A8 = central SUP, segundos 10m (10m horizontal × 7.5m vertical) */}
-      <g onClick={() => onSelect("A8")} className="cursor-pointer">
-        <rect x={X_MEDIA} y={BANDA_SUP_Y} width={X_10 - X_MEDIA} height={Y_CENTRO - BANDA_SUP_Y}
-          fill={colorZona("A8")} fillOpacity={opZona("A8")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-              </g>
-
-      {/* A9 = central INF, segundos 10m */}
-      <g onClick={() => onSelect("A9")} className="cursor-pointer">
-        <rect x={X_MEDIA} y={Y_CENTRO} width={X_10 - X_MEDIA} height={BANDA_INF_Y - Y_CENTRO}
-          fill={colorZona("A9")} fillOpacity={opZona("A9")}
-          stroke="#ffffff" strokeOpacity={0.3} strokeWidth="1" />
-              </g>
-
-      {/* A1 = mitad SUP del área (izquierda del atacante) */}
-      <g onClick={() => onSelect("A1")} className="cursor-pointer">
-        <path d={pathA1}
-          fill={colorZona("A1")} fillOpacity={opZona("A1")} />
-              </g>
-
-      {/* A2 = mitad INF del área (derecha del atacante) */}
-      <g onClick={() => onSelect("A2")} className="cursor-pointer">
-        <path d={pathA2}
-          fill={colorZona("A2")} fillOpacity={opZona("A2")} />
-              </g>
-
-      {/* ── LÍNEAS DEL CAMPO (encima, sin pointerEvents) ── */}
-      <g style={{ pointerEvents: "none" }}
-        fill="none" stroke="#ffffff" strokeWidth="2.5">
-        {/* Borde del área (contorno con cuartos de círculo) */}
-        <path d={pathArea} />
-        {/* Línea central de 4m que separa A4 de A5
-            (paralela a la banda, en el centro horizontal de la mitad ofensiva) */}
-        <line x1={X_10} y1={Y_CENTRO} x2={AREA_BORDE_X} y2={Y_CENTRO}
-          strokeDasharray="4 4" opacity="0.55" />
-        {/* Línea a 10m (paralela a la portería rival) */}
-        <line x1={X_10} y1={BANDA_SUP_Y} x2={X_10} y2={BANDA_INF_Y}
-          strokeDasharray="4 4" opacity="0.4" />
-        {/* Punto penalti 6m */}
-        <circle cx={AREA_BORDE_X} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
-        {/* Punto doble penalti 10m */}
-        <circle cx={X_10} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
-        {/* Portería atacada (derecha) */}
-        <rect x={W - 4} y={POSTE_SUP_Y} width="4" height={POSTE_INF_Y - POSTE_SUP_Y} fill="#ffffff" />
-      </g>
-
+        {/* ── LÍNEAS DEL CAMPO (encima, sin pointerEvents) ── */}
+        <g style={{ pointerEvents: "none" }} fill="none" stroke="#ffffff" strokeWidth="2.5">
+          {/* Línea media + círculo central */}
+          <line x1={X_MEDIA} y1="0" x2={X_MEDIA} y2={H} strokeWidth="3" />
+          <circle cx={X_MEDIA} cy={Y_CENTRO} r={3 * M} strokeWidth="2" />
+          <circle cx={X_MEDIA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+          {/* Áreas (ambas) */}
+          <path d={gDer.pArea} />
+          <path d={gIzq.pArea} />
+          {/* Línea central de 4m que separa 4/5 en cada mitad */}
+          <line x1={gDer.X10} y1={Y_CENTRO} x2={gDer.XAREA} y2={Y_CENTRO} strokeDasharray="4 4" opacity="0.55" />
+          <line x1={gIzq.X10} y1={Y_CENTRO} x2={gIzq.XAREA} y2={Y_CENTRO} strokeDasharray="4 4" opacity="0.55" />
+          {/* Líneas de 10m (ambas) */}
+          <line x1={gDer.X10} y1={BANDA_SUP_Y} x2={gDer.X10} y2={BANDA_INF_Y} strokeDasharray="4 4" opacity="0.4" />
+          <line x1={gIzq.X10} y1={BANDA_SUP_Y} x2={gIzq.X10} y2={BANDA_INF_Y} strokeDasharray="4 4" opacity="0.4" />
+          {/* Puntos de penalti (6m) y doble penalti (10m) en ambas mitades */}
+          <circle cx={gDer.XAREA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+          <circle cx={gDer.X10} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+          <circle cx={gIzq.XAREA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+          <circle cx={gIzq.X10} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+          {/* Porterías: derecha (rival) e izquierda (propia) */}
+          <rect x={W - 4} y={POSTE_SUP_Y} width="4" height={POSTE_INF_Y - POSTE_SUP_Y} fill="#ffffff" />
+          <rect x="0" y={POSTE_SUP_Y} width="4" height={POSTE_INF_Y - POSTE_SUP_Y} fill="#ffffff" />
+        </g>
       </g>{/* fin del grupo rotable */}
 
-      {/* Etiqueta del atacante FUERA del grupo rotado: siempre legible,
-          y la flecha apunta hacia donde realmente está atacando. */}
-      <text x={flip ? W - 8 : 8} y="18"
-        textAnchor={flip ? "end" : "start"} fontSize="11"
+      {/* Etiqueta del atacante FUERA del grupo rotado: siempre legible. */}
+      <text x={flip ? W - 8 : 8} y="18" textAnchor={flip ? "end" : "start"} fontSize="11"
         fill="#ffffff" opacity="0.65">
         {flip
           ? t("campo_ataca_izq", { nombre: nombreAtacante ?? t("campo_atacante") })
