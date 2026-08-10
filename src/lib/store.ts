@@ -350,6 +350,7 @@ export function usePartido() {
     const nuevo: Partido = {
       id: ID_PARTIDO,
       estado: "en_curso",
+      modo: "directo",   // por defecto se cronometra EN DIRECTO (rápido, sin zonas)
       config,
       cronometro: {
         parteActual: "1T",
@@ -945,6 +946,12 @@ export function usePartido() {
               [campo]: Math.max(0, next.disparosRival[campo] - 1) };
           }
         }
+      } else if (ev.tipo === "accion_individual") {
+        // Revertir el contador que subió registrarAccionIndividual. Antes NO
+        // se revertía → deshacer dejaba el contador inflado (bug). Incluye las
+        // acciones colectivas de equipo (jugador "#EQUIPO"). bumpContador
+        // ya hace clamp a 0.
+        next.acciones = bumpContador(next.acciones, ev.jugador, ev.accion, -1);
       }
       return next;
     });
@@ -1264,6 +1271,12 @@ export function usePartido() {
     setPartido((prev) => ({ ...prev, tanda: { ...prev.tanda, activa: false } }));
   }
 
+  /** Cambia el modo de captura (directo ⇄ video). Ver Partido.modo. Persiste
+   *  a IndexedDB como cualquier otro cambio (setPartido). */
+  function setModo(modo: "directo" | "video") {
+    setPartido((prev) => ({ ...prev, modo }));
+  }
+
   return {
     partido, cargado,
     segundosTurnoActual, segundosBanquillo, segundosParte, segundosPartidoTotal,
@@ -1272,6 +1285,6 @@ export function usePartido() {
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual, reset,
     editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
-    setDuracionesParte, finalizarPartido, retrocederParte,
+    setDuracionesParte, finalizarPartido, retrocederParte, setModo,
   };
 }

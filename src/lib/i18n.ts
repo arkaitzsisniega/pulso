@@ -349,6 +349,11 @@ export const CATALOGO: Record<string, Entrada> = {
 
   // ══════════════════ PARTIDO — AJUSTE RELOJ ══════════════════
   part_ajustar_reloj: { es: "Ajustar reloj:", en: "Adjust clock:", it: "Regola cronometro:" },
+  part_modo: { es: "Modo:", en: "Mode:", it: "Modalità:" },
+  part_modo_directo: { es: "DIRECTO", en: "LIVE", it: "DIRETTA" },
+  part_modo_video: { es: "VÍDEO", en: "VIDEO", it: "VIDEO" },
+  part_modo_directo_nota: { es: "rápido · sin zonas", en: "fast · no zones", it: "veloce · senza zone" },
+  part_modo_video_nota: { es: "detalle completo · con zonas", en: "full detail · with zones", it: "dettaglio completo · con zone" },
   part_ajustar_nota: {
     es: "(ajusta también tiempo de jugadores en pista)",
     en: "(also adjusts on-court players' time)",
@@ -377,6 +382,8 @@ export const CATALOGO: Record<string, Entrada> = {
   btn_cambio: { es: "🔄 CAMBIO", en: "🔄 SUB", it: "🔄 CAMBIO" },
   btn_tm: { es: "🛑 T.M.", en: "🛑 T.O.", it: "🛑 T.O." },
   btn_pen10m: { es: "🎯 PEN/10M", en: "🎯 PEN/10M", it: "🎯 PEN/10M" },
+  btn_recuperacion_equipo: { es: "🟢 REC. EQUIPO", en: "🟢 TEAM STEAL", it: "🟢 REC. SQUADRA" },
+  btn_perdida_equipo: { es: "🔴 PÉRD. EQUIPO", en: "🔴 TEAM LOSS", it: "🔴 PERD. SQUADRA" },
   btn_deshacer: { es: "↶ Deshacer", en: "↶ Undo", it: "↶ Annulla" },
   btn_tiempos: { es: "📊 TIEMPOS", en: "📊 TIMES", it: "📊 TEMPI" },
   btn_tanda: { es: "🥇 TANDA", en: "🥇 SHOOTOUT", it: "🥇 RIGORI" },
@@ -521,6 +528,7 @@ export const CATALOGO: Record<string, Entrada> = {
   acc_3x4: { es: "3x4", en: "3x4", it: "3x4" },
   acc_contraataque: { es: "Contraataque", en: "Counterattack", it: "Contropiede" },
   acc_robo_zona_alta: { es: "Robo zona alta", en: "High-press steal", it: "Recupero zona alta" },
+  acc_salida_presion: { es: "Salida de presión", en: "Press break", it: "Uscita dalla pressione" },
   acc_1x1_banda: { es: "1x1 banda", en: "1v1 wing", it: "1v1 sulla fascia" },
   acc_ataque_posicional: { es: "Ataque posicional", en: "Positional attack", it: "Attacco posizionale" },
   acc_10m: { es: "10m", en: "10m", it: "10m" },
@@ -767,6 +775,8 @@ export const CATALOGO: Record<string, Entrada> = {
   res_ratio: { es: "Ratio", en: "Ratio", it: "Rapporto" },
   res_goles_partido: { es: "⚽ Goles del partido", en: "⚽ Match goals", it: "⚽ Gol della partita" },
   res_sin_goles: { es: "Aún no hay goles registrados.", en: "No goals logged yet.", it: "Ancora nessun gol registrato." },
+  res_orden_faltas: { es: "⚠️ Orden de faltas (quién comete cada una)", en: "⚠️ Foul order (who commits each)", it: "⚠️ Ordine dei falli (chi commette ciascuno)" },
+  res_sin_faltas: { es: "Aún no hay faltas del equipo registradas.", en: "No team fouls logged yet.", it: "Ancora nessun fallo di squadra registrato." },
   res_gol_rival: { es: "⚽ Gol del rival", en: "⚽ Opponent goal", it: "⚽ Gol dell'avversario" },
   res_asist: { es: "asist.", en: "assist", it: "assist" },
   res_desde: { es: "desde {zona}", en: "from {zona}", it: "da {zona}" },
@@ -993,6 +1003,7 @@ const CLAVE_ACCION_GOL: Record<string, string> = {
   "Córner": "acc_corner", "Banda": "acc_banda", "Falta": "acc_falta",
   "5x4": "acc_5x4", "4x5": "acc_4x5", "4x3": "acc_4x3", "3x4": "acc_3x4",
   "Contraataque": "acc_contraataque", "Robo zona alta": "acc_robo_zona_alta",
+  "Salida de presión": "acc_salida_presion",
   "1x1 banda": "acc_1x1_banda", "Ataque posicional": "acc_ataque_posicional",
   "10m": "acc_10m", "10 m": "acc_10m", "Penalti": "acc_penalti", "Otra": "acc_otra",
 };

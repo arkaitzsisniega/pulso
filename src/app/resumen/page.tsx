@@ -9,7 +9,7 @@ import { formatMMSS } from "@/lib/utils";
 import { CampoConteos } from "@/components/CampoConteos";
 import { EditorEventos } from "@/components/EditorEventos";
 import type { Evento, ParteId, Partido } from "@/lib/db";
-import { direccionAtaque } from "@/lib/db";
+import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
@@ -210,18 +210,24 @@ export default function ResumenPage() {
     return { nombre, c, r, esPortero };
   });
 
-  // Totales del equipo (para tab General — bloque principal)
-  const totalesEquipo = filasIndiv.reduce((acc, f) => ({
-    dpp: acc.dpp + (f.c?.dpp || 0),
-    dpa: acc.dpa + (f.c?.dpa || 0),
-    dpf: acc.dpf + (f.c?.dpf || 0),
-    dpb: acc.dpb + (f.c?.dpb || 0),
-    pf:  acc.pf  + (f.c?.pf  || 0),
-    pnf: acc.pnf + (f.c?.pnf || 0),
-    robos:  acc.robos  + (f.c?.robos  || 0),
-    cortes: acc.cortes + (f.c?.cortes || 0),
-    bdg: acc.bdg + (f.c?.bdg || 0),
-    bdp: acc.bdp + (f.c?.bdp || 0),
+  // Totales del equipo (para tab General — bloque principal). Incluye, además
+  // de cada jugador, las acciones COLECTIVAS del pseudo-jugador #EQUIPO
+  // (recuperación / pérdida de equipo), para que sumen a robos/pnf del equipo.
+  const _contadoresTotales = [
+    ...filasIndiv.map((f) => f.c),
+    partido.acciones.porJugador[JUGADOR_EQUIPO] ?? null,
+  ];
+  const totalesEquipo = _contadoresTotales.reduce((acc, c) => ({
+    dpp: acc.dpp + (c?.dpp || 0),
+    dpa: acc.dpa + (c?.dpa || 0),
+    dpf: acc.dpf + (c?.dpf || 0),
+    dpb: acc.dpb + (c?.dpb || 0),
+    pf:  acc.pf  + (c?.pf  || 0),
+    pnf: acc.pnf + (c?.pnf || 0),
+    robos:  acc.robos  + (c?.robos  || 0),
+    cortes: acc.cortes + (c?.cortes || 0),
+    bdg: acc.bdg + (c?.bdg || 0),
+    bdp: acc.bdp + (c?.bdp || 0),
   }), { dpp:0,dpa:0,dpf:0,dpb:0,pf:0,pnf:0,robos:0,cortes:0,bdg:0,bdp:0 });
 
   // Marcador final (incluye tanda si la hubo)
@@ -367,6 +373,51 @@ export default function ResumenPage() {
             </div>
           </div>
 
+          {/* ORDEN DE FALTAS DEL EQUIPO — quién comete la 1ª, 2ª, 3ª... falta
+              de cada parte, para detectar tendencias (¿siempre el mismo hace la
+              5ª?). El nº de orden se deriva ordenando las faltas INTER de la
+              parte por tiempo. Pedido Arkaitz 10/8/2026. */}
+          <div className="bg-zinc-900 rounded-xl p-5">
+            <h3 className="text-lg font-bold text-zinc-300 mb-4">{t("res_orden_faltas")}</h3>
+            {(() => {
+              const partesConFaltas = partesJugadas.filter((p) =>
+                partido.eventos.some((e) => e.tipo === "falta" && e.equipo === "INTER" && e.parte === p)
+              );
+              if (partesConFaltas.length === 0) {
+                return <p className="text-base text-zinc-500">{t("res_sin_faltas")}</p>;
+              }
+              return (
+                <div className="space-y-3">
+                  {partesConFaltas.map((p) => {
+                    const faltas = partido.eventos
+                      .filter((e) => e.tipo === "falta" && e.equipo === "INTER" && e.parte === p)
+                      .sort((a, b) => (a.segundosParte || 0) - (b.segundosParte || 0));
+                    return (
+                      <div key={p}>
+                        <div className="text-sm text-zinc-500 mb-1.5">{p} · {faltas.length}</div>
+                        <div className="flex flex-wrap gap-2">
+                          {faltas.map((f: any, i) => {
+                            const quien = f.jugador
+                              ?? (f.sinAsignar ? t("sin_asignar") : (f.rivalMano ? t("mf_rival_mano") : "—"));
+                            // 6ª falta en adelante = ya son de doble penalti (10 m).
+                            const acumulada = i + 1 >= 6;
+                            return (
+                              <span key={f.id}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-base ${acumulada ? "bg-red-800" : "bg-zinc-800"}`}>
+                                <strong className="font-mono text-zinc-400">{i + 1}</strong>
+                                <span className="font-bold">{quien}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
           {/* CRONOLOGÍA DE GOLES */}
           <div className="bg-zinc-900 rounded-xl p-5">
             <h3 className="text-lg font-bold text-zinc-300 mb-4">{t("res_goles_partido")}</h3>
@@ -492,8 +543,8 @@ export default function ResumenPage() {
           <p className="text-base text-zinc-500 mb-4">
             {t("res_tiempo_nota")}
           </p>
-          <table className="w-full text-lg">
-            <thead className="text-base text-zinc-400 border-b border-zinc-800">
+          <table className="w-full text-xl">
+            <thead className="text-lg text-zinc-400 border-b border-zinc-800">
               <tr>
                 <th className="text-left py-3 px-3">{t("res_jugador")}</th>
                 <th className="text-right px-3">{t("res_tiempos_total")}</th>

@@ -8,7 +8,7 @@ import { formatMMSS, colorTiempoPista, colorTiempoBanquillo } from "@/lib/utils"
 import { Campo } from "@/components/Campo";
 import { Porteria } from "@/components/Porteria";
 import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido } from "@/lib/db";
-import { direccionAtaque } from "@/lib/db";
+import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelResultadoDisparo, labelAccionGol } from "@/lib/i18n";
 
 export default function PartidoPage() {
@@ -22,7 +22,7 @@ export default function PartidoPage() {
     play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
-    setDuracionesParte, finalizarPartido, retrocederParte,
+    setDuracionesParte, finalizarPartido, retrocederParte, setModo,
   } = usePartido();
 
   // Estado UI
@@ -234,6 +234,10 @@ export default function PartidoPage() {
 
   const cfg = partido.config;
   const corriendo = partido.cronometro.ultimoStart != null;
+  // Modo de captura (default "directo" para partidos antiguos sin el campo).
+  // En directo, los modales de disparo/falta/acción NO piden zona de campo ni
+  // de portería (se apunta solo que ocurrió); en vídeo piden todo el detalle.
+  const directo = (partido.modo ?? "directo") === "directo";
   const segParte = segundosParte();
   const dur = duracionParteActual();
   const restantes = segundosRestantesParte();
@@ -248,6 +252,21 @@ export default function PartidoPage() {
   const enPistaActivos = enPista.filter((n) => !jugadoresExpulsados.has(n));
   const banquilloActivos = banquillo.filter((n) => !jugadoresExpulsados.has(n));
 
+  // Orden VISUAL de los 5 en pista: el que MÁS tiempo lleva jugado (total del
+  // partido, en vivo) va a la IZQUIERDA. Es estable entre cambios — todos los
+  // de pista suman a la vez mientras el reloj corre, así que su orden relativo
+  // no "baila"; solo se reordena al hacer un cambio. NO muta partido.enPista
+  // (solo afecta al render). Pedido por Arkaitz (10/8/2026).
+  const _totalVivoJugado = (n: string): number => {
+    const tj = partido.tiempos[n];
+    if (!tj) return 0;
+    const live = (enPista.includes(n) && tj.turnoStart != null && partido.cronometro.ultimoStart != null)
+      ? (Date.now() - tj.turnoStart) / 1000
+      : 0;
+    return (tj.totalSegundos ?? 0) + live;
+  };
+  const enPistaVista = [...enPista].sort((a, b) => _totalVivoJugado(b) - _totalVivoJugado(a));
+
   // Huecos en pista cuya sanción YA terminó (pasaron los 2 min o el rival
   // marcó y canceló la roja) → se pueden rellenar metiendo a alguien del
   // banquillo. Plantilla completa = 5. Cada inferioridad AÚN activa justifica
@@ -261,8 +280,20 @@ export default function PartidoPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-3">
+      {/* BOTÓN DE TIEMPO FLOTANTE — SIEMPRE accesible arriba a la derecha, por
+          encima de cualquier modal (z-[60] > z-50 de los ModalShell). En futsal
+          el reloj se arranca/para sin parar, también mientras metes disparos,
+          pérdidas o faltas con un modal abierto. Pedido Arkaitz 10/8/2026. */}
+      <div className="fixed top-2 right-2 z-[60]">
+        {!corriendo
+          ? <button onClick={play} aria-label={t("part_iniciar")}
+              className="px-6 py-4 bg-green-700 hover:bg-green-600 rounded-xl text-xl font-bold shadow-lg shadow-black/60 border border-green-300/40">▶ {t("part_iniciar")}</button>
+          : <button onClick={pausa} aria-label={t("part_pausar")}
+              className="px-6 py-4 bg-orange-700 hover:bg-orange-600 rounded-xl text-xl font-bold shadow-lg shadow-black/60 border border-orange-200/40">⏸ {t("part_pausar")}</button>}
+      </div>
+
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-1 pr-40">
         <div className="flex items-center gap-3">
           <div className={`text-6xl font-mono font-bold tabular-nums ${acabada ? "text-red-500 animate-pulse" : ""}`}>
             {dur > 0 ? formatMMSS(restantes) : formatMMSS(segParte)}
@@ -283,9 +314,8 @@ export default function PartidoPage() {
           <span className="text-red-400">{partido.marcador.rival} {cfg.rival}</span>
         </div>
         <div className="flex gap-2">
-          {!corriendo
-            ? <button onClick={play} className="px-5 py-3 bg-green-700 hover:bg-green-600 rounded-lg text-lg font-bold">{t("part_iniciar")}</button>
-            : <button onClick={pausa} className="px-5 py-3 bg-orange-700 hover:bg-orange-600 rounded-lg text-lg font-bold">{t("part_pausar")}</button>}
+          {/* El botón Iniciar/Parar ahora es el FLOTANTE de arriba (fixed,
+              siempre visible). Aquí quedan solo los controles de parte. */}
           <button
             onClick={() => {
               if (p !== "1T" && confirm(t("part_volver_parte_confirm", { parte: p }))) {
@@ -405,6 +435,23 @@ export default function PartidoPage() {
         </div>
       )}
 
+      {/* MODO DE CAPTURA — directo (rápido, sin zonas) vs vídeo (todo el
+          detalle al revisar la grabación). Pedido Arkaitz 10/8/2026. */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-zinc-500 text-xs">{t("part_modo")}</span>
+        <div className="inline-flex rounded-lg overflow-hidden border border-zinc-700">
+          <button onClick={() => setModo("directo")}
+            className={`px-3 py-1.5 text-sm font-bold ${directo ? "bg-red-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
+            🔴 {t("part_modo_directo")}
+          </button>
+          <button onClick={() => setModo("video")}
+            className={`px-3 py-1.5 text-sm font-bold ${!directo ? "bg-sky-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
+            🎥 {t("part_modo_video")}
+          </button>
+        </div>
+        <span className="text-zinc-600 text-[10px]">{directo ? t("part_modo_directo_nota") : t("part_modo_video_nota")}</span>
+      </div>
+
       {/* Botones de ajuste de reloj */}
       <div className="flex items-center gap-2 mb-3 text-sm">
         <span className="text-zinc-500 text-xs">{t("part_ajustar_reloj")}</span>
@@ -412,6 +459,10 @@ export default function PartidoPage() {
           className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">−1:00</button>
         <button onClick={() => ajustarReloj(-10)}
           className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">−0:10</button>
+        <button onClick={() => ajustarReloj(-1)}
+          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">−0:01</button>
+        <button onClick={() => ajustarReloj(+1)}
+          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">+0:01</button>
         <button onClick={() => ajustarReloj(+10)}
           className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">+0:10</button>
         <button onClick={() => ajustarReloj(+60)}
@@ -423,7 +474,7 @@ export default function PartidoPage() {
       <div className="bg-zinc-900 rounded-xl p-3 mb-3">
         <h2 className="text-zinc-400 text-sm mb-2">{t("part_en_pista")}</h2>
         <div className="grid grid-cols-5 gap-2">
-          {enPista.map((nombre) => {
+          {enPistaVista.map((nombre) => {
             const seg = segundosTurnoActual(nombre);
             const totalParte = segundosEnParte(nombre, p);
             const dorsal = ROSTER.find((j) => j.nombre === nombre)?.dorsal || "";
@@ -528,6 +579,20 @@ export default function PartidoPage() {
         <BotonAccion label={t("btn_cambio")} color="bg-zinc-700" onClick={() => setModalCambio({ sale: "" })} />
         <BotonAccion label={t("btn_tm")} color="bg-purple-700" onClick={() => setModalTM(true)} />
         <BotonAccion label={t("btn_pen10m")} color="bg-pink-700" onClick={() => setModalPen(true)} />
+      </div>
+      {/* ACCIONES COLECTIVAS DE EQUIPO — recuperación / pérdida que NO se
+          asignan a un jugador (trabajo colectivo). Se guardan como acción del
+          pseudo-jugador "#EQUIPO" y suman a los totales de recuperaciones /
+          pérdidas del equipo. Pedido Arkaitz 10/8/2026. */}
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        <button onClick={() => registrarAccionIndividual(JUGADOR_EQUIPO, "robos")}
+          className="py-4 bg-green-800 hover:bg-green-700 rounded-lg text-lg font-bold">
+          {t("btn_recuperacion_equipo")}
+        </button>
+        <button onClick={() => registrarAccionIndividual(JUGADOR_EQUIPO, "pnf")}
+          className="py-4 bg-rose-900 hover:bg-rose-800 rounded-lg text-lg font-bold">
+          {t("btn_perdida_equipo")}
+        </button>
       </div>
       <div className={`grid ${cfg.permiteTanda ? "grid-cols-5" : "grid-cols-4"} gap-2 mt-2`}>
         <button onClick={deshacerUltimoEvento}
@@ -692,6 +757,7 @@ export default function PartidoPage() {
       {modalAccionInd && (
         <ModalAccionIndividual
           jugador={modalAccionInd.jugador}
+          directo={directo}
           enPista={enPistaActivos}
           banquillo={banquilloActivos}
           cfg={cfg}
@@ -742,6 +808,7 @@ export default function PartidoPage() {
 
       {modalFalta && (
         <ModalFalta
+          directo={directo}
           enPista={enPistaActivos}
           banquillo={banquilloActivos}
           rivalNombre={cfg.rival}
@@ -917,6 +984,7 @@ export default function PartidoPage() {
 
       {modalDisparoRival && (
         <ModalDisparoRival
+          directo={directo}
           enPista={enPistaActivos}
           rivalNombre={cfg.rival}
           cfg={cfg}
@@ -985,7 +1053,7 @@ export default function PartidoPage() {
 function BotonAccion(props: { label: string; color: string; onClick: () => void }) {
   return (
     <button onClick={props.onClick}
-      className={`${props.color} hover:opacity-90 py-7 rounded-xl text-xl font-bold leading-tight`}>
+      className={`${props.color} hover:opacity-90 py-9 rounded-xl text-2xl font-bold leading-tight`}>
       {props.label}
     </button>
   );
@@ -1122,6 +1190,7 @@ function ModalCambio(props: {
 // Flujo: equipo → jugador (o SIN ASIGNAR / RIVAL-MANO) → zona campo → cierra.
 
 function ModalFalta(props: {
+  directo: boolean;
   enPista: string[];
   banquillo: string[];     // se admiten también jugadores del banquillo
   rivalNombre: string;
@@ -1145,6 +1214,23 @@ function ModalFalta(props: {
     if (rivalMano) ev.rivalMano = true;
     if (zonaCampo) ev.zonaCampo = zonaCampo;
     props.onConfirmar(ev);
+  };
+
+  // Selección de jugador / sin-asignar / rival-mano. En DIRECTO se guarda ya
+  // (sin pedir la zona del campo); en VÍDEO solo fija la selección y aparece
+  // el paso de zona. Usa los valores de `sel` directamente para no depender
+  // del setState asíncrono.
+  const seleccionar = (sel: { jugador?: string; sinAsignar?: boolean; rivalMano?: boolean }) => {
+    setJugador(sel.jugador ?? "");
+    setSinAsignar(!!sel.sinAsignar);
+    setRivalMano(!!sel.rivalMano);
+    if (props.directo) {
+      const ev: any = { tipo: "falta", equipo };
+      if (sel.jugador) ev.jugador = sel.jugador;
+      if (sel.sinAsignar) ev.sinAsignar = true;
+      if (sel.rivalMano) ev.rivalMano = true;
+      props.onConfirmar(ev);
+    }
   };
 
   return (
@@ -1175,7 +1261,7 @@ function ModalFalta(props: {
               const enBanquillo = props.banquillo.includes(n);
               return (
                 <button key={n}
-                  onClick={() => { setJugador(n); setSinAsignar(false); setRivalMano(false); }}
+                  onClick={() => seleccionar({ jugador: n })}
                   className={`px-3 py-2 rounded text-base ${
                     jugador === n ? "bg-emerald-700"
                                   : enBanquillo ? "bg-zinc-700 opacity-70" : "bg-zinc-800"
@@ -1185,12 +1271,12 @@ function ModalFalta(props: {
                 </button>
               );
             })}
-            <button onClick={() => { setJugador(""); setSinAsignar(true); setRivalMano(false); }}
+            <button onClick={() => seleccionar({ sinAsignar: true })}
               className={`px-3 py-2 rounded text-base ${
                 sinAsignar ? "bg-zinc-500" : "bg-zinc-800"
               }`}>{t("sin_asignar")}</button>
             {equipo === "INTER" && (
-              <button onClick={() => { setJugador(""); setRivalMano(true); setSinAsignar(false); }}
+              <button onClick={() => seleccionar({ rivalMano: true })}
                 className={`px-3 py-2 rounded text-base ${
                   rivalMano ? "bg-purple-700" : "bg-zinc-800"
                 }`}>{t("mf_rival_mano")}</button>
@@ -1472,7 +1558,7 @@ function ModalTM(props: {
 // botón, vía labelAccionGol() (importado de @/lib/i18n).
 const ACCIONES_GOL = [
   "Córner", "Banda", "Falta", "5x4", "4x5", "4x3", "3x4", "Contraataque",
-  "Robo zona alta", "1x1 banda", "Ataque posicional", "10m", "Penalti",
+  "Robo zona alta", "Salida de presión", "1x1 banda", "Ataque posicional", "10m", "Penalti",
   "Otra",
 ];
 
@@ -1612,6 +1698,7 @@ function ModalGol(props: {
 // disparos que NO son gol.
 
 function ModalDisparoRival(props: {
+  directo: boolean;
   enPista: string[];
   rivalNombre: string;
   cfg: ConfigPartido; parteActual: ParteId;
@@ -1658,6 +1745,13 @@ function ModalDisparoRival(props: {
   // - PALO/FUERA/BLOQUEADO: solo zonaCampo (no hay portería que marcar).
   useEffect(() => {
     if (!resultado || yaConfirmado.current) return;
+    // DIRECTO: en cuanto hay resultado, guardar SIN pedir zona de campo ni de
+    // portería (solo cuenta que ocurrió). La parada del portero en pista se
+    // asigna sola en registrarEvento.
+    if (props.directo) {
+      const t = setTimeout(aplicar, 150);
+      return () => clearTimeout(t);
+    }
     if (resultado === "PUERTA") {
       if (zonaCampo && zonaPorteria && porteroNuestro) {
         // Pequeño delay para que el usuario VEA su última selección antes
@@ -1858,6 +1952,7 @@ type AccionConZonaTipo = "pf" | "pnf" | "robos" | "cortes" | "bdg" | "bdp";
 
 function ModalAccionIndividual(props: {
   jugador: string;
+  directo: boolean;
   enPista: string[];
   banquillo: string[];
   cfg: ConfigPartido; parteActual: ParteId;
@@ -1889,6 +1984,12 @@ function ModalAccionIndividual(props: {
   // Pulsar una acción → ir a la pantalla del mapa para elegir zona.
   // Después se aplica la acción + zona.
   const irAAccionZona = (a: AccionConZonaTipo) => {
+    if (props.directo) {
+      // DIRECTO: guardar la acción sin pedir la zona del campo (el padre
+      // registra y cierra el modal). Solo cuenta que ocurrió.
+      props.onAccionConZona(a, undefined);
+      return;
+    }
     setAccionPendiente(a);
     setPaso("accionZona");
   };
@@ -1974,7 +2075,14 @@ function ModalAccionIndividual(props: {
           <div className="grid grid-cols-4 gap-2">
             {(["PUERTA", "PALO", "FUERA", "BLOQUEADO"] as ResultadoDisparo[]).map((r) => (
               <button key={r}
-                onClick={() => { setDisparoRes(r); setPaso("disparoCampo"); }}
+                onClick={() => {
+                  if (props.directo) {
+                    // DIRECTO: guardar el disparo sin zona de campo ni portería.
+                    props.onDisparo({ resultado: r, zonaCampo: "", zonaPorteria: "" });
+                    return;
+                  }
+                  setDisparoRes(r); setPaso("disparoCampo");
+                }}
                 className="py-4 rounded font-bold bg-pink-700 hover:bg-pink-600">{labelResultadoDisparo(r)}</button>
             ))}
           </div>
@@ -2031,9 +2139,9 @@ function ModalAccionIndividual(props: {
 function BotonGrande(props: { label: string; subtitle?: string; onClick: () => void; color?: string }) {
   return (
     <button onClick={props.onClick}
-      className={`${props.color || "bg-zinc-700"} hover:opacity-90 py-4 rounded-xl font-bold flex flex-col items-center`}>
-      <span className="text-base">{props.label}</span>
-      {props.subtitle && <span className="text-xs opacity-70">{props.subtitle}</span>}
+      className={`${props.color || "bg-zinc-700"} hover:opacity-90 py-6 rounded-xl font-bold flex flex-col items-center`}>
+      <span className="text-lg">{props.label}</span>
+      {props.subtitle && <span className="text-sm opacity-70">{props.subtitle}</span>}
     </button>
   );
 }
@@ -2318,8 +2426,9 @@ function ModalCambioParte(props: {
     .filter((x): x is NonNullable<typeof x> => x !== null && (x.totalParte > 0 || x.total > 0))
     .sort((a, b) => b.totalParte - a.totalParte);
 
-  // Totales de equipo (acumulados a TODO el partido, no solo a esta parte)
-  const tot = cfg.convocados.reduce((acc, n) => {
+  // Totales de equipo (acumulados a TODO el partido, no solo a esta parte).
+  // Incluye #EQUIPO (recuperación/pérdida colectiva) además de cada jugador.
+  const tot = [...cfg.convocados, JUGADOR_EQUIPO].reduce((acc, n) => {
     const c = partido.acciones.porJugador[n];
     if (!c) return acc;
     return {
@@ -2433,7 +2542,7 @@ function ModalCambioParte(props: {
       </div>
 
       {/* OTROS STATS DEL EQUIPO — Pérdidas / Recuperaciones / Balones divididos */}
-      <div className="grid grid-cols-3 gap-3 text-sm mb-4">
+      <div className="grid grid-cols-3 gap-3 text-base mb-4">
         <div className="bg-red-900/20 rounded-lg p-3 border border-red-700/20">
           <div className="text-red-300 font-bold mb-2 text-base">{t("mcp_perdidas")}</div>
           <div className="flex justify-between"><span>{t("mcp_forzada")}</span><strong>{tot.pf}</strong></div>
@@ -2469,8 +2578,8 @@ function ModalCambioParte(props: {
           {t("mcp_tiempos_jugador", { parte: desde })}
         </h3>
         <div className="max-h-72 overflow-y-auto">
-          <table className="w-full text-base">
-            <thead className="text-sm text-zinc-500 border-b border-zinc-800">
+          <table className="w-full text-xl">
+            <thead className="text-base text-zinc-500 border-b border-zinc-800">
               <tr>
                 <th className="text-left py-2 px-2">{t("mt_jugador")}</th>
                 <th className="text-right px-2">{desde}</th>
