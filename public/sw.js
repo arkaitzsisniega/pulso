@@ -15,7 +15,7 @@
  * Es un SW escrito a mano a propósito: next-pwa 5.x no soporta Next 16 +
  * app router + output:export, y para una app estática esto es más robusto.
  */
-const CACHE = "inter-crono-v3";
+const CACHE = "inter-crono-v4";
 // Carpeta donde vive la app: "/arkaitz-2526/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 const APP_SHELL = [
@@ -47,29 +47,43 @@ async function precachePaginaYAssets(cache, url) {
   } catch { /* best-effort */ }
 }
 
+// ¿Está el app-shell ENTERO cacheado? (las 4 páginas principales).
+async function appShellCompleto(cache) {
+  const res = await Promise.all(APP_SHELL.map((u) => cache.match(u).then((r) => !!r)));
+  return res.every(Boolean);
+}
+
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {
-      // manifest aparte (no es HTML con assets).
       await cache.add(`${BASE}/manifest.json`).catch(() => {});
-      // allSettled: que un fallo puntual no aborte la instalación.
       await Promise.allSettled(
         APP_SHELL.filter((u) => !u.endsWith("manifest.json"))
           .map((u) => precachePaginaYAssets(cache, u))
       );
+      // SWAP ATÓMICO: solo "comprometemos" el SW nuevo (skipWaiting) si el
+      // app-shell entero quedó cacheado. Si la conexión fue intermitente y falta
+      // alguna página, NO activamos: el SW viejo y su caché BUENA siguen sirviendo
+      // y se reintenta en la próxima visita con conexión. Antes se hacía
+      // skipWaiting de entrada y activate borraba la caché buena aunque la nueva
+      // quedara a medias → app rota offline (justo el pabellón sin wifi).
+      if (await appShellCompleto(cache)) await self.skipWaiting();
     })
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-      )
-      .then(() => self.clients.claim())
+    (async () => {
+      // Solo borramos cachés viejas si la NUESTRA está completa: si estuviera a
+      // medias, conservamos la vieja como red de seguridad offline.
+      const cache = await caches.open(CACHE);
+      if (await appShellCompleto(cache)) {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+      }
+      await self.clients.claim();
+    })()
   );
 });
 
