@@ -1701,6 +1701,11 @@ function ModalGol(props: {
       ev.goleador = goleador;
       if (asistente && asistente !== "OMIT") ev.asistente = asistente;
       ev.cuarteto = props.enPista.filter((n) => n !== goleador);
+    } else {
+      // Gol del RIVAL: guardar también quién estaba en pista (los 5). Antes
+      // solo se guardaba en los goles del Inter y el informe no podía marcar
+      // a nadie "en pista" en los goles en contra (visto por Arkaitz 16/8).
+      ev.cuarteto = [...props.enPista];
     }
     if (accion) ev.accion = accion;
     if (zonaAsistencia) ev.zonaAsistencia = zonaAsistencia;
@@ -1725,6 +1730,8 @@ function ModalGol(props: {
       ev.goleador = goleador;
       if (asistente && asistente !== "OMIT") ev.asistente = asistente;
       ev.cuarteto = props.enPista.filter((n) => n !== goleador);
+    } else {
+      ev.cuarteto = [...props.enPista];  // quinteto en pista en el gol rival
     }
     ev.accion = acc;
     const esPenOAcc = acc === "Penalti" || acc === "10m";
