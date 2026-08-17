@@ -624,14 +624,26 @@ export default function ResumenPage() {
           <p className="text-base text-zinc-500 mb-4">
             {t("res_tiempo_nota")}
           </p>
-          <table className="w-full text-xl">
-            <thead className="text-lg text-zinc-400 border-b border-zinc-800">
+          {/* Tabla con anchos FIJOS: la columna del nombre estrecha (antes se
+              comía todo el ancho y los tiempos quedaban lejos, a la derecha) y
+              los tiempos grandes y pegados al nombre. Pedido Arkaitz 16/8. */}
+          <table className="w-full table-fixed text-2xl">
+            {/* Columnas de tiempo de ancho FIJO pegadas al nombre; el hueco
+                sobrante va a una columna vacía al final de la fila. */}
+            <colgroup>
+              <col style={{ width: "30%" }} />
+              <col style={{ width: `${Math.min(15, Math.floor(62 / (1 + partesJugadas.length)))}%` }} />
+              {partesJugadas.map((p) => <col key={p} style={{ width: `${Math.min(15, Math.floor(62 / (1 + partesJugadas.length)))}%` }} />)}
+              <col />
+            </colgroup>
+            <thead className="text-base text-zinc-400 border-b border-zinc-800">
               <tr>
-                <th className="text-left py-3 px-3">{t("res_jugador")}</th>
-                <th className="text-right px-3">{t("res_tiempos_total")}</th>
+                <th className="text-left py-2 px-2">{t("res_jugador")}</th>
+                <th className="text-right px-2">{t("res_tiempos_total")}</th>
                 {partesJugadas.map((p) => (
-                  <th key={p} className="text-right px-3">{p}</th>
+                  <th key={p} className="text-right px-2">{p}</th>
                 ))}
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -641,36 +653,38 @@ export default function ResumenPage() {
                   : colorSemaforoMin(f.total, maxMinJugados);
                 return (
                   <tr key={f.nombre} className={`border-b border-zinc-900 ${colorFila}`}>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2 px-2 truncate">
                       <span className={`${f.esPortero ? "text-yellow-400" : ""} font-bold`}>
                         {f.nombre}
                       </span>
-                      {f.enPista && <span className="ml-2 text-base bg-green-700 px-2 py-0.5 rounded">{t("res_en_pista_badge")}</span>}
+                      {f.enPista && <span className="ml-2 text-sm bg-green-700 px-2 py-0.5 rounded align-middle">{t("res_en_pista_badge")}</span>}
                       {f.esPortero && <span className="ml-2 text-base text-zinc-500">🥅</span>}
                     </td>
-                    <td className="text-right font-mono tabular-nums px-3 font-bold text-xl">
+                    <td className="text-right font-mono tabular-nums px-2 font-bold text-3xl">
                       {formatMMSS(f.total)}
                     </td>
                     {partesJugadas.map((p) => (
-                      <td key={p} className="text-right font-mono tabular-nums px-3 text-zinc-300">
+                      <td key={p} className="text-right font-mono tabular-nums px-2 text-zinc-200 text-3xl">
                         {formatMMSS(f.porParte[p] ?? 0)}
                       </td>
                     ))}
+                    <td />
                   </tr>
                 );
               })}
             </tbody>
             <tfoot className="text-base text-zinc-500 border-t border-zinc-800">
               <tr>
-                <td className="pt-3 px-3 italic">{t("res_total_acumulado")}</td>
-                <td className="text-right font-mono tabular-nums px-3 font-bold pt-3 text-lg">
+                <td className="pt-3 px-2 italic truncate">{t("res_total_acumulado")}</td>
+                <td className="text-right font-mono tabular-nums px-2 font-bold pt-3 text-xl">
                   {formatMMSS(filasTiempos.reduce((s, f) => s + f.total, 0))}
                 </td>
                 {partesJugadas.map((p) => (
-                  <td key={p} className="text-right font-mono tabular-nums px-3 pt-3">
+                  <td key={p} className="text-right font-mono tabular-nums px-2 pt-3 text-xl">
                     {formatMMSS(filasTiempos.reduce((s, f) => s + (f.porParte[p] ?? 0), 0))}
                   </td>
                 ))}
+                <td />
               </tr>
             </tfoot>
           </table>
