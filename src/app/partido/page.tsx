@@ -317,7 +317,13 @@ export default function PartidoPage() {
   const sTM = partido.stats.tiemposMuerto[p];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-3">
+    // PANTALLA COMPLETA SIN SCROLL (pedido Arkaitz 17/8: en el iPad en horizontal
+    // había que bajar para ver faltas/tarjetas). Columna flex de la altura exacta
+    // de la ventana (100dvh): "En pista" crece para llenar el hueco y todo lo
+    // demás va compacto (modo + ajuste de reloj + faltas/tarjetas en UNA línea,
+    // banquillo en una fila, botones más bajos). Si algún día no cabe (muchos
+    // banners a la vez), el contenedor sí permite scroll como red de seguridad.
+    <div className="h-[100dvh] bg-zinc-950 text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto">
       {/* BOTÓN DE TIEMPO FLOTANTE — SIEMPRE accesible arriba a la derecha, por
           encima de cualquier modal (z-[60] > z-50 de los ModalShell). En futsal
           el reloj se arranca/para sin parar, también mientras metes disparos,
@@ -325,13 +331,13 @@ export default function PartidoPage() {
       <div className="fixed top-2 right-2 z-[60]">
         {!corriendo
           ? <button onClick={play} aria-label={t("part_iniciar")}
-              className="px-6 py-4 bg-green-700 hover:bg-green-600 rounded-xl text-xl font-bold shadow-lg shadow-black/60 border border-green-300/40">▶ {t("part_iniciar")}</button>
+              className="px-5 py-3 bg-green-700 hover:bg-green-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-green-300/40">▶ {t("part_iniciar")}</button>
           : <button onClick={pausa} aria-label={t("part_pausar")}
-              className="px-6 py-4 bg-orange-700 hover:bg-orange-600 rounded-xl text-xl font-bold shadow-lg shadow-black/60 border border-orange-200/40">⏸ {t("part_pausar")}</button>}
+              className="px-5 py-3 bg-orange-700 hover:bg-orange-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-orange-200/40">⏸ {t("part_pausar")}</button>}
       </div>
 
-      {/* HEADER */}
-      <div className="flex items-center justify-between mb-1 pr-40">
+      {/* HEADER (compacto) */}
+      <div className="flex items-center justify-between pr-36 flex-none">
         <div className="flex items-center gap-3">
           {/* Reloj grande: componente propio que se repinta JUSTO en cada
               límite de segundo (no cada 250 ms) y cuenta atrás tipo marcador
@@ -342,17 +348,17 @@ export default function PartidoPage() {
             ultimoStart={partido.cronometro.ultimoStart}
             dur={dur}
             acabada={acabada} />
-          <div className="text-sm text-zinc-400">
+          <div className="text-sm text-zinc-400 leading-tight">
             <div className="font-bold">{p}</div>
             <div className="text-xs">
               {dur > 0
                 ? `${formatMMSS(segParte)} / ${formatMMSS(dur)}`
                 : `tot ${formatMMSS(segundosPartidoTotal())}`}
             </div>
-            {acabada && <div className="text-red-400 text-xs font-bold mt-0.5">{t("part_fin_parte")}</div>}
+            {acabada && <div className="text-red-400 text-xs font-bold">{t("part_fin_parte")}</div>}
           </div>
         </div>
-        <div className="text-4xl font-bold tabular-nums">
+        <div className="text-3xl font-bold tabular-nums">
           <span className="text-emerald-400">{CLIENTE.nombreCorto} {partido.marcador.inter}</span>
           <span className="text-zinc-500 mx-2">-</span>
           <span className="text-red-400">{partido.marcador.rival} {cfg.rival}</span>
@@ -367,12 +373,12 @@ export default function PartidoPage() {
               }
             }}
             disabled={p === "1T"}
-            className="px-2 py-3 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-sm"
+            className="px-2 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-sm"
             title={t("part_volver_parte_title")}>
             ⏮
           </button>
           <button onClick={() => setModalCambioParte(true)}
-            className="px-3 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+            className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
             {t("part_parte_btn")}
           </button>
         </div>
@@ -384,7 +390,7 @@ export default function PartidoPage() {
           inferioridad MÁS ANTIGUO; cada gol nuestro cancela el de
           superioridad más antiguo. */}
       {(cronosInferioridad.length > 0 || cronosSuperioridad.length > 0) && (
-        <div className={`grid ${(cronosInferioridad.length + cronosSuperioridad.length) >= 2 ? "grid-cols-2" : "grid-cols-1"} gap-2 mb-3`}>
+        <div className={`grid ${(cronosInferioridad.length + cronosSuperioridad.length) >= 2 ? "grid-cols-2" : "grid-cols-1"} gap-2 flex-none`}>
           {cronosInferioridad.map((c, i) => (
             <div key={`inf-${c.tInicio}-${i}`}
               className="bg-red-700/90 border-2 border-red-400 rounded-lg p-3 flex items-center justify-between gap-3">
@@ -430,8 +436,8 @@ export default function PartidoPage() {
           cumplidos o gol del rival) queda un hueco en pista. Aquí se ofrece
           meter a un jugador del banquillo de un toque (rápido para el live). */}
       {huecosRellenables > 0 && (
-        <div className="bg-emerald-700/90 border-2 border-emerald-400 rounded-lg p-3 mb-3">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="bg-emerald-700/90 border-2 border-emerald-400 rounded-lg p-2 flex-none">
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-3xl">✅</span>
             <div>
               <div className="text-base font-bold leading-tight">
@@ -465,7 +471,7 @@ export default function PartidoPage() {
           - 0 porteros en pista: situación normal en fin de partido
             perdiendo (portero-jugador). Línea pequeña discreta. */}
       {porterosEnPista.length >= 2 && (
-        <div className="bg-yellow-600/90 border-2 border-yellow-300 rounded-lg p-2 mb-3 flex items-center gap-2">
+        <div className="bg-yellow-600/90 border-2 border-yellow-300 rounded-lg p-2 flex-none flex items-center gap-2">
           <span className="text-2xl">⚠️</span>
           <div className="text-sm font-bold leading-tight">
             {t("part_porteros_dos", { n: porterosEnPista.length, lista: porterosEnPista.join(", ") })}
@@ -473,51 +479,77 @@ export default function PartidoPage() {
         </div>
       )}
       {porterosEnPista.length === 0 && enPista.length > 0 && (
-        <div className="text-xs text-zinc-500 mb-2 flex items-center gap-1.5">
+        <div className="text-xs text-zinc-500 flex-none flex items-center gap-1.5">
           <span>ℹ️</span>
           <span>{t("part_sin_portero")}</span>
         </div>
       )}
 
-      {/* MODO DE CAPTURA — directo (rápido, sin zonas) vs vídeo (todo el
-          detalle al revisar la grabación). Pedido Arkaitz 10/8/2026. */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-zinc-500 text-xs">{t("part_modo")}</span>
-        <div className="inline-flex rounded-lg overflow-hidden border border-zinc-700">
+      {/* LÍNEA DE CONTROL (una sola fila): modo directo/vídeo · ajuste de reloj ·
+          faltas / amarillas / TM de la parte · avisos de faltas · tarjetas del
+          rival. Antes eran 2 filas arriba + una barra al final de la página que
+          obligaba a hacer scroll en el iPad. */}
+      <div className="flex items-center gap-x-3 gap-y-1 flex-wrap flex-none text-sm">
+        <div className="inline-flex rounded-lg overflow-hidden border border-zinc-700" title={directo ? t("part_modo_directo_nota") : t("part_modo_video_nota")}>
           <button onClick={() => setModo("directo")}
-            className={`px-3 py-1.5 text-sm font-bold ${directo ? "bg-red-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
+            className={`px-2.5 py-1 text-xs font-bold ${directo ? "bg-red-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
             🔴 {t("part_modo_directo")}
           </button>
           <button onClick={() => setModo("video")}
-            className={`px-3 py-1.5 text-sm font-bold ${!directo ? "bg-sky-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
+            className={`px-2.5 py-1 text-xs font-bold ${!directo ? "bg-sky-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
             🎥 {t("part_modo_video")}
           </button>
         </div>
-        <span className="text-zinc-600 text-[10px]">{directo ? t("part_modo_directo_nota") : t("part_modo_video_nota")}</span>
+        <div className="flex items-center gap-1" title={t("part_ajustar_nota")}>
+          <span className="text-zinc-500 text-[10px]">{t("part_ajustar_reloj")}</span>
+          {([-60, -10, -1, 1, 10, 60] as const).map((d) => (
+            <button key={d} onClick={() => ajustarReloj(d)}
+              className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono text-xs">
+              {d < 0 ? "−" : "+"}{formatMMSS(Math.abs(d)).replace(/^0/, "")}
+            </button>
+          ))}
+        </div>
+        {/* Faltas / amarillas (todo el partido) / TM */}
+        <div className="flex items-center gap-x-3 ml-auto text-sm">
+          <span className="text-zinc-500 text-[10px] uppercase tracking-wide">{t("part_stats_parte", { parte: p })}</span>
+          <span>
+            <span className="text-emerald-400 font-bold">I</span> {t("part_faltas")}{" "}
+            <strong className={sFalt.inter >= 5 ? "text-red-400" : ""}>{sFalt.inter}</strong>
+            <span className="text-zinc-600 mx-1">/</span>
+            <span className="text-red-400 font-bold">R</span> {t("part_faltas")}{" "}
+            <strong className={sFalt.rival >= 5 ? "text-red-400" : ""}>{sFalt.rival}</strong>
+          </span>
+          <span>🟨 <strong>{sAma.inter}</strong><span className="text-zinc-600">/</span><strong>{sAma.rival}</strong></span>
+          <span>🛑 TM <strong>{sTM.inter}</strong><span className="text-zinc-600">/</span><strong>{sTM.rival}</strong></span>
+        </div>
+        {/* Avisos de faltas (solo el más alto que aplique) + tarjetas del rival */}
+        {sFalt.inter === 4 && <span className="bg-amber-600 rounded px-2 py-0.5 text-xs font-bold">{t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}</span>}
+        {sFalt.inter === 5 && <span className="bg-orange-600 rounded px-2 py-0.5 text-xs font-bold">{t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC })}</span>}
+        {sFalt.inter >= 6 && <span className="bg-red-700 rounded px-2 py-0.5 text-xs font-bold">{t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC })}</span>}
+        {sFalt.rival === 4 && <span className="bg-amber-600 rounded px-2 py-0.5 text-xs font-bold">{t("part_rival_4falta")}</span>}
+        {sFalt.rival === 5 && <span className="bg-orange-600 rounded px-2 py-0.5 text-xs font-bold">{t("part_rival_5falta")}</span>}
+        {sFalt.rival >= 6 && <span className="bg-emerald-700 rounded px-2 py-0.5 text-xs font-bold">{t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC })}</span>}
+        {(() => {
+          const evs = partido.eventos as any[];
+          const amaRival = evs.filter((e) => e.tipo === "amarilla" && e.equipo === "RIVAL" && e.jugador).map((e) => e.jugador as string);
+          const rojaRival = evs.filter((e) => e.tipo === "roja" && e.equipo === "RIVAL" && e.jugador).map((e) => e.jugador as string);
+          if (!amaRival.length && !rojaRival.length) return null;
+          const rojaSet = new Set(rojaRival);
+          const amaSinExp = amaRival.filter((d) => !rojaSet.has(d));
+          return (
+            <span className="text-xs">
+              {amaSinExp.length > 0 && <span className="text-yellow-300">{t("part_ama_rival", { rival: cfg.rival })} <strong>{amaSinExp.join(", ")}</strong></span>}
+              {amaSinExp.length > 0 && rojaRival.length > 0 && <span className="text-zinc-600 mx-1">·</span>}
+              {rojaRival.length > 0 && <span className="text-red-300">{t("part_roja_rival_exp", { rival: cfg.rival })} <strong>{rojaRival.join(", ")}</strong></span>}
+            </span>
+          );
+        })()}
       </div>
 
-      {/* Botones de ajuste de reloj */}
-      <div className="flex items-center gap-2 mb-3 text-sm">
-        <span className="text-zinc-500 text-xs">{t("part_ajustar_reloj")}</span>
-        <button onClick={() => ajustarReloj(-60)}
-          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">−1:00</button>
-        <button onClick={() => ajustarReloj(-10)}
-          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">−0:10</button>
-        <button onClick={() => ajustarReloj(-1)}
-          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">−0:01</button>
-        <button onClick={() => ajustarReloj(+1)}
-          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">+0:01</button>
-        <button onClick={() => ajustarReloj(+10)}
-          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">+0:10</button>
-        <button onClick={() => ajustarReloj(+60)}
-          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono">+1:00</button>
-        <span className="text-zinc-600 text-[10px] ml-2">{t("part_ajustar_nota")}</span>
-      </div>
-
-      {/* EN PISTA — ocupa todo el ancho, los 5 jugadores en columnas iguales y bien grandes */}
-      <div className="bg-zinc-900 rounded-xl p-3 mb-3">
-        <h2 className="text-zinc-400 text-sm mb-2">{t("part_en_pista")}</h2>
-        <div className="grid grid-cols-5 gap-2">
+      {/* EN PISTA — crece para llenar la altura disponible; los 5 en columnas iguales */}
+      <div className="bg-zinc-900 rounded-xl p-2 flex-1 min-h-[132px] flex flex-col">
+        <h2 className="text-zinc-400 text-xs mb-1 flex-none">{t("part_en_pista")}</h2>
+        <div className="grid grid-cols-5 gap-2 flex-1 min-h-0">
           {enPistaVista.map((nombre) => {
             const seg = segundosTurnoActual(nombre);
             const totalParte = segundosEnParte(nombre, p);
@@ -532,7 +564,7 @@ export default function PartidoPage() {
                   setModalAccionInd({ jugador: nombre });
                 }}
                 disabled={estaExpulsado}
-                className={`relative p-5 min-h-[140px] rounded-lg text-center flex flex-col justify-center ${
+                className={`relative px-2 py-1 h-full min-h-0 rounded-lg text-center flex flex-col justify-center ${
                   estaExpulsado
                     ? "bg-red-900/70 border-2 border-red-500 opacity-80 cursor-not-allowed"
                     : esPortero
@@ -540,22 +572,24 @@ export default function PartidoPage() {
                       : colorTiempoPista(seg)
                 } ${tieneAmarilla && !estaExpulsado ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-zinc-900" : ""}`}>
                 {estaExpulsado && (
-                  <span className="absolute top-1.5 right-1.5 text-xl leading-none" title={t("part_expulsado_title")}>🟥</span>
+                  <span className="absolute top-1 right-1.5 text-lg leading-none" title={t("part_expulsado_title")}>🟥</span>
                 )}
                 {!estaExpulsado && tieneAmarilla && (
-                  <span className="absolute top-1.5 right-1.5 text-xl leading-none" title={t("part_amarilla_title")}>🟨</span>
+                  <span className="absolute top-1 right-1.5 text-lg leading-none" title={t("part_amarilla_title")}>🟨</span>
                 )}
                 {esPortero && !estaExpulsado && (
-                  <span className="absolute top-1.5 left-1.5 text-sm">🥅</span>
+                  <span className="absolute top-1 left-1.5 text-sm">🥅</span>
                 )}
-                <div className="text-sm opacity-70">{dorsal ? `#${dorsal}` : "—"}</div>
-                <div className={`text-lg font-bold leading-tight ${estaExpulsado ? "line-through" : ""}`}>{nombre}</div>
+                {/* Tamaños en función de la ALTURA disponible (vh) para que
+                    quepa sin scroll en cualquier iPad en horizontal. */}
+                <div className="text-xs opacity-70 leading-none">{dorsal ? `#${dorsal}` : "—"}</div>
+                <div className={`font-bold leading-tight text-[clamp(0.9rem,2.4vh,1.35rem)] ${estaExpulsado ? "line-through" : ""}`}>{nombre}</div>
                 {estaExpulsado ? (
-                  <div className="text-base font-bold mt-2 text-red-200">{t("part_expulsado")}</div>
+                  <div className="text-base font-bold mt-1 text-red-200">{t("part_expulsado")}</div>
                 ) : (
                   <>
-                    <div className="text-3xl font-mono tabular-nums mt-2">{formatMMSS(seg)}</div>
-                    <div className="text-sm opacity-70 mt-1">{t("part_parte_corto", { tiempo: formatMMSS(totalParte) })}</div>
+                    <div className="font-mono tabular-nums leading-none mt-1 text-[clamp(1.4rem,5.5vh,3rem)]">{formatMMSS(seg)}</div>
+                    <div className="text-xs opacity-70 mt-1">{t("part_parte_corto", { tiempo: formatMMSS(totalParte) })}</div>
                   </>
                 )}
               </button>
@@ -564,10 +598,12 @@ export default function PartidoPage() {
         </div>
       </div>
 
-      {/* BANQUILLO */}
-      <div className="bg-zinc-900 rounded-xl p-4 mb-3">
-        <h2 className="text-zinc-400 text-base mb-3">{t("part_banquillo")}</h2>
-        <div className="grid grid-cols-6 gap-2">
+      {/* BANQUILLO — una fila hasta 8 jugadores; a partir de 9, dos filas
+          (con 10 en una fila los nombres se cortaban en el iPad). */}
+      <div className="bg-zinc-900 rounded-xl p-2 flex-none">
+        <h2 className="text-zinc-400 text-xs mb-1">{t("part_banquillo")}</h2>
+        <div className="grid gap-1.5"
+          style={{ gridTemplateColumns: `repeat(${banquilloVista.length <= 8 ? Math.max(1, banquilloVista.length) : Math.ceil(banquilloVista.length / 2)}, minmax(0, 1fr))` }}>
           {banquilloVista.map((nombre) => {
             const seg = segundosBanquillo(nombre);
             // segTurnoUltimo = tiempo que jugó en su última rotación antes
@@ -585,7 +621,7 @@ export default function PartidoPage() {
                   setModalAccionBanquillo({ jugador: nombre });
                 }}
                 disabled={estaExpulsado}
-                className={`relative p-3 min-h-[90px] rounded-lg text-center flex flex-col justify-center ${
+                className={`relative px-1 py-1.5 min-h-[62px] rounded-lg text-center flex flex-col justify-center ${
                   estaExpulsado
                     ? "bg-red-900/70 border border-red-500 opacity-80 cursor-not-allowed"
                     : esPortero
@@ -593,17 +629,18 @@ export default function PartidoPage() {
                       : colorTiempoBanquillo(seg, segUltimo)
                 } ${tieneAmarilla && !estaExpulsado ? "ring-2 ring-yellow-400 ring-offset-1 ring-offset-zinc-900" : ""}`}>
                 {estaExpulsado && (
-                  <span className="absolute top-1 right-1 text-base leading-none">🟥</span>
+                  <span className="absolute top-0.5 right-1 text-sm leading-none">🟥</span>
                 )}
                 {!estaExpulsado && tieneAmarilla && (
-                  <span className="absolute top-1 right-1 text-base leading-none">🟨</span>
+                  <span className="absolute top-0.5 right-1 text-sm leading-none">🟨</span>
                 )}
-                <div className="text-sm opacity-70">{dorsal ? `#${dorsal}` : "—"}</div>
-                <div className={`text-base font-bold leading-tight ${estaExpulsado ? "line-through" : ""}`}>{nombre}</div>
+                <div className={`text-sm font-bold leading-tight truncate ${estaExpulsado ? "line-through" : ""}`}>
+                  <span className="opacity-60 font-normal text-xs mr-1">{dorsal ? `#${dorsal}` : ""}</span>{nombre}
+                </div>
                 {estaExpulsado ? (
-                  <div className="text-xs font-bold mt-1 text-red-200">{t("part_expulsado")}</div>
+                  <div className="text-[10px] font-bold text-red-200">{t("part_expulsado")}</div>
                 ) : (
-                  <div className="text-xl font-mono tabular-nums mt-1.5">{formatMMSS(seg)}</div>
+                  <div className="text-lg font-mono tabular-nums leading-none mt-1">{formatMMSS(seg)}</div>
                 )}
               </button>
             );
@@ -614,7 +651,7 @@ export default function PartidoPage() {
       {/* BOTONES ACCIÓN COLECTIVA — RESTAURADO 20/5/2026 noche:
           Arkaitz aclaró que "omitir guardar" no significaba eliminar el
           botón, sino simplificar el flujo del modal. El botón vuelve. */}
-      <div className="grid grid-cols-8 gap-2">
+      <div className="grid grid-cols-8 gap-1.5 flex-none">
         <BotonAccion label={t("btn_gol")} color="bg-emerald-700" onClick={() => setModalGol(true)} />
         <BotonAccion label={t("btn_disp_rival")} color="bg-red-700" onClick={() => setModalDisparoRival(true)} />
         <BotonAccion label={t("btn_falta")} color="bg-orange-600" onClick={() => setModalFalta(true)} />
@@ -624,34 +661,30 @@ export default function PartidoPage() {
         <BotonAccion label={t("btn_tm")} color="bg-purple-700" onClick={() => setModalTM(true)} />
         <BotonAccion label={t("btn_pen10m")} color="bg-pink-700" onClick={() => setModalPen(true)} />
       </div>
-      {/* ACCIONES COLECTIVAS DE EQUIPO — recuperación / pérdida que NO se
-          asignan a un jugador (trabajo colectivo). Se guardan como acción del
-          pseudo-jugador "#EQUIPO" y suman a los totales de recuperaciones /
-          pérdidas del equipo. Pedido Arkaitz 10/8/2026. */}
-      <div className="grid grid-cols-2 gap-2 mt-2">
+      {/* ACCIONES COLECTIVAS DE EQUIPO (recuperación / pérdida de equipo, se
+          guardan como "#EQUIPO") + navegación, TODO en una fila para no
+          consumir altura. Pérdida de EQUIPO = SIEMPRE forzada (pf); la no
+          forzada siempre es de un jugador (decisión Arkaitz 10/8). */}
+      <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-none`}>
         <button onClick={() => registrarAccionIndividual(JUGADOR_EQUIPO, "robos")}
-          className="py-4 bg-green-800 hover:bg-green-700 rounded-lg text-lg font-bold">
+          className="py-2.5 bg-green-800 hover:bg-green-700 rounded-lg text-sm font-bold leading-tight">
           {t("btn_recuperacion_equipo")}
         </button>
-        {/* Pérdida de EQUIPO = SIEMPRE forzada (pf). La no forzada siempre es
-            de un jugador concreto (decisión de Arkaitz 10/8). */}
         <button onClick={() => registrarAccionIndividual(JUGADOR_EQUIPO, "pf")}
-          className="py-4 bg-rose-900 hover:bg-rose-800 rounded-lg text-lg font-bold">
+          className="py-2.5 bg-rose-900 hover:bg-rose-800 rounded-lg text-sm font-bold leading-tight">
           {t("btn_perdida_equipo")}
         </button>
-      </div>
-      <div className={`grid ${cfg.permiteTanda ? "grid-cols-5" : "grid-cols-4"} gap-2 mt-2`}>
         <button onClick={deshacerUltimoEvento}
-          className="py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+          className="py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
           {t("btn_deshacer")}
         </button>
         <button onClick={() => setModalTiempos(true)}
-          className="py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+          className="py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
           {t("btn_tiempos")}
         </button>
         {cfg.permiteTanda && (
           <button onClick={() => { iniciarTanda(); setModalTanda(true); }}
-            className={`py-3 rounded-lg text-sm font-bold ${
+            className={`py-2.5 rounded-lg text-sm font-bold ${
               partido.tanda?.tiros.length
                 ? "bg-pink-700 hover:bg-pink-600"
                 : "bg-zinc-800 hover:bg-zinc-700"
@@ -661,102 +694,13 @@ export default function PartidoPage() {
           </button>
         )}
         <button onClick={() => router.push("/resumen")}
-          className="py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-bold">
+          className="py-2.5 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-bold">
           {t("btn_resumen")}
         </button>
         <button onClick={() => router.push("/")}
-          className="py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+          className="py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
           {t("inicio")}
         </button>
-      </div>
-
-      {/* STATS compactas al final: faltas / amarillas / tiempos muertos por parte */}
-      <div className="bg-zinc-900/60 rounded-lg p-3 mt-3 text-base">
-        <div className="flex items-center justify-between flex-wrap gap-x-5 gap-y-2">
-          <span className="text-zinc-500 text-xs uppercase tracking-wide">{t("part_stats_parte", { parte: p })}</span>
-          <div className="flex flex-wrap gap-x-5 gap-y-2">
-            <span>
-              <span className="text-emerald-400 font-bold">I</span> {t("part_faltas")}{" "}
-              <strong className={sFalt.inter >= 5 ? "text-red-400" : ""}>{sFalt.inter}</strong>
-              <span className="text-zinc-600 mx-1">/</span>
-              <span className="text-red-400 font-bold">R</span> {t("part_faltas")}{" "}
-              <strong className={sFalt.rival >= 5 ? "text-red-400" : ""}>{sFalt.rival}</strong>
-            </span>
-            <span>
-              🟨 <strong>{sAma.inter}</strong>
-              <span className="text-zinc-600">/</span>
-              <strong>{sAma.rival}</strong>
-            </span>
-            <span>
-              🛑 TM <strong>{sTM.inter}</strong>
-              <span className="text-zinc-600">/</span>
-              <strong>{sTM.rival}</strong>
-            </span>
-          </div>
-        </div>
-
-        {/* Dorsales del RIVAL con tarjetas (amarilla / roja). Se construye
-            sobre la marcha desde los eventos. Útil para el CT que necesita
-            saber a quién han amonestado del rival. */}
-        {(() => {
-          const evs = partido.eventos as any[];
-          const amaRival = evs
-            .filter((e) => e.tipo === "amarilla" && e.equipo === "RIVAL" && e.jugador)
-            .map((e) => e.jugador as string);
-          const rojaRival = evs
-            .filter((e) => e.tipo === "roja" && e.equipo === "RIVAL" && e.jugador)
-            .map((e) => e.jugador as string);
-          if (!amaRival.length && !rojaRival.length) return null;
-          // Si un dorsal ya tiene roja, lo quitamos de la lista de amarillas
-          const rojaSet = new Set(rojaRival);
-          const amaSinExpulsados = amaRival.filter((d) => !rojaSet.has(d));
-          return (
-            <div className="mt-2 flex flex-wrap gap-3 text-sm">
-              {amaSinExpulsados.length > 0 && (
-                <span className="text-yellow-300">
-                  {t("part_ama_rival", { rival: cfg.rival })} <strong>{amaSinExpulsados.join(", ")}</strong>
-                </span>
-              )}
-              {rojaRival.length > 0 && (
-                <span className="text-red-300">
-                  {t("part_roja_rival_exp", { rival: cfg.rival })} <strong>{rojaRival.join(", ")}</strong>
-                </span>
-              )}
-            </div>
-          );
-        })()}
-        {/* Avisos de faltas escalonados: 4ª (cuidado), 5ª (siguiente es 10m),
-            6ª (ya es 10m). Solo mostramos el más alto que aplique. */}
-        {sFalt.inter === 4 && (
-          <div className="mt-2 bg-amber-600 rounded px-3 py-1 text-center font-bold">
-            {t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}
-          </div>
-        )}
-        {sFalt.inter === 5 && (
-          <div className="mt-2 bg-orange-600 rounded px-3 py-1 text-center font-bold">
-            {t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC })}
-          </div>
-        )}
-        {sFalt.inter >= 6 && (
-          <div className="mt-2 bg-red-700 rounded px-3 py-1 text-center font-bold">
-            {t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC })}
-          </div>
-        )}
-        {sFalt.rival === 4 && (
-          <div className="mt-2 bg-amber-600 rounded px-3 py-1 text-center font-bold">
-            {t("part_rival_4falta")}
-          </div>
-        )}
-        {sFalt.rival === 5 && (
-          <div className="mt-2 bg-orange-600 rounded px-3 py-1 text-center font-bold">
-            {t("part_rival_5falta")}
-          </div>
-        )}
-        {sFalt.rival >= 6 && (
-          <div className="mt-2 bg-emerald-700 rounded px-3 py-1 text-center font-bold">
-            {t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC })}
-          </div>
-        )}
       </div>
 
       {modalCambio && (
@@ -1131,9 +1075,11 @@ function RelojGrande(props: { segundosParte: number; ultimoStart: number | null;
 }
 
 function BotonAccion(props: { label: string; color: string; onClick: () => void }) {
+  // Altura contenida (antes py-9/text-2xl: ~100 px que obligaban a hacer scroll
+  // en el iPad). Sigue siendo un botón grande para el dedo (~56 px).
   return (
     <button onClick={props.onClick}
-      className={`${props.color} hover:opacity-90 py-9 rounded-xl text-2xl font-bold leading-tight`}>
+      className={`${props.color} hover:opacity-90 py-3.5 rounded-xl text-lg font-bold leading-tight`}>
       {props.label}
     </button>
   );
