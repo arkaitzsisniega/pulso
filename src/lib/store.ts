@@ -44,6 +44,7 @@ import {
 import { uid } from "./utils";
 import { ROSTER } from "./clientes";
 import { reconstruirAgregados, recomputarMinutos } from "./reconstruir";
+import { segundosVivos } from "./reloj";
 
 const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
 const TICK_MS = 250;
@@ -372,9 +373,9 @@ export function usePartido() {
   );
 
   const segundosParte = useCallback((): number => {
-    const c = partido.cronometro;
-    if (c.ultimoStart == null) return c.segundosParte;
-    return c.segundosParte + (Date.now() - c.ultimoStart) / 1000;
+    // Misma aritmética de siempre (contra Date.now(), sin acumular ticks →
+    // no deriva); ahora vive en lib/reloj.ts, con test (reloj.test.ts).
+    return segundosVivos(partido.cronometro);
   }, [partido.cronometro]);
 
   const segundosPartidoTotal = useCallback((): number => {

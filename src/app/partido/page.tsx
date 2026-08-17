@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
 import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
 import { formatMMSS, colorTiempoPista, colorTiempoBanquillo } from "@/lib/utils";
+import { segundosVivos, formatCuentaAtras, msHastaSiguienteCambio } from "@/lib/reloj";
 import { Campo } from "@/components/Campo";
 import { Porteria } from "@/components/Porteria";
 import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo } from "@/lib/db";
@@ -262,22 +263,37 @@ export default function PartidoPage() {
   // originales `enPista`/`banquillo` se reservan para el render
   // visual donde el expulsado SÍ debe aparecer (con su estética roja).
   const enPistaActivos = enPista.filter((n) => !jugadoresExpulsados.has(n));
-  const banquilloActivos = banquillo.filter((n) => !jugadoresExpulsados.has(n));
 
-  // Orden VISUAL de los 5 en pista: el que MÁS tiempo lleva jugado (total del
-  // partido, en vivo) va a la IZQUIERDA. Es estable entre cambios — todos los
-  // de pista suman a la vez mientras el reloj corre, así que su orden relativo
-  // no "baila"; solo se reordena al hacer un cambio. NO muta partido.enPista
-  // (solo afecta al render). Pedido por Arkaitz (10/8/2026).
-  const _totalVivoJugado = (n: string): number => {
+  // Orden VISUAL de los 5 en pista: el que MÁS tiempo lleva en pista EN ESTE
+  // TURNO (desde que entró, en vivo) va a la IZQUIERDA; el recién entrado, a la
+  // derecha. Antes ordenaba por el TOTAL jugado en el partido, con lo que un
+  // jugador recién entrado con muchos minutos acumulados se ponía a la
+  // izquierda — por eso Arkaitz decía que "seguía sin funcionar" (16/8). Es
+  // estable mientras el reloj corre (todos suman a la vez) y solo se reordena
+  // al hacer un cambio. Empate → orden de la lista de pista (portero primero
+  // al inicio). NO muta partido.enPista (solo afecta al render).
+  const enPistaVista = [...enPista]
+    .map((n, i) => ({ n, i, seg: segundosTurnoActual(n) }))
+    .sort((a, b) => (b.seg - a.seg) || (a.i - b.i))
+    .map((x) => x.n);
+
+  // Orden VISUAL del banquillo: el que ha salido del campo MÁS RECIENTEMENTE a
+  // la IZQUIERDA … y los que aún NO han jugado, los últimos (en orden de
+  // convocatoria). Pedido por Arkaitz (16/8). Se usa también en las listas de
+  // "cambio rápido" para que vea el mismo orden en todas partes.
+  const _ordenBanquillo = (n: string, i: number): [number, number, number] => {
     const tj = partido.tiempos[n];
-    if (!tj) return 0;
-    const live = (enPista.includes(n) && tj.turnoStart != null && partido.cronometro.ultimoStart != null)
-      ? (Date.now() - tj.turnoStart) / 1000
-      : 0;
-    return (tj.totalSegundos ?? 0) + live;
+    // "Ha jugado" ⇔ ha salido alguna vez de pista (segTurnoUltimo se fija al
+    // salir) o acumula tiempo. Los que nunca entraron tienen ultimaSalida =
+    // hora de creación del partido, así que hay que separarlos explícitamente.
+    const haJugado = !!tj && (tj.segTurnoUltimo != null || (tj.totalSegundos ?? 0) > 0);
+    return [haJugado ? 0 : 1, -(tj?.ultimaSalida ?? 0), i];
   };
-  const enPistaVista = [...enPista].sort((a, b) => _totalVivoJugado(b) - _totalVivoJugado(a));
+  const banquilloVista = [...banquillo]
+    .map((n, i) => ({ n, k: _ordenBanquillo(n, i) }))
+    .sort((a, b) => (a.k[0] - b.k[0]) || (a.k[1] - b.k[1]) || (a.k[2] - b.k[2]))
+    .map((x) => x.n);
+  const banquilloActivos = banquilloVista.filter((n) => !jugadoresExpulsados.has(n));
 
   // Huecos en pista cuya sanción YA terminó (pasaron los 2 min o el rival
   // marcó y canceló la roja) → se pueden rellenar metiendo a alguien del
@@ -287,7 +303,17 @@ export default function PartidoPage() {
 
   const p = partido.cronometro.parteActual;
   const sFalt = partido.stats.faltas[p];
-  const sAma = partido.stats.amarillas[p];
+  // AMARILLAS: se guardan por parte (para el informe), pero se MUESTRAN
+  // acumuladas de TODO el partido — una amarilla no caduca al cambiar de
+  // parte, prórroga o penaltis (regla del reglamento; pedido Arkaitz 16/8).
+  // Antes se mostraba solo la parte actual y en la 2ª parte "aparecían" 0.
+  // Las FALTAS sí se reinician por parte (eso está bien).
+  const sAma = (["1T", "2T", "PR1", "PR2"] as ParteId[]).reduce(
+    (acc, pid) => ({
+      inter: acc.inter + (partido.stats.amarillas[pid]?.inter ?? 0),
+      rival: acc.rival + (partido.stats.amarillas[pid]?.rival ?? 0),
+    }),
+    { inter: 0, rival: 0 });
   const sTM = partido.stats.tiemposMuerto[p];
 
   return (
@@ -307,9 +333,15 @@ export default function PartidoPage() {
       {/* HEADER */}
       <div className="flex items-center justify-between mb-1 pr-40">
         <div className="flex items-center gap-3">
-          <div className={`text-6xl font-mono font-bold tabular-nums ${acabada ? "text-red-500 animate-pulse" : ""}`}>
-            {dur > 0 ? formatMMSS(restantes) : formatMMSS(segParte)}
-          </div>
+          {/* Reloj grande: componente propio que se repinta JUSTO en cada
+              límite de segundo (no cada 250 ms) y cuenta atrás tipo marcador
+              (20:00 durante el 1er segundo, 00:00 solo al acabar). Ver
+              lib/reloj.ts. Pedido Arkaitz 16/8 ("parece ir más lento"). */}
+          <RelojGrande
+            segundosParte={partido.cronometro.segundosParte}
+            ultimoStart={partido.cronometro.ultimoStart}
+            dur={dur}
+            acabada={acabada} />
           <div className="text-sm text-zinc-400">
             <div className="font-bold">{p}</div>
             <div className="text-xs">
@@ -536,7 +568,7 @@ export default function PartidoPage() {
       <div className="bg-zinc-900 rounded-xl p-4 mb-3">
         <h2 className="text-zinc-400 text-base mb-3">{t("part_banquillo")}</h2>
         <div className="grid grid-cols-6 gap-2">
-          {banquillo.map((nombre) => {
+          {banquilloVista.map((nombre) => {
             const seg = segundosBanquillo(nombre);
             // segTurnoUltimo = tiempo que jugó en su última rotación antes
             // de salir. Lo necesitamos para colorear el banquillo con el
@@ -585,9 +617,9 @@ export default function PartidoPage() {
       <div className="grid grid-cols-8 gap-2">
         <BotonAccion label={t("btn_gol")} color="bg-emerald-700" onClick={() => setModalGol(true)} />
         <BotonAccion label={t("btn_disp_rival")} color="bg-red-700" onClick={() => setModalDisparoRival(true)} />
-        <BotonAccion label={t("btn_falta")} color="bg-orange-700" onClick={() => setModalFalta(true)} />
-        <BotonAccion label={t("btn_amarilla")} color="bg-yellow-700" onClick={() => setModalAmarilla(true)} />
-        <BotonAccion label={t("btn_roja")} color="bg-red-800" onClick={() => setModalRoja(true)} />
+        <BotonAccion label={t("btn_falta")} color="bg-orange-600" onClick={() => setModalFalta(true)} />
+        <BotonAccion label={t("btn_amarilla")} color="bg-yellow-400 text-zinc-950" onClick={() => setModalAmarilla(true)} />
+        <BotonAccion label={t("btn_roja")} color="bg-red-950 border-2 border-red-500" onClick={() => setModalRoja(true)} />
         <BotonAccion label={t("btn_cambio")} color="bg-zinc-700" onClick={() => setModalCambio({ sale: "" })} />
         <BotonAccion label={t("btn_tm")} color="bg-purple-700" onClick={() => setModalTM(true)} />
         <BotonAccion label={t("btn_pen10m")} color="bg-pink-700" onClick={() => setModalPen(true)} />
@@ -990,6 +1022,7 @@ export default function PartidoPage() {
 
       {modalPen && (
         <ModalPenalti
+          directo={directo}
           enPista={enPistaActivos}
           rivalNombre={cfg.rival}
           onCerrar={() => setModalPen(false)}
@@ -1065,6 +1098,38 @@ export default function PartidoPage() {
 
 // ──────────────── COMPONENTES BÁSICOS ────────────────
 
+/**
+ * Reloj grande del partido. Se repinta a sí mismo EXACTAMENTE en cada límite
+ * de segundo (setTimeout alineado con lib/reloj.msHastaSiguienteCambio), en
+ * vez de depender del tick de 250 ms + render de toda la página, que hacía
+ * que el cambio de dígito llegara siempre un poco tarde ("parece ir lento").
+ * El valor sigue calculándose contra Date.now() (exacto, sin deriva).
+ * Cuenta atrás con semántica de marcador (ceil); transcurrido con floor.
+ */
+function RelojGrande(props: { segundosParte: number; ultimoStart: number | null; dur: number; acabada: boolean }) {
+  const [, repintar] = useState(0);
+  const { segundosParte, ultimoStart, dur } = props;
+  useEffect(() => {
+    if (ultimoStart == null) return;  // pausado: el valor es fijo
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let vivo = true;
+    const programar = () => {
+      if (!vivo) return;
+      const ms = msHastaSiguienteCambio({ segundosParte, ultimoStart }, dur);
+      timer = setTimeout(() => { repintar((x) => x + 1); programar(); }, ms);
+    };
+    programar();
+    return () => { vivo = false; if (timer) clearTimeout(timer); };
+  }, [segundosParte, ultimoStart, dur]);
+  const vivos = segundosVivos({ segundosParte, ultimoStart });
+  const texto = dur > 0 ? formatCuentaAtras(dur - vivos) : formatMMSS(vivos);
+  return (
+    <div className={`text-6xl font-mono font-bold tabular-nums ${props.acabada ? "text-red-500 animate-pulse" : ""}`}>
+      {texto}
+    </div>
+  );
+}
+
 function BotonAccion(props: { label: string; color: string; onClick: () => void }) {
   return (
     <button onClick={props.onClick}
@@ -1074,14 +1139,14 @@ function BotonAccion(props: { label: string; color: string; onClick: () => void 
   );
 }
 
-function ModalShell(props: { titulo: string; onCerrar: () => void; children: React.ReactNode; maxW?: string }) {
+function ModalShell(props: { titulo: string; onCerrar: () => void; children: React.ReactNode; maxW?: string; tituloClass?: string }) {
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
       onClick={props.onCerrar}>
       <div className={`bg-zinc-900 rounded-xl p-5 w-full ${props.maxW || "max-w-4xl"} max-h-[95vh] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-2xl font-bold">{props.titulo}</h2>
+          <h2 className={`${props.tituloClass || "text-2xl"} font-bold`}>{props.titulo}</h2>
           <button onClick={props.onCerrar} className="text-zinc-400 text-3xl leading-none px-2">×</button>
         </div>
         {props.children}
@@ -1166,18 +1231,19 @@ function ModalAccionBanquillo(props: {
 }) {
   return (
     <ModalShell titulo={t("mab_titulo", { jugador: props.jugador })} onCerrar={props.onCerrar} maxW="max-w-2xl">
+      {/* Mismo orden y colores que en el menú de pista: FALTA · AMARILLA · ROJA */}
       <div className="grid grid-cols-3 gap-3 mb-4">
+        <button onClick={props.onFalta}
+          className="py-4 bg-orange-600 hover:bg-orange-500 rounded-lg text-lg font-bold">
+          {t("mab_falta")}
+        </button>
         <button onClick={props.onAmarilla}
-          className="py-4 bg-yellow-700 hover:bg-yellow-600 rounded-lg text-lg font-bold">
+          className="py-4 bg-yellow-400 hover:bg-yellow-300 text-zinc-950 rounded-lg text-lg font-bold">
           {t("mab_amarilla")}
         </button>
         <button onClick={props.onRoja}
-          className="py-4 bg-red-800 hover:bg-red-700 rounded-lg text-lg font-bold">
+          className="py-4 bg-red-950 border-2 border-red-500 hover:bg-red-900 rounded-lg text-lg font-bold">
           {t("mab_roja")}
-        </button>
-        <button onClick={props.onFalta}
-          className="py-4 bg-orange-700 hover:bg-orange-600 rounded-lg text-lg font-bold">
-          {t("mab_falta")}
         </button>
       </div>
       <h3 className="text-sm text-zinc-400 mb-2">{t("mab_entra_por")}</h3>
@@ -1333,7 +1399,7 @@ function ModalFalta(props: {
         </Paso>
       )}
 
-      {equipo && (jugador || sinAsignar || rivalMano) && (
+      {!props.directo && equipo && (jugador || sinAsignar || rivalMano) && (
         <Paso n={3} titulo={t("mf_zona_produce")} activo>
           {/* La falta importa por su cercanía a portería: cuando la cometemos
               NOSOTROS, el tiro libre lo lanza el rival hacia NUESTRA portería,
@@ -1725,8 +1791,8 @@ function ModalGol(props: {
       )}
 
       {/* Zona de la ASISTENCIA (desde dónde el pase de gol) — solo gol INTER con
-          asistente, antes del remate. */}
-      {accion && !esPenaltiOAccion && equipo === "INTER" && asistente && asistente !== "OMIT" && !zonaAsistencia && (
+          asistente, antes del remate. NUNCA en directo (cero zonas). */}
+      {!props.directo && accion && !esPenaltiOAccion && equipo === "INTER" && asistente && asistente !== "OMIT" && !zonaAsistencia && (
         <Paso n={5} titulo={t("mg_zona_asistencia")} activo>
           <Campo seleccionada={zonaAsistencia} onSelect={setZonaAsistencia}
             direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
@@ -1739,7 +1805,7 @@ function ModalGol(props: {
       )}
       {/* Zona del REMATE (desde dónde se remató). Tras la asistencia, o directo
           si no hay asistente / es gol del rival. */}
-      {accion && !esPenaltiOAccion
+      {!props.directo && accion && !esPenaltiOAccion
         && (!(equipo === "INTER" && asistente && asistente !== "OMIT") || zonaAsistencia) && (
         <Paso n={6} titulo={t("mg_zona_tira")} activo={!zonaCampo}>
           <Campo seleccionada={zonaCampo} onSelect={setZonaCampo}
@@ -1752,7 +1818,7 @@ function ModalGol(props: {
         </Paso>
       )}
 
-      {accion && (zonaCampo || esPenaltiOAccion) && (
+      {!props.directo && accion && (zonaCampo || esPenaltiOAccion) && (
         <PorteriaOverlay
           titulo={esPenaltiOAccion
             ? t("mg_porteria_entra_accion", { accion: labelAccionGol(accion).toLowerCase() })
@@ -1821,19 +1887,26 @@ function ModalDisparoRival(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // DIRECTO: guardar en el MISMO toque del resultado, sin zonas y sin esperas.
+  // Antes se hacía con un setTimeout(150ms) y, mientras tanto, el render
+  // pintaba el paso del CAMPO → "aparece el campo medio segundo y se quita"
+  // (bug visto por Arkaitz 16/8). Ahora ni se espera ni se renderiza el campo.
+  const confirmarDirecto = (r: ResultadoDisparo) => {
+    if (yaConfirmado.current) return;
+    yaConfirmado.current = true;
+    const ev: any = { tipo: "disparo", equipo: "RIVAL", resultado: r };
+    const portero = porteroNuestro || porterosPista[0];
+    if (portero) ev.portero = portero;
+    props.onConfirmar(ev);
+  };
+
   // ⚡ Auto-confirmar cuando se completen los pasos requeridos. Ahorra el
   // click final de "Guardar" que pedía Arkaitz.
   // - PUERTA: requiere zonaCampo + zonaPorteria + portero (este pre-seleccionado).
   // - PALO/FUERA/BLOQUEADO: solo zonaCampo (no hay portería que marcar).
   useEffect(() => {
     if (!resultado || yaConfirmado.current) return;
-    // DIRECTO: en cuanto hay resultado, guardar SIN pedir zona de campo ni de
-    // portería (solo cuenta que ocurrió). La parada del portero en pista se
-    // asigna sola en registrarEvento.
-    if (props.directo) {
-      const t = setTimeout(aplicar, 150);
-      return () => clearTimeout(t);
-    }
+    if (props.directo) return;  // en directo ya se guardó en el toque
     if (resultado === "PUERTA") {
       if (zonaCampo && zonaPorteria && porteroNuestro) {
         // Pequeño delay para que el usuario VEA su última selección antes
@@ -1862,8 +1935,8 @@ function ModalDisparoRival(props: {
         <div className="grid grid-cols-4 gap-2">
           {(["PUERTA", "PALO", "FUERA", "BLOQUEADO"] as ResultadoDisparo[]).map((r) => (
             <button key={r}
-              onClick={() => setResultado(r)}
-              className={`py-3 rounded font-bold ${
+              onClick={() => { if (props.directo) confirmarDirecto(r); else setResultado(r); }}
+              className={`py-4 rounded font-bold text-lg ${
                 resultado === r ? "bg-red-700" : "bg-zinc-800"
               }`}>{labelResultadoDisparo(r)}</button>
           ))}
@@ -1875,9 +1948,10 @@ function ModalDisparoRival(props: {
 
       {/* Paso "Tirador rival" eliminado 20/5/2026 noche: Arkaitz no
           quiere apuntar quién es el tirador del rival, le da igual.
-          El flujo simplificado: resultado → zona campo → zona portería. */}
+          El flujo simplificado: resultado → zona campo → zona portería.
+          En DIRECTO no hay pasos 2/3: ni campo ni portería, nunca. */}
 
-      {resultado && (
+      {!props.directo && resultado && (
         <Paso n={2} titulo={t("mdr_zona_campo")} activo={!zonaCampo}>
           <Campo
             seleccionada={zonaCampo}
@@ -1893,7 +1967,7 @@ function ModalDisparoRival(props: {
         </Paso>
       )}
 
-      {resultado === "PUERTA" && zonaCampo && (
+      {!props.directo && resultado === "PUERTA" && zonaCampo && (
         <PorteriaOverlay
           titulo={t("mdr_zona_porteria_portero")}
           onSelect={(z) => setZonaPorteria(z)}
@@ -1912,7 +1986,7 @@ function ModalDisparoRival(props: {
         />
       )}
 
-      {resultado && resultado !== "PUERTA" && !zonaCampo && (
+      {!props.directo && resultado && resultado !== "PUERTA" && !zonaCampo && (
         <p className="text-xs text-zinc-500 mt-2 italic">
           {t("mdr_guarda_auto_campo")}
         </p>
@@ -1924,6 +1998,7 @@ function ModalDisparoRival(props: {
 // ──────────────── MODAL PENALTI / 10M ────────────────
 
 function ModalPenalti(props: {
+  directo: boolean;
   enPista: string[]; rivalNombre: string;
   onCerrar: () => void;
   onConfirmar: (ev: any) => void;
@@ -1935,13 +2010,13 @@ function ModalPenalti(props: {
   const [porteroRival, setPorteroRival] = useState("");
   const [resultado, setResultado] = useState<"GOL" | "PARADA" | "POSTE" | "FUERA" | null>(null);
 
-  const aplicar = (zonaPorteria?: string) => {
+  const aplicar = (zonaPorteria?: string, res?: "GOL" | "PARADA" | "POSTE" | "FUERA") => {
     const ev: any = {
       tipo,
       equipo,
       tirador: equipo === "INTER" ? tirador : "",
       portero: equipo === "INTER" ? porteroRival : porteroNuestro,
-      resultado,
+      resultado: res ?? resultado,
     };
     if (zonaPorteria) ev.zonaPorteria = zonaPorteria;
     props.onConfirmar(ev);
@@ -2000,7 +2075,13 @@ function ModalPenalti(props: {
         <Paso n={4} titulo={t("mp_resultado")} activo={!resultado}>
           <div className="grid grid-cols-4 gap-2">
             {RESULTADOS.map((r) => (
-              <button key={r} onClick={() => setResultado(r)}
+              <button key={r}
+                onClick={() => {
+                  // DIRECTO: guardar en el toque (sin zona de portería) — en
+                  // directo cero zonas en nada. En VÍDEO se pasa al paso 5.
+                  if (props.directo) { aplicar(undefined, r); return; }
+                  setResultado(r);
+                }}
                 className={`py-3 rounded font-bold ${
                   resultado === r
                     ? (r === "GOL" ? "bg-green-700" : "bg-yellow-700")
@@ -2011,7 +2092,7 @@ function ModalPenalti(props: {
         </Paso>
       )}
 
-      {resultado && (
+      {!props.directo && resultado && (
         <Paso n={5}
           titulo={resultado === "FUERA" ? t("mp_zona_no_aplica") : t("mp_zona_guardar")}
           activo>
@@ -2099,39 +2180,57 @@ function ModalAccionIndividual(props: {
   };
 
   if (paso === "menu") {
+    // LAYOUT por filas (pedido Arkaitz 16/8), con COLORES por familia para que
+    // en pista se lea de un vistazo:
+    //   fila 1 → ROBO · CORTE           (verdes distintos = recuperar)
+    //   fila 2 → PÉRDIDA F · PÉRDIDA NF (rojos distintos = perder)
+    //   fila 2b→ BDG · BDP              (solo VÍDEO; en directo NO existen)
+    //   fila 3 → DISPARO                (azul, ancho completo)
+    //   fila 3b→ STATS DE VÍDEO         (solo VÍDEO)
+    //   fila 4 → FALTA · AMARILLA · ROJA (naranja · amarillo · rojo oscuro)
+    //   debajo → BANQUILLO grande con el DORSAL (cambio en un toque)
     return (
       <ModalShell titulo={t("mai_titulo", { jugador: props.jugador })} onCerrar={props.onCerrar}>
         <p className="text-sm text-zinc-400 mb-3">
-          {t("mai_intro")}
+          {props.directo ? t("mai_intro_directo") : t("mai_intro")}
         </p>
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <BotonGrande label={t("mai_btn_robo")}  onClick={() => irAAccionZona("robos")} />
-          <BotonGrande label={t("mai_btn_corte")} onClick={() => irAAccionZona("cortes")} />
-          <BotonGrande label={t("mai_btn_pf")}    subtitle={t("mai_btn_pf_sub")} onClick={() => irAAccionZona("pf")} />
-          <BotonGrande label={t("mai_btn_pnf")}   subtitle={t("mai_btn_pnf_sub")} onClick={() => irAAccionZona("pnf")} />
-          <BotonGrande label={t("mai_btn_bdg")}   subtitle={t("mai_btn_bdg_sub")} onClick={() => irAAccionZona("bdg")} />
-          <BotonGrande label={t("mai_btn_bdp")}   subtitle={t("mai_btn_bdp_sub")} onClick={() => irAAccionZona("bdp")} />
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <BotonGrande label={t("mai_btn_robo")}  color="bg-green-600" onClick={() => irAAccionZona("robos")} />
+          <BotonGrande label={t("mai_btn_corte")} color="bg-emerald-800" onClick={() => irAAccionZona("cortes")} />
         </div>
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <BotonGrande label={t("mai_btn_pf")}  subtitle={t("mai_btn_pf_sub")}  color="bg-red-600"  onClick={() => irAAccionZona("pf")} />
+          <BotonGrande label={t("mai_btn_pnf")} subtitle={t("mai_btn_pnf_sub")} color="bg-rose-800" onClick={() => irAAccionZona("pnf")} />
+        </div>
+        {/* Balón dividido: solo en VÍDEO (Arkaitz lo quitó del directo, 16/8). */}
+        {!props.directo && (
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <BotonGrande label={t("mai_btn_bdg")} subtitle={t("mai_btn_bdg_sub")} color="bg-purple-700" onClick={() => irAAccionZona("bdg")} />
+            <BotonGrande label={t("mai_btn_bdp")} subtitle={t("mai_btn_bdp_sub")} color="bg-purple-950" onClick={() => irAAccionZona("bdp")} />
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-2 mb-2">
-          <BotonGrande label={t("mai_disparo")} color="bg-pink-700" onClick={() => setPaso("disparoTipo")} />
+          <BotonGrande label={t("mai_disparo")} color="bg-blue-600" onClick={() => setPaso("disparoTipo")} />
         </div>
 
         {/* Stats de VÍDEO — solo en modo vídeo (duelos, 1x1, coberturas...). */}
         {!props.directo && (
           <div className="grid grid-cols-1 gap-2 mb-2">
-            <BotonGrande label={t("vid_menu_btn")} color="bg-sky-800" onClick={() => setPaso("videoMenu")} />
+            <BotonGrande label={t("vid_menu_btn")} color="bg-sky-900" onClick={() => setPaso("videoMenu")} />
           </div>
         )}
 
-        {/* Disciplina: amarilla + roja + falta (cometida POR este jugador). */}
+        {/* Disciplina: FALTA (izq) · AMARILLA (centro) · ROJA (der). */}
         <div className="grid grid-cols-3 gap-2">
-          <BotonGrande label={t("mab_amarilla")} color="bg-yellow-700" onClick={props.onAmarilla} />
-          <BotonGrande label={t("mab_roja")} color="bg-red-800" onClick={props.onRoja} />
-          <BotonGrande label={t("mab_falta")} color="bg-orange-700" onClick={props.onFalta} />
+          <BotonGrande label={t("mab_falta")} color="bg-orange-600" onClick={props.onFalta} />
+          <BotonGrande label={t("mab_amarilla")} color="bg-yellow-400 text-zinc-950" onClick={props.onAmarilla} />
+          <BotonGrande label={t("mab_roja")} color="bg-red-950 border-2 border-red-500" onClick={props.onRoja} />
         </div>
 
-        {/* CAMBIO DIRECTO: tap en un jugador del banquillo y se hace el
-            cambio inmediatamente (sin pasar por sub-menú). */}
+        {/* CAMBIO DIRECTO: tap en un jugador del banquillo y se hace el cambio
+            inmediatamente. Botones GRANDES con el DORSAL bien visible (en vez
+            de la flecha), en el mismo orden que el banquillo de la pantalla
+            (último en salir a la izquierda; sin jugar, al final). */}
         <div className="mt-4 pt-3 border-t border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-300 mb-2">
             {t("mai_cambio_rapido")}
@@ -2139,14 +2238,21 @@ function ModalAccionIndividual(props: {
           {props.banquillo.length === 0 ? (
             <p className="text-xs text-zinc-500">{t("mai_no_banquillo")}</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {props.banquillo.map((n) => (
-                <button key={n}
-                  onClick={() => props.onCambio(props.jugador, n)}
-                  className="px-3 py-2 rounded bg-emerald-800 hover:bg-emerald-700 text-base font-bold">
-                  ⤴ {n}
-                </button>
-              ))}
+            <div className="grid grid-cols-4 gap-2">
+              {props.banquillo.map((n) => {
+                const dorsal = ROSTER.find((j) => j.nombre === n)?.dorsal || "";
+                const esPor = ROSTER.find((j) => j.nombre === n)?.posicion === "PORTERO";
+                return (
+                  <button key={n}
+                    onClick={() => props.onCambio(props.jugador, n)}
+                    className={`min-h-[76px] px-2 py-2 rounded-xl flex items-center justify-center gap-3 font-bold border-2 ${
+                      esPor ? "bg-zinc-800 border-zinc-500" : "bg-zinc-700 border-zinc-500 hover:bg-zinc-600"
+                    }`}>
+                    <span className="text-3xl font-mono tabular-nums leading-none">{dorsal || "·"}</span>
+                    <span className="text-lg leading-tight text-left">{n}{esPor ? " 🥅" : ""}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
           <p className="text-[11px] text-zinc-500 mt-2">
@@ -2359,47 +2465,58 @@ function ModalTiempos(props: {
   return (
     <ModalShell titulo={t("mt_titulo")} onCerrar={props.onCerrar}>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-xs text-zinc-400 border-b border-zinc-800">
+        {/* Anchos fijos: nombre estrecho, tiempos grandes y pegados (16/8). */}
+        <table className="w-full table-fixed text-xl">
+          {/* Tiempos de ancho fijo pegados al nombre; hueco sobrante al final. */}
+          <colgroup>
+            <col style={{ width: "30%" }} />
+            <col style={{ width: `${Math.min(15, Math.floor(62 / (1 + partesActivas.length)))}%` }} />
+            {partesActivas.map((p) => <col key={p} style={{ width: `${Math.min(15, Math.floor(62 / (1 + partesActivas.length)))}%` }} />)}
+            <col />
+          </colgroup>
+          <thead className="text-sm text-zinc-400 border-b border-zinc-800">
             <tr>
               <th className="text-left py-2 px-2">{t("mt_jugador")}</th>
               <th className="text-right px-2">{t("mt_total")}</th>
               {partesActivas.map((p) => (
                 <th key={p} className="text-right px-2">{p}</th>
               ))}
+              <th />
             </tr>
           </thead>
           <tbody>
             {filas.map((f) => (
               <tr key={f.nombre} className="border-b border-zinc-900">
-                <td className="py-1.5 px-2">
+                <td className="py-1.5 px-2 truncate">
                   <span className={`${f.esPortero ? "text-yellow-400" : ""} font-bold`}>
                     {f.nombre}
                   </span>
-                  {f.enPista && <span className="ml-2 text-[10px] bg-green-700 px-1.5 py-0.5 rounded">{t("mt_en_pista")}</span>}
+                  {f.enPista && <span className="ml-2 text-[10px] bg-green-700 px-1.5 py-0.5 rounded align-middle">{t("mt_en_pista")}</span>}
                 </td>
-                <td className="text-right font-mono tabular-nums px-2 font-bold">
+                <td className="text-right font-mono tabular-nums px-2 font-bold text-2xl">
                   {formatMMSS(f.total)}
                 </td>
                 {partesActivas.map((p) => (
-                  <td key={p} className="text-right font-mono tabular-nums px-2 text-zinc-400">
+                  <td key={p} className="text-right font-mono tabular-nums px-2 text-zinc-300 text-2xl">
                     {formatMMSS(f.porParte[p] ?? 0)}
                   </td>
                 ))}
+                <td />
               </tr>
             ))}
           </tbody>
           <tfoot className="text-xs text-zinc-500 border-t border-zinc-800">
             <tr>
-              <td className="pt-2 px-2 italic">{t("mt_total_minutos")}</td>
-              <td className="text-right font-mono tabular-nums px-2 font-bold pt-2">
+              <td className="pt-2 px-2 italic truncate">{t("mt_total_minutos")}</td>
+              <td className="text-right font-mono tabular-nums px-2 font-bold pt-2 text-base">
                 {formatMMSS(filas.reduce((s, f) => s + f.total, 0))}
               </td>
               {partesActivas.map((p) => (
-                <td key={p} className="text-right font-mono tabular-nums px-2 pt-2">
+                <td key={p} className="text-right font-mono tabular-nums px-2 pt-2 text-base">
                   {formatMMSS(filas.reduce((s, f) => s + (f.porParte[p] ?? 0), 0))}
                 </td>
               ))}
+              <td />
             </tr>
           </tfoot>
         </table>
@@ -2634,17 +2751,18 @@ function ModalCambioParte(props: {
   const esFinalParte = esFinal2T || esFinalPR2;
 
   return (
-    <ModalShell titulo={TITULOS[desde]} onCerrar={props.onCerrar}>
+    <ModalShell titulo={TITULOS[desde]} onCerrar={props.onCerrar} tituloClass="text-lg text-zinc-300">
 
-      {/* Marcador actual + estado */}
-      <div className="text-center bg-zinc-950 rounded-lg p-5 mb-4">
-        <div className="text-5xl font-bold tabular-nums">
+      {/* Marcador actual + estado (compacto: el protagonista de esta pantalla
+          son los TIEMPOS por jugador — pedido Arkaitz 16/8) */}
+      <div className="text-center bg-zinc-950 rounded-lg px-3 py-2 mb-3">
+        <div className="text-2xl font-bold tabular-nums">
           <span className="text-emerald-400">{CLIENTE.nombreCorto} {partido.marcador.inter}</span>
           <span className="text-zinc-500 mx-2">-</span>
           <span className="text-red-400">{partido.marcador.rival} {cfg.rival}</span>
         </div>
         {esFinalParte && empate && (
-          <div className="text-yellow-400 text-base mt-2">
+          <div className="text-yellow-400 text-sm mt-1">
             {t("mcp_empate")}
           </div>
         )}
@@ -2656,129 +2774,134 @@ function ModalCambioParte(props: {
           1T/PR1. Las opciones de 2T/PR2 siguen abajo. */}
       {(desde === "1T" || desde === "PR1") && (
         <button onClick={props.onContinuarSiguienteParte}
-          className="w-full py-6 mb-4 bg-green-700 hover:bg-green-600 rounded-xl text-3xl font-bold">
+          className="w-full py-4 mb-3 bg-green-700 hover:bg-green-600 rounded-xl text-2xl font-bold">
           ▶ {desde === "1T" ? t("mcp_empezar_2a") : t("mcp_empezar_pr2")}
         </button>
       )}
 
-      {/* DISPAROS — destacado, grande y con énfasis */}
-      <div className="bg-zinc-900 rounded-lg p-4 mb-4">
-        <h3 className="text-lg font-bold text-zinc-200 mb-3">{t("mcp_disparos")}</h3>
-        <div className="grid grid-cols-2 gap-3">
+      {/* TIEMPOS POR JUGADOR — PRIMERO, grandes y TODOS visibles (sin scroll
+          interno: antes un max-h cortaba la lista y no se veían todos). Columna
+          de nombre estrecha para que los tiempos queden pegados y grandes. */}
+      <div className="bg-zinc-900 rounded-lg p-3 mb-3">
+        <h3 className="text-sm font-bold text-zinc-400 mb-2 uppercase tracking-wide">
+          {t("mcp_tiempos_jugador", { parte: desde })}
+        </h3>
+        <table className="w-full table-fixed text-2xl">
+          <colgroup>
+            <col style={{ width: "34%" }} /><col style={{ width: "20%" }} /><col style={{ width: "22%" }} /><col />
+          </colgroup>
+          <thead className="text-sm text-zinc-500 border-b border-zinc-800">
+            <tr>
+              <th className="text-left py-1 px-2">{t("mt_jugador")}</th>
+              <th className="text-right px-2">{desde}</th>
+              <th className="text-right px-2">{t("mcp_total_partido")}</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {filasTiempos.map((f) => (
+              <tr key={f.nombre} className="border-b border-zinc-900">
+                <td className={`py-1 px-2 truncate ${f.esPortero ? "text-yellow-400" : ""} font-bold`}>
+                  {f.nombre}{f.esPortero ? " 🥅" : ""}
+                </td>
+                <td className="text-right font-mono tabular-nums px-2 font-bold text-3xl">{formatMMSS(f.totalParte)}</td>
+                <td className="text-right font-mono tabular-nums px-2 text-zinc-400">{formatMMSS(f.total)}</td>
+                <td />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* DISPAROS — compacto (una línea por equipo) */}
+      <div className="bg-zinc-900 rounded-lg p-3 mb-3">
+        <h3 className="text-sm font-bold text-zinc-400 mb-2 uppercase tracking-wide">{t("mcp_disparos")}</h3>
+        <div className="grid grid-cols-2 gap-2">
           {/* INTER */}
-          <div className="bg-emerald-900/40 rounded-lg p-4 border border-emerald-700/40">
-            <div className="text-base text-emerald-300 font-bold mb-2 uppercase tracking-wide">{CLIENTE.nombreCorto}</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-bold text-white tabular-nums">{totalDispINTER}</span>
-              <span className="text-sm text-emerald-300">{t("mcp_total")}</span>
+          <div className="bg-emerald-900/40 rounded-lg px-3 py-2 border border-emerald-700/40">
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-sm text-emerald-300 font-bold uppercase tracking-wide">{CLIENTE.nombreCorto}</span>
+              <span><span className="text-2xl font-bold text-white tabular-nums">{totalDispINTER}</span>
+                <span className="text-xs text-emerald-300 ml-1">{t("mcp_total")}</span></span>
             </div>
-            <div className="mt-3 grid grid-cols-4 gap-1 text-center">
-              <div className="bg-emerald-800/40 rounded py-1.5">
-                <div className="text-xl font-bold tabular-nums">{tot.dpp}</div>
-                <div className="text-xs text-emerald-200 uppercase">{t("mcp_puerta")}</div>
+            <div className="grid grid-cols-4 gap-1 text-center">
+              <div className="bg-emerald-800/40 rounded py-0.5">
+                <div className="text-base font-bold tabular-nums">{tot.dpp}</div>
+                <div className="text-[10px] text-emerald-200 uppercase">{t("mcp_puerta")}</div>
               </div>
-              <div className="bg-zinc-800/60 rounded py-1.5">
-                <div className="text-xl font-bold tabular-nums">{tot.dpa}</div>
-                <div className="text-xs text-zinc-400 uppercase">{t("mcp_palo")}</div>
+              <div className="bg-zinc-800/60 rounded py-0.5">
+                <div className="text-base font-bold tabular-nums">{tot.dpa}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_palo")}</div>
               </div>
-              <div className="bg-zinc-800/60 rounded py-1.5">
-                <div className="text-xl font-bold tabular-nums">{tot.dpf}</div>
-                <div className="text-xs text-zinc-400 uppercase">{t("mcp_fuera")}</div>
+              <div className="bg-zinc-800/60 rounded py-0.5">
+                <div className="text-base font-bold tabular-nums">{tot.dpf}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_fuera")}</div>
               </div>
-              <div className="bg-zinc-800/60 rounded py-1.5">
-                <div className="text-xl font-bold tabular-nums">{tot.dpb}</div>
-                <div className="text-xs text-zinc-400 uppercase">{t("mcp_bloq")}</div>
+              <div className="bg-zinc-800/60 rounded py-0.5">
+                <div className="text-base font-bold tabular-nums">{tot.dpb}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_bloq")}</div>
               </div>
             </div>
           </div>
           {/* RIVAL */}
-          <div className="bg-red-900/40 rounded-lg p-4 border border-red-700/40">
-            <div className="text-base text-red-300 font-bold mb-2 uppercase tracking-wide">{cfg.rival}</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-bold text-white tabular-nums">{totalDispRIVAL}</span>
-              <span className="text-sm text-red-300">{t("mcp_total")}</span>
+          <div className="bg-red-900/40 rounded-lg px-3 py-2 border border-red-700/40">
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-sm text-red-300 font-bold uppercase tracking-wide truncate">{cfg.rival}</span>
+              <span><span className="text-2xl font-bold text-white tabular-nums">{totalDispRIVAL}</span>
+                <span className="text-xs text-red-300 ml-1">{t("mcp_total")}</span></span>
             </div>
-            <div className="mt-3 grid grid-cols-4 gap-1 text-center">
-              <div className="bg-red-800/40 rounded py-1.5">
-                <div className="text-xl font-bold tabular-nums">{r.puerta}</div>
-                <div className="text-xs text-red-200 uppercase">{t("mcp_puerta")}</div>
+            <div className="grid grid-cols-4 gap-1 text-center">
+              <div className="bg-red-800/40 rounded py-0.5">
+                <div className="text-base font-bold tabular-nums">{r.puerta}</div>
+                <div className="text-[10px] text-red-200 uppercase">{t("mcp_puerta")}</div>
               </div>
-              <div className="bg-zinc-800/60 rounded py-1.5">
-                <div className="text-xl font-bold tabular-nums">{r.palo}</div>
-                <div className="text-xs text-zinc-400 uppercase">{t("mcp_palo")}</div>
+              <div className="bg-zinc-800/60 rounded py-0.5">
+                <div className="text-base font-bold tabular-nums">{r.palo}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_palo")}</div>
               </div>
-              <div className="bg-zinc-800/60 rounded py-1.5">
-                <div className="text-xl font-bold tabular-nums">{r.fuera}</div>
-                <div className="text-xs text-zinc-400 uppercase">{t("mcp_fuera")}</div>
+              <div className="bg-zinc-800/60 rounded py-0.5">
+                <div className="text-base font-bold tabular-nums">{r.fuera}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_fuera")}</div>
               </div>
-              <div className="bg-zinc-800/60 rounded py-1.5">
-                <div className="text-xl font-bold tabular-nums">{r.bloqueado}</div>
-                <div className="text-xs text-zinc-400 uppercase">{t("mcp_bloq")}</div>
+              <div className="bg-zinc-800/60 rounded py-0.5">
+                <div className="text-base font-bold tabular-nums">{r.bloqueado}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_bloq")}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* OTROS STATS DEL EQUIPO — Pérdidas / Recuperaciones / Balones divididos */}
-      <div className="grid grid-cols-3 gap-3 text-base mb-4">
-        <div className="bg-red-900/20 rounded-lg p-3 border border-red-700/20">
-          <div className="text-red-300 font-bold mb-2 text-base">{t("mcp_perdidas")}</div>
+      {/* OTROS STATS DEL EQUIPO — Pérdidas / Recuperaciones / Balones divididos (compacto) */}
+      <div className="grid grid-cols-3 gap-2 text-sm mb-3">
+        <div className="bg-red-900/20 rounded-lg p-2 border border-red-700/20">
+          <div className="text-red-300 font-bold mb-1">{t("mcp_perdidas")}</div>
           <div className="flex justify-between"><span>{t("mcp_forzada")}</span><strong>{tot.pf}</strong></div>
           <div className="flex justify-between"><span>{t("mcp_no_forzada")}</span><strong>{tot.pnf}</strong></div>
           <div className="flex justify-between text-red-300/80"><span>{t("res_de_equipo")}</span><strong>{perdEquipo}</strong></div>
-          <div className="border-t border-red-700/40 mt-2 pt-2 flex justify-between text-red-200 text-base">
+          <div className="border-t border-red-700/40 mt-1 pt-1 flex justify-between text-red-200">
             <span>{t("mcp_total_lbl")}</span><strong>{tot.pf + tot.pnf + perdEquipo}</strong>
           </div>
         </div>
-        <div className="bg-green-900/20 rounded-lg p-3 border border-green-700/20">
-          <div className="text-green-300 font-bold mb-2 text-base">{t("mcp_recuperaciones")}</div>
+        <div className="bg-green-900/20 rounded-lg p-2 border border-green-700/20">
+          <div className="text-green-300 font-bold mb-1">{t("mcp_recuperaciones")}</div>
           <div className="flex justify-between"><span>{t("mcp_robos")}</span><strong>{tot.robos}</strong></div>
           <div className="flex justify-between"><span>{t("mcp_cortes")}</span><strong>{tot.cortes}</strong></div>
           <div className="flex justify-between text-green-300/80"><span>{t("res_de_equipo")}</span><strong>{recEquipo}</strong></div>
-          <div className="border-t border-green-700/40 mt-2 pt-2 flex justify-between text-green-200 text-base">
+          <div className="border-t border-green-700/40 mt-1 pt-1 flex justify-between text-green-200">
             <span>{t("mcp_total_lbl")}</span><strong>{tot.robos + tot.cortes + recEquipo}</strong>
           </div>
         </div>
-        <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-700/20">
-          <div className="text-purple-300 font-bold mb-2 text-base">{t("mcp_divididos")}</div>
+        <div className="bg-purple-900/20 rounded-lg p-2 border border-purple-700/20">
+          <div className="text-purple-300 font-bold mb-1">{t("mcp_divididos")}</div>
           <div className="flex justify-between"><span>{t("mcp_ganados")}</span><strong>{tot.bdg}</strong></div>
           <div className="flex justify-between"><span>{t("mcp_no_ganados")}</span><strong>{tot.bdp}</strong></div>
-          <div className="border-t border-purple-700/40 mt-2 pt-2 flex justify-between text-purple-200 text-base">
+          <div className="border-t border-purple-700/40 mt-1 pt-1 flex justify-between text-purple-200">
             <span>{t("mcp_ratio")}</span>
             <strong>{(tot.bdg + tot.bdp) > 0
               ? `${Math.round(tot.bdg / (tot.bdg + tot.bdp) * 100)}%`
               : "—"}</strong>
           </div>
-        </div>
-      </div>
-
-      {/* TIEMPOS POR JUGADOR */}
-      <div className="bg-zinc-900 rounded-lg p-4 mb-4">
-        <h3 className="text-base font-bold text-zinc-300 mb-3">
-          {t("mcp_tiempos_jugador", { parte: desde })}
-        </h3>
-        <div className="max-h-72 overflow-y-auto">
-          <table className="w-full text-xl">
-            <thead className="text-base text-zinc-500 border-b border-zinc-800">
-              <tr>
-                <th className="text-left py-2 px-2">{t("mt_jugador")}</th>
-                <th className="text-right px-2">{desde}</th>
-                <th className="text-right px-2">{t("mcp_total_partido")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filasTiempos.map((f) => (
-                <tr key={f.nombre} className="border-b border-zinc-900">
-                  <td className={`py-1.5 px-2 ${f.esPortero ? "text-yellow-400" : ""} font-bold`}>
-                    {f.nombre}{f.esPortero ? " 🥅" : ""}
-                  </td>
-                  <td className="text-right font-mono tabular-nums px-2 font-bold">{formatMMSS(f.totalParte)}</td>
-                  <td className="text-right font-mono tabular-nums px-2 text-zinc-400">{formatMMSS(f.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 

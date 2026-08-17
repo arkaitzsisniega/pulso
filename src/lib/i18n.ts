@@ -606,6 +606,11 @@ export const CATALOGO: Record<string, Entrada> = {
     en: "Every action opens the map to place the pitch zone.",
     it: "Tutte le azioni aprono la mappa per individuare la zona del campo.",
   },
+  mai_intro_directo: {
+    es: "Toca la acción y se guarda al momento (en directo no hay zonas).",
+    en: "Tap the action and it is saved instantly (no zones in live mode).",
+    it: "Tocca l'azione e si salva subito (in diretta niente zone).",
+  },
   mai_disparo: { es: "🎯 DISPARO", en: "🎯 SHOT", it: "🎯 TIRO" },
   mai_cambio_rapido: {
     es: "🔄 Cambio rápido — toca al jugador de banquillo que entra:",
