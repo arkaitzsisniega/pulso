@@ -39,6 +39,7 @@ export const ROSTER_REAL: Jugador[] = [
   { dorsal: "39", nombre: "GORDILLO", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "4", nombre: "TONI", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "99", nombre: "MARVIN", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "21", nombre: "NACHO GOMEZ", posicion: "CAMPO", equipo: "PRIMER" },
   // Portero filial
   { dorsal: "28", nombre: "OSCAR", posicion: "PORTERO", equipo: "FILIAL" },
   { dorsal: "", nombre: "ANDRES", posicion: "PORTERO", equipo: "FILIAL" },
@@ -69,6 +70,7 @@ export const ROSTER_DEMO: Jugador[] = [
   { dorsal: "39", nombre: "ORTEGA", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "4", nombre: "MARIN", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "99", nombre: "LEON", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "21", nombre: "ARANDA", posicion: "CAMPO", equipo: "PRIMER" },
   // Portero filial
   { dorsal: "28", nombre: "PASTOR", posicion: "PORTERO", equipo: "FILIAL" },
   { dorsal: "", nombre: "MENDEZ", posicion: "PORTERO", equipo: "FILIAL" },
