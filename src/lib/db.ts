@@ -71,6 +71,7 @@ export const PRESETS_COMPETICION: Record<string, { duraciones: Record<ParteId, n
   COPA_REY:    { duraciones: { "1T": 1200, "2T": 1200, PR1: 300, PR2: 300 }, permiteTanda: true,  label: "Copa del Rey (2×20' + 2×5' + tanda)" },
   COPA_ESPANA: { duraciones: { "1T": 1200, "2T": 1200, PR1: 300, PR2: 300 }, permiteTanda: true,  label: "Copa de España (2×20' + 2×5' + tanda)" },
   COPA_MUNDO:  { duraciones: { "1T": 1200, "2T": 1200, PR1: 300, PR2: 300 }, permiteTanda: true,  label: "Copa del Mundo (2×20' + 2×5' + tanda)" },
+  COPA_MADRID: { duraciones: { "1T": 1200, "2T": 1200, PR1: 300, PR2: 300 }, permiteTanda: true,  label: "Copa de Madrid (2×20' + 2×5' + tanda)" },
   AMISTOSO:    { duraciones: { "1T": 1200, "2T": 1200, PR1: 0,   PR2: 0   }, permiteTanda: false, label: "Amistoso (2×20')" },
   PLAYOFF:     { duraciones: { "1T": 1200, "2T": 1200, PR1: 300, PR2: 300 }, permiteTanda: true,  label: "Playoff (2×20' + 2×5' + tanda)" },
   SUPERCOPA:   { duraciones: { "1T": 1200, "2T": 1200, PR1: 300, PR2: 300 }, permiteTanda: true,  label: "Supercopa (2×20' + 2×5' + tanda)" },

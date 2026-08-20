@@ -212,6 +212,7 @@ export default function NuevoPartido() {
             <option>COPA_REY</option>
             <option>COPA_ESPANA</option>
             <option>COPA_MUNDO</option>
+            <option>COPA_MADRID</option>
             <option>AMISTOSO</option>
             <option>PLAYOFF</option>
             <option>SUPERCOPA</option>
