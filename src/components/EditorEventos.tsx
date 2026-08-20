@@ -29,7 +29,8 @@ const TIPOS: Evento["tipo"][] = [
 ];
 const ACCIONES_GOL = [
   "Córner", "Banda", "Falta", "5x4", "4x5", "4x3", "3x4", "Contraataque",
-  "Robo zona alta", "1x1 banda", "Ataque posicional", "10m", "Penalti", "Otra",
+  "Robo zona alta", "Salida de presión", "1x1 banda", "Ataque posicional",
+  "10m", "Penalti", "2ª jugada", "Otra",
 ];
 const RES_DISPARO = ["PUERTA", "PALO", "FUERA", "BLOQUEADO"];
 const RES_PENALTI = ["GOL", "PARADA", "POSTE", "FUERA"];
@@ -40,7 +41,8 @@ const NOMBRES_PORTERO = PORTEROS.map((j) => j.nombre);
 
 function emoji(tipo: Evento["tipo"]): string {
   return { gol: "⚽", falta: "⚠️", amarilla: "🟨", roja: "🟥", tiempo_muerto: "🛑",
-    cambio: "🔄", disparo: "🎯", penalti: "🥅", diezm: "📌", accion_individual: "👤" }[tipo] ?? "•";
+    cambio: "🔄", disparo: "🎯", penalti: "🥅", diezm: "📌", accion_individual: "👤",
+    incorporacion_rival: "🧤" }[tipo] ?? "•";
 }
 
 function mmssASeg(s: string): number {

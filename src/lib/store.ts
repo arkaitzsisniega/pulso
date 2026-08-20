@@ -113,6 +113,7 @@ function construirPartidoNuevo(id: string, config: ConfigPartido, modo: "directo
     eventos: [],
     acciones,
     disparosRival: { puerta: 0, fuera: 0, palo: 0, bloqueado: 0 },
+    incorporacionesRival: { total: 0, conDisparo: 0, sinDisparo: 0 },
     tanda: { activa: false, tiros: [], marcador: { inter: 0, rival: 0 } },
     actualizado: ahora,
   };
@@ -325,6 +326,9 @@ export function usePartido() {
               ?? { "1T": 0, "2T": 0, PR1: 0, PR2: 0 } as Record<ParteId, number>,
           },
           disparosRival: p.disparosRival ?? { puerta: 0, fuera: 0, palo: 0, bloqueado: 0 },
+          // Partidos guardados antes del 20/8/2026: sin este campo. Se rellena
+          // a cero para que la pantalla no reviente al abrirlos.
+          incorporacionesRival: p.incorporacionesRival ?? { total: 0, conDisparo: 0, sinDisparo: 0 },
           tanda: p.tanda ?? { activa: false, tiros: [], marcador: { inter: 0, rival: 0 } },
           acciones: {
             porJugador: Object.fromEntries(
@@ -822,6 +826,16 @@ export function usePartido() {
             ? { ...cur, inter: cur.inter + 1 }
             : { ...cur, rival: cur.rival + 1 },
         } };
+      } else if (evento.tipo === "incorporacion_rival") {
+        // El portero rival sube a jugar de cinco. Se cuenta el volumen y
+        // cuántas acaban en disparo (el disparo va en su propio evento).
+        const inc = next.incorporacionesRival
+          ?? { total: 0, conDisparo: 0, sinDisparo: 0 };
+        next.incorporacionesRival = {
+          total: inc.total + 1,
+          conDisparo: inc.conDisparo + (evento.conDisparo ? 1 : 0),
+          sinDisparo: inc.sinDisparo + (evento.conDisparo ? 0 : 1),
+        };
       } else if (evento.tipo === "disparo") {
         // Disparo independiente (NO gol). Si llega con resultado y no enlaza a
         // gol, suma contadores.
@@ -924,6 +938,14 @@ export function usePartido() {
           : { ...cur, rival: Math.max(0, cur.rival - 1) };
       } else if (ev.tipo === "cambio") {
         next.enPista = next.enPista.map((n) => (n === ev.entra ? ev.sale : n));
+      } else if (ev.tipo === "incorporacion_rival") {
+        const inc = next.incorporacionesRival
+          ?? { total: 0, conDisparo: 0, sinDisparo: 0 };
+        next.incorporacionesRival = {
+          total: Math.max(0, inc.total - 1),
+          conDisparo: Math.max(0, inc.conDisparo - (ev.conDisparo ? 1 : 0)),
+          sinDisparo: Math.max(0, inc.sinDisparo - (ev.conDisparo ? 0 : 1)),
+        };
       } else if (ev.tipo === "disparo") {
         if (ev.equipo === "INTER" && ev.jugador) {
           next.acciones = bumpContador(next.acciones, ev.jugador, campoDisparo(ev.resultado), -1);

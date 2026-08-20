@@ -46,7 +46,21 @@ export default function PartidoPage() {
   const [modalTanda, setModalTanda] = useState(false);
   const [modalTiempos, setModalTiempos] = useState(false);
   const [modalDisparoRival, setModalDisparoRival] = useState(false);
+  const [modalIncorporacion, setModalIncorporacion] = useState(false);
   const [modalCambioParte, setModalCambioParte] = useState(false);
+  // Aviso corto tras una acción que se guarda SIN abrir modal (pérdida y
+  // recuperación de equipo). Arkaitz: "le doy al botón y, al no pasar nada, no
+  // sé si lo he apuntado". Se borra solo.
+  const [aviso, setAviso] = useState<string | null>(null);
+  const avisoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mostrarAviso = (texto: string) => {
+    if (avisoTimer.current) clearTimeout(avisoTimer.current);
+    setAviso(texto);
+    avisoTimer.current = setTimeout(() => setAviso(null), 1600);
+  };
+  useEffect(() => () => {
+    if (avisoTimer.current) clearTimeout(avisoTimer.current);
+  }, []);
 
   // Jugadores nuestros que tienen al menos una amarilla.
   // OJO: useMemo debe ir ANTES de los early returns (reglas de hooks).
@@ -651,9 +665,11 @@ export default function PartidoPage() {
       {/* BOTONES ACCIÓN COLECTIVA — RESTAURADO 20/5/2026 noche:
           Arkaitz aclaró que "omitir guardar" no significaba eliminar el
           botón, sino simplificar el flujo del modal. El botón vuelve. */}
-      <div className="grid grid-cols-8 gap-1.5 flex-none">
+      <div className="grid grid-cols-9 gap-1.5 flex-none">
         <BotonAccion label={t("btn_gol")} color="bg-emerald-700" onClick={() => setModalGol(true)} />
         <BotonAccion label={t("btn_disp_rival")} color="bg-red-700" onClick={() => setModalDisparoRival(true)} />
+        <BotonAccion label={t("btn_incorporacion")} color="bg-amber-700"
+          onClick={() => setModalIncorporacion(true)} />
         <BotonAccion label={t("btn_falta")} color="bg-orange-600" onClick={() => setModalFalta(true)} />
         <BotonAccion label={t("btn_amarilla")} color="bg-yellow-400 text-zinc-950" onClick={() => setModalAmarilla(true)} />
         <BotonAccion label={t("btn_roja")} color="bg-red-950 border-2 border-red-500" onClick={() => setModalRoja(true)} />
@@ -666,12 +682,16 @@ export default function PartidoPage() {
           consumir altura. Pérdida de EQUIPO = SIEMPRE forzada (pf); la no
           forzada siempre es de un jugador (decisión Arkaitz 10/8). */}
       <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-none`}>
-        <button onClick={() => registrarAccionIndividual(JUGADOR_EQUIPO, "robos")}
-          className="py-2.5 bg-green-800 hover:bg-green-700 rounded-lg text-sm font-bold leading-tight">
+        <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "robos");
+                                 mostrarAviso(t("aviso_recuperacion_equipo")); }}
+          className="py-2.5 bg-green-800 hover:bg-green-700 active:bg-green-500
+                     active:scale-95 transition rounded-lg text-sm font-bold leading-tight">
           {t("btn_recuperacion_equipo")}
         </button>
-        <button onClick={() => registrarAccionIndividual(JUGADOR_EQUIPO, "pf")}
-          className="py-2.5 bg-rose-900 hover:bg-rose-800 rounded-lg text-sm font-bold leading-tight">
+        <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "pf");
+                                 mostrarAviso(t("aviso_perdida_equipo")); }}
+          className="py-2.5 bg-rose-900 hover:bg-rose-800 active:bg-rose-600
+                     active:scale-95 transition rounded-lg text-sm font-bold leading-tight">
           {t("btn_perdida_equipo")}
         </button>
         <button onClick={deshacerUltimoEvento}
@@ -972,6 +992,54 @@ export default function PartidoPage() {
           onCerrar={() => setModalPen(false)}
           onConfirmar={(ev) => { registrarEvento(ev as any); setModalPen(false); }}
         />
+      )}
+
+      {/* INCORPORACIÓN del portero rival. Dos toques como mucho: si fue con
+          disparo, encadena directamente el modal de disparo rival, que es el
+          flujo que Arkaitz ya tiene en los dedos. */}
+      {modalIncorporacion && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+             onClick={() => setModalIncorporacion(false)}>
+          <div className="bg-zinc-900 rounded-2xl p-5 w-full max-w-md"
+               onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold mb-1">🧤 {t("inc_titulo")}</h3>
+            <p className="text-sm text-zinc-400 mb-4">{t("inc_sub")}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  registrarEvento({ tipo: "incorporacion_rival", conDisparo: true } as any);
+                  setModalIncorporacion(false);
+                  setModalDisparoRival(true);   // encadena el disparo
+                }}
+                className="py-6 bg-red-700 hover:bg-red-600 rounded-xl text-lg font-bold">
+                {t("inc_con_disparo")}
+              </button>
+              <button
+                onClick={() => {
+                  registrarEvento({ tipo: "incorporacion_rival", conDisparo: false } as any);
+                  setModalIncorporacion(false);
+                  mostrarAviso(t("aviso_incorporacion"));
+                }}
+                className="py-6 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-lg font-bold">
+                {t("inc_sin_disparo")}
+              </button>
+            </div>
+            <button onClick={() => setModalIncorporacion(false)}
+              className="mt-4 w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+              {t("ed_cancelar")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Aviso corto de "apuntado" para las acciones sin modal. */}
+      {aviso && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+          <div className="bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg
+                          text-base font-bold">
+            ✓ {aviso}
+          </div>
+        </div>
       )}
 
       {modalDisparoRival && (
@@ -1619,6 +1687,7 @@ function ModalTM(props: {
 const ACCIONES_GOL = [
   "Córner", "Banda", "Falta", "5x4", "4x5", "4x3", "3x4", "Contraataque",
   "Robo zona alta", "Salida de presión", "1x1 banda", "Ataque posicional", "10m", "Penalti",
+  "2ª jugada",
   "Otra",
 ];
 

@@ -325,6 +325,24 @@ export default function ResumenPage() {
                   <span>{t("res_total")}</span>
                   <strong>{partido.disparosRival.puerta+partido.disparosRival.palo+partido.disparosRival.fuera+partido.disparosRival.bloqueado}</strong>
                 </div>
+                {/* Incorporaciones del portero rival: cuántas veces sube a
+                    jugar de cinco y cuántas acaban en disparo. */}
+                {(partido.incorporacionesRival?.total ?? 0) > 0 && (
+                  <div className="border-t border-red-700/30 mt-3 pt-3 text-lg">
+                    <div className="flex justify-between text-red-200 font-bold">
+                      <span>🧤 {t("res_incorporaciones")}</span>
+                      <strong>{partido.incorporacionesRival!.total}</strong>
+                    </div>
+                    <div className="flex justify-between text-red-300/80 text-base">
+                      <span>{t("res_inc_con_disparo")}</span>
+                      <strong>{partido.incorporacionesRival!.conDisparo}</strong>
+                    </div>
+                    <div className="flex justify-between text-red-300/80 text-base">
+                      <span>{t("res_inc_sin_disparo")}</span>
+                      <strong>{partido.incorporacionesRival!.sinDisparo}</strong>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
