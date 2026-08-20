@@ -1021,6 +1021,7 @@ export const CATALOGO: Record<string, Entrada> = {
   comp_COPA_REY: { es: "Copa del Rey (2×20' + 2×5' + tanda)", en: "Copa del Rey (2×20' + 2×5' + shootout)", it: "Copa del Rey (2×20' + 2×5' + rigori)" },
   comp_COPA_ESPANA: { es: "Copa de España (2×20' + 2×5' + tanda)", en: "Copa de España (2×20' + 2×5' + shootout)", it: "Copa de España (2×20' + 2×5' + rigori)" },
   comp_COPA_MUNDO: { es: "Copa del Mundo (2×20' + 2×5' + tanda)", en: "World Cup (2×20' + 2×5' + shootout)", it: "Coppa del Mondo (2×20' + 2×5' + rigori)" },
+  comp_COPA_MADRID: { es: "Copa de Madrid (2×20' + 2×5' + tanda)", en: "Copa de Madrid (2×20' + 2×5' + shootout)", it: "Copa de Madrid (2×20' + 2×5' + rigori)" },
   comp_AMISTOSO: { es: "Amistoso (2×20')", en: "Friendly (2×20')", it: "Amichevole (2×20')" },
   comp_PLAYOFF: { es: "Playoff (2×20' + 2×5' + tanda)", en: "Playoff (2×20' + 2×5' + shootout)", it: "Playoff (2×20' + 2×5' + rigori)" },
   comp_SUPERCOPA: { es: "Supercopa (2×20' + 2×5' + tanda)", en: "Supercup (2×20' + 2×5' + shootout)", it: "Supercoppa (2×20' + 2×5' + rigori)" },
