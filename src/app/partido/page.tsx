@@ -24,7 +24,7 @@ export default function PartidoPage() {
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte, setModo,
-  } = usePartido();
+  setDireccionAtaque, } = usePartido();
 
   // Estado UI
   const [modalCambio, setModalCambio] = useState<{ sale: string } | null>(null);
@@ -514,6 +514,20 @@ export default function PartidoPage() {
             🎥 {t("part_modo_video")}
           </button>
         </div>
+        {/* Dirección de ataque. Se elige al crear el partido, pero hasta el
+            saque puede cambiar (sorteo, decisión del árbitro) y antes había
+            que rehacer el partido entero. Enseña hacia dónde ataca el Inter EN
+            ESTA PARTE (en la 2ª se invierte solo) y al tocarlo lo cambia. */}
+        <button
+          onClick={() => setDireccionAtaque(cfg.direccionInter1T === "der" ? "izq" : "der")}
+          title={t("part_direccion_nota")}
+          className="flex items-center gap-1 px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700
+                     rounded-lg border border-zinc-700 text-xs font-bold">
+          <span className="text-zinc-500 text-[10px] uppercase">{t("part_direccion")}</span>
+          <span className="text-emerald-300 text-base leading-none">
+            {direccionAtaque(p, "INTER", cfg) === "der" ? "▶" : "◀"}
+          </span>
+        </button>
         <div className="flex items-center gap-1" title={t("part_ajustar_nota")}>
           <span className="text-zinc-500 text-[10px]">{t("part_ajustar_reloj")}</span>
           {([-60, -10, -1, 1, 10, 60] as const).map((d) => (
@@ -560,8 +574,12 @@ export default function PartidoPage() {
         })()}
       </div>
 
-      {/* EN PISTA — crece para llenar la altura disponible; los 5 en columnas iguales */}
-      <div className="bg-zinc-900 rounded-xl p-2 flex-1 min-h-[132px] flex flex-col">
+      {/* EN PISTA — reparto de altura (Arkaitz 20/8/2026: "el botón del jugador
+          se ve demasiado grande"). La pista cede un 40 % de su alto y ese
+          espacio va a las dos filas de botones, 20 % a cada una: de ahí el
+          6 / 2 / 2 de los `flex-[n]`. Antes la pista se quedaba con TODO el
+          sobrante (flex-1) y los botones tenían la altura justa del texto. */}
+      <div className="bg-zinc-900 rounded-xl p-2 flex-[6] min-h-[80px] flex flex-col">
         <h2 className="text-zinc-400 text-xs mb-1 flex-none">{t("part_en_pista")}</h2>
         <div className="grid grid-cols-5 gap-2 flex-1 min-h-0">
           {enPistaVista.map((nombre) => {
@@ -665,7 +683,7 @@ export default function PartidoPage() {
       {/* BOTONES ACCIÓN COLECTIVA — RESTAURADO 20/5/2026 noche:
           Arkaitz aclaró que "omitir guardar" no significaba eliminar el
           botón, sino simplificar el flujo del modal. El botón vuelve. */}
-      <div className="grid grid-cols-9 gap-1.5 flex-none">
+      <div className="grid grid-cols-9 gap-1.5 flex-[2] min-h-0">
         <BotonAccion label={t("btn_gol")} color="bg-emerald-700" onClick={() => setModalGol(true)} />
         <BotonAccion label={t("btn_disp_rival")} color="bg-red-700" onClick={() => setModalDisparoRival(true)} />
         <BotonAccion label={t("btn_incorporacion")} color="bg-amber-700"
@@ -681,30 +699,30 @@ export default function PartidoPage() {
           guardan como "#EQUIPO") + navegación, TODO en una fila para no
           consumir altura. Pérdida de EQUIPO = SIEMPRE forzada (pf); la no
           forzada siempre es de un jugador (decisión Arkaitz 10/8). */}
-      <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-none`}>
+      <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-[2] min-h-0`}>
         <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "robos");
                                  mostrarAviso(t("aviso_recuperacion_equipo")); }}
-          className="py-2.5 bg-green-800 hover:bg-green-700 active:bg-green-500
+          className="h-full min-h-[44px] py-2 bg-green-800 hover:bg-green-700 active:bg-green-500
                      active:scale-95 transition rounded-lg text-sm font-bold leading-tight">
           {t("btn_recuperacion_equipo")}
         </button>
         <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "pf");
                                  mostrarAviso(t("aviso_perdida_equipo")); }}
-          className="py-2.5 bg-rose-900 hover:bg-rose-800 active:bg-rose-600
+          className="h-full min-h-[44px] py-2 bg-rose-900 hover:bg-rose-800 active:bg-rose-600
                      active:scale-95 transition rounded-lg text-sm font-bold leading-tight">
           {t("btn_perdida_equipo")}
         </button>
         <button onClick={deshacerUltimoEvento}
-          className="py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+          className="h-full min-h-[44px] py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
           {t("btn_deshacer")}
         </button>
         <button onClick={() => setModalTiempos(true)}
-          className="py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+          className="h-full min-h-[44px] py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
           {t("btn_tiempos")}
         </button>
         {cfg.permiteTanda && (
           <button onClick={() => { iniciarTanda(); setModalTanda(true); }}
-            className={`py-2.5 rounded-lg text-sm font-bold ${
+            className={`h-full min-h-[44px] py-2 rounded-lg text-sm font-bold ${
               partido.tanda?.tiros.length
                 ? "bg-pink-700 hover:bg-pink-600"
                 : "bg-zinc-800 hover:bg-zinc-700"
@@ -714,11 +732,11 @@ export default function PartidoPage() {
           </button>
         )}
         <button onClick={() => router.push("/resumen")}
-          className="py-2.5 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-bold">
+          className="h-full min-h-[44px] py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-bold">
           {t("btn_resumen")}
         </button>
         <button onClick={() => router.push("/")}
-          className="py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+          className="h-full min-h-[44px] py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
           {t("inicio")}
         </button>
       </div>
@@ -1147,7 +1165,8 @@ function BotonAccion(props: { label: string; color: string; onClick: () => void 
   // en el iPad). Sigue siendo un botón grande para el dedo (~56 px).
   return (
     <button onClick={props.onClick}
-      className={`${props.color} hover:opacity-90 py-3.5 rounded-xl text-lg font-bold leading-tight`}>
+      className={`${props.color} hover:opacity-90 h-full min-h-[44px] py-2 rounded-xl
+                  text-lg font-bold leading-tight`}>
       {props.label}
     </button>
   );

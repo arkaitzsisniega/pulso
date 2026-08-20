@@ -393,6 +393,12 @@ export const CATALOGO: Record<string, Entrada> = {
   btn_gol: { es: "⚽ GOL", en: "⚽ GOAL", it: "⚽ GOL" },
   btn_disp_rival: { es: "🎯 DISP. RIVAL", en: "🎯 OPP. SHOT", it: "🎯 TIRO AVV." },
   btn_incorporacion: { es: "🧤 INCORP.", en: "🧤 KEEPER UP", it: "🧤 PORT. ALTO" },
+  part_direccion: { es: "Atacamos", en: "Attacking", it: "Attacchiamo" },
+  part_direccion_nota: {
+    es: "Hacia dónde ataca el equipo en ESTA parte. Tócalo para cambiarlo (en la 2ª parte se invierte solo).",
+    en: "Which way the team attacks in THIS half. Tap to switch (it flips on its own in the 2nd half).",
+    it: "Verso dove attacca la squadra in QUESTO tempo. Tocca per cambiare (nel 2º si inverte da solo).",
+  },
   res_incorporaciones: { es: "Incorporaciones del portero", en: "Keeper-up plays",
                           it: "Incorporazioni del portiere" },
   res_inc_con_disparo: { es: "· con disparo", en: "· with shot", it: "· con tiro" },

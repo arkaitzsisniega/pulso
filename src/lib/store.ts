@@ -1342,6 +1342,18 @@ export function usePartido() {
     setPartido((prev) => ({ ...prev, modo }));
   }
 
+  /** Cambia hacia dónde ataca el Inter en la 1ª parte.
+   *
+   *  Se elige al crear el partido, pero hasta el saque inicial puede cambiar
+   *  (sorteo, el árbitro decide otra cosa) y hasta ahora había que rehacer el
+   *  partido. Solo toca la config: los eventos ya guardados conservan su zona
+   *  tal cual, y `direccionAtaque()` deriva de aquí el resto de partes. */
+  function setDireccionAtaque(dir: "izq" | "der") {
+    setPartido((prev) => (prev.config
+      ? { ...prev, config: { ...prev.config, direccionInter1T: dir } }
+      : prev));
+  }
+
   return {
     partido, cargado,
     segundosTurnoActual, segundosBanquillo, segundosParte, segundosPartidoTotal,
@@ -1351,5 +1363,6 @@ export function usePartido() {
     editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte, setModo,
+    setDireccionAtaque,
   };
 }
