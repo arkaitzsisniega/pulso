@@ -184,6 +184,10 @@ export type Evento =
       /** Solo para "conexPivot": jugador que RECIBE el pase (el pívot). */
       receptor?: string;
       zonaCampo?: string })
+  /** El portero rival sube a jugar de cinco. `conDisparo` dice si esa
+   *  incorporación acabó en disparo; el disparo en sí se guarda aparte, con su
+   *  propio evento, para no duplicar los contadores de tiro. */
+  | (EventoBase & { tipo: "incorporacion_rival"; conDisparo: boolean })
   | (EventoBase & { tipo: "disparo"; equipo: "INTER" | "RIVAL";
       jugador?: string;            // tirador (si INTER); si RIVAL puede no estar
       portero?: string;            // portero nuestro (si RIVAL) o rival (si INTER)
@@ -274,6 +278,15 @@ export interface DisparosRival {
   bloqueado: number;
 }
 
+/** Veces que el portero RIVAL sube a jugar de cinco (portero-jugador).
+ *  Interesa el volumen —cuánto recurre el rival a incorporarse— y cuántas de
+ *  esas veces acaba en disparo, que es la que de verdad genera peligro. */
+export interface IncorporacionesRival {
+  total: number;
+  conDisparo: number;
+  sinDisparo: number;
+}
+
 /** Un tiro de la tanda de penaltis post-prórroga. */
 export interface TiroTanda {
   id: string;
@@ -321,6 +334,9 @@ export interface Partido {
   eventos: Evento[];
   acciones: AccionesIndividuales;
   disparosRival: DisparosRival;
+  /** Incorporaciones del portero rival. Opcional: los partidos guardados antes
+   *  del 20/8/2026 no la tienen y se leen como ceros. */
+  incorporacionesRival?: IncorporacionesRival;
   tanda: TandaPenaltis;
   /** ms del último cambio (para auto-save / recuperación). */
   actualizado: number;
@@ -372,6 +388,7 @@ export function partidoVacio(id = "current"): Partido {
     eventos: [],
     acciones: { porJugador: {} },
     disparosRival: { puerta: 0, fuera: 0, palo: 0, bloqueado: 0 },
+    incorporacionesRival: { total: 0, conDisparo: 0, sinDisparo: 0 },
     tanda: { activa: false, tiros: [], marcador: { inter: 0, rival: 0 } },
     actualizado: Date.now(),
   };
