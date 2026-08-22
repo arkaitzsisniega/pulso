@@ -602,7 +602,7 @@ export default function PartidoPage() {
           espacio va a las dos filas de botones, 20 % a cada una: de ahí el
           6 / 2 / 2 de los `flex-[n]`. Antes la pista se quedaba con TODO el
           sobrante (flex-1) y los botones tenían la altura justa del texto. */}
-      <div className="bg-zinc-900 rounded-xl p-2 flex-[42] min-h-[70px] flex flex-col">
+      <div className="bg-zinc-900 rounded-xl p-2 flex-[34] min-h-[70px] flex flex-col">
         <h2 className="text-zinc-400 text-xs mb-1 flex-none">{t("part_en_pista")}</h2>
         <div className="grid grid-cols-5 gap-2 flex-1 min-h-0">
           {enPistaVista.map((nombre) => {
@@ -658,9 +658,9 @@ export default function PartidoPage() {
       {/* El 30 % que cede la pista viene AQUÍ (Arkaitz 22/8). El banquillo pasa
           de alto fijo a repartirse el espacio; con dos filas, mitad para cada
           una. Proporción final: pista 42 · botones 20+20 · banquillo 18. */}
-      <div className="bg-zinc-900 rounded-xl p-2 flex-[18] min-h-[70px] flex flex-col">
+      <div className="bg-zinc-900 rounded-xl p-2 flex-[26] min-h-[110px] flex flex-col">
         <h2 className="text-zinc-400 text-xs mb-1 flex-none">{t("part_banquillo")}</h2>
-        <div className="grid gap-1.5"
+        <div className="grid gap-1.5 flex-1 min-h-0 auto-rows-fr"
           style={{ gridTemplateColumns: `repeat(${banquilloVista.length <= 8 ? Math.max(1, banquilloVista.length) : Math.ceil(banquilloVista.length / 2)}, minmax(0, 1fr))` }}>
           {banquilloVista.map((nombre) => {
             const seg = segundosBanquillo(nombre);
@@ -679,7 +679,7 @@ export default function PartidoPage() {
                   setModalAccionBanquillo({ jugador: nombre });
                 }}
                 disabled={estaExpulsado}
-                className={`relative px-1 py-1.5 min-h-[62px] rounded-lg text-center flex flex-col justify-center ${
+                className={`relative px-1 py-1.5 min-h-[44px] rounded-lg text-center flex flex-col justify-center ${
                   estaExpulsado
                     ? "bg-red-900/70 border border-red-500 opacity-80 cursor-not-allowed"
                     : esPortero
@@ -728,13 +728,13 @@ export default function PartidoPage() {
         <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "robos");
                                  mostrarAviso(t("aviso_recuperacion_equipo")); }}
           className="h-full min-h-[44px] py-1 px-0.5 bg-green-800 hover:bg-green-700 active:bg-green-500
-                     active:scale-95 transition rounded-lg text-base font-bold leading-none leading-tight">
+                     active:scale-95 transition rounded-lg text-lg font-bold leading-none leading-tight">
           {t("btn_recuperacion_equipo")}
         </button>
         <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "pf");
                                  mostrarAviso(t("aviso_perdida_equipo")); }}
           className="h-full min-h-[44px] py-1 px-0.5 bg-rose-900 hover:bg-rose-800 active:bg-rose-600
-                     active:scale-95 transition rounded-lg text-base font-bold leading-none leading-tight">
+                     active:scale-95 transition rounded-lg text-lg font-bold leading-none leading-tight">
           {t("btn_perdida_equipo")}
         </button>
         <button onClick={() => {
@@ -744,16 +744,16 @@ export default function PartidoPage() {
                   mostrarAviso(desc ? t("aviso_deshecho", { que: desc })
                                      : t("aviso_nada_deshacer"));
                 }}
-          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base font-bold leading-none">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-bold leading-none">
           {t("btn_deshacer")}
         </button>
         <button onClick={() => setModalTiempos(true)}
-          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base font-bold leading-none">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-bold leading-none">
           {t("btn_tiempos")}
         </button>
         {cfg.permiteTanda && (
           <button onClick={() => { iniciarTanda(); setModalTanda(true); }}
-            className={`h-full min-h-[44px] py-1 px-0.5 rounded-lg text-base font-bold leading-none ${
+            className={`h-full min-h-[44px] py-1 px-0.5 rounded-lg text-lg font-bold leading-none ${
               partido.tanda?.tiros.length
                 ? "bg-pink-700 hover:bg-pink-600"
                 : "bg-zinc-800 hover:bg-zinc-700"
@@ -763,11 +763,11 @@ export default function PartidoPage() {
           </button>
         )}
         <button onClick={() => router.push("/resumen")}
-          className="h-full min-h-[44px] py-1 px-0.5 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-base font-bold leading-none">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-lg font-bold leading-none">
           {t("btn_resumen")}
         </button>
         <button onClick={() => router.push("/")}
-          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base font-bold leading-none">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-bold leading-none">
           {t("inicio")}
         </button>
       </div>
