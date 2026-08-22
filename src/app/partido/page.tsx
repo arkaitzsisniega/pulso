@@ -255,10 +255,16 @@ export default function PartidoPage() {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center gap-4">
         <p className="text-xl">{t("part_no_en_curso")}</p>
-        <button onClick={() => router.push("/nuevo")}
-          className="px-6 py-3 bg-emerald-700 rounded-xl text-lg font-bold">
-          {t("part_crear_nuevo")}
-        </button>
+        <div className="flex gap-3">
+          <button onClick={() => router.push("/")}
+            className="px-6 py-3 bg-zinc-800 rounded-xl text-lg">
+            {t("inicio")}
+          </button>
+          <button onClick={() => router.push("/nuevo")}
+            className="px-6 py-3 bg-emerald-700 rounded-xl text-lg font-bold">
+            {t("part_crear_nuevo")}
+          </button>
+        </div>
       </div>
     );
   }

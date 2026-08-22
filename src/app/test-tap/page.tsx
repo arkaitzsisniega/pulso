@@ -14,6 +14,10 @@ export default function TestTap() {
   return (
     <div style={{ padding: 20, fontFamily: "system-ui", color: "#fff", background: "#000", minHeight: "100vh" }}>
       <h1 style={{ fontSize: 24, marginBottom: 16 }}>Test de hidratación</h1>
+      <a href="/" style={{ display: "inline-block", marginBottom: 16, padding: "8px 16px",
+        background: "#27272a", color: "#fff", borderRadius: 8, textDecoration: "none" }}>
+        🏠 Inicio
+      </a>
       <p style={{ marginBottom: 8 }}>
         Si React está vivo, al tocar el botón el contador sube. Si NO sube,
         React no se hidrata en este dispositivo.
