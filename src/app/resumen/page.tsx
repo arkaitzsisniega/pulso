@@ -164,6 +164,21 @@ export default function ResumenPage() {
 
   const cfg = partido.config;
   const partesJugadas = PARTES.filter((p) => (cfg.duracionParte[p] ?? 0) > 0);
+  // En DIRECTO no da tiempo a coger balones divididos ni a tocar el mapa de
+  // disparos, así que esas vistas mienten (salen todas a cero). Los partidos
+  // antiguos no llevan `modo` y se tratan como directo, igual que en db.ts.
+  const esDirecto = (partido.modo ?? "directo") === "directo";
+  // Incorporaciones del portero rival por parte. Se derivan de los eventos
+  // (que sí llevan `parte`); el contador plano `incorporacionesRival` solo
+  // guarda el total del partido y no sirve para desglosar.
+  const incorporacionesDe = (p: ParteId) => {
+    const evs = partido.eventos.filter(
+      (e) => e.tipo === "incorporacion_rival" && e.parte === p) as any[];
+    return { con: evs.filter((e) => e.conDisparo).length,
+             sin: evs.filter((e) => !e.conDisparo).length };
+  };
+  const hayEventosIncorporacion = partido.eventos.some(
+    (e) => e.tipo === "incorporacion_rival");
 
   // Eventos por parte (orden cronológico)
   const eventosOrdenados = [...partido.eventos].sort((a, b) => {
@@ -286,7 +301,7 @@ export default function ResumenPage() {
           { id: "tiempos",    lbl: t("res_tab_tiempos") },
           { id: "individual", lbl: t("res_tab_individual") },
           { id: "cronograma", lbl: t("res_tab_cronograma") },
-          { id: "disparos",   lbl: t("res_tab_disparos") },
+          ...(esDirecto ? [] : [{ id: "disparos", lbl: t("res_tab_disparos") }]),
           { id: "analisis",   lbl: t("res_tab_analisis") },
           { id: "editar",     lbl: t("res_tab_editar") },
         ].map((tabItem) => (
@@ -383,20 +398,68 @@ export default function ResumenPage() {
                   </div>
                 </div>
               </div>
-              {/* Balones divididos */}
-              <div className="bg-purple-900/30 rounded-lg p-5">
-                <div className="text-xl text-purple-300 font-bold mb-3">{t("res_divididos")}</div>
-                <div className="text-lg space-y-2">
-                  <div className="flex justify-between"><span>{t("res_ganados")}</span><strong>{totalesEquipo.bdg}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_no_ganados")}</span><strong>{totalesEquipo.bdp}</strong></div>
-                  <div className="border-t border-purple-700/50 mt-3 pt-3 flex justify-between text-purple-200 text-xl font-bold">
-                    <span>{t("res_ratio")}</span>
-                    <strong>{(totalesEquipo.bdg + totalesEquipo.bdp) > 0
-                      ? `${Math.round(totalesEquipo.bdg / (totalesEquipo.bdg + totalesEquipo.bdp) * 100)}%`
-                      : "—"}</strong>
+              {/* En VÍDEO, balones divididos. En DIRECTO no se cogen (saldría
+                  todo a cero), así que ese hueco lo ocupan las incorporaciones
+                  del portero rival, parte por parte. */}
+              {esDirecto ? (
+                <div className="bg-purple-900/30 rounded-lg p-5">
+                  <div className="text-xl text-purple-300 font-bold mb-3">{t("res_incorporaciones_titulo")}</div>
+                  <div className="text-lg space-y-2">
+                    {hayEventosIncorporacion || (partido.incorporacionesRival?.total ?? 0) === 0 ? (
+                      <>
+                        {partesJugadas.map((p) => {
+                          const inc = incorporacionesDe(p);
+                          return (
+                            <div key={p} className="flex justify-between">
+                              <span>{nombreParte(p)}</span>
+                              <strong className="tabular-nums">
+                                {inc.con + inc.sin}
+                                <span className="text-purple-300 font-normal text-base">
+                                  {" "}({inc.con} {t("res_inc_con")} · {inc.sin} {t("res_inc_sin")})
+                                </span>
+                              </strong>
+                            </div>
+                          );
+                        })}
+                        <div className="border-t border-purple-700/50 mt-3 pt-3 flex justify-between text-purple-200 text-xl font-bold">
+                          <span>{t("res_total")}</span>
+                          <strong className="tabular-nums">
+                            {partesJugadas.reduce((a, p) => a + incorporacionesDe(p).con + incorporacionesDe(p).sin, 0)}
+                            <span className="font-normal text-base">
+                              {" "}({partesJugadas.reduce((a, p) => a + incorporacionesDe(p).con, 0)} {t("res_inc_con")})
+                            </span>
+                          </strong>
+                        </div>
+                      </>
+                    ) : (
+                      /* Partidos anteriores al desglose: solo hay el total. */
+                      <div className="flex justify-between">
+                        <span>{t("res_total")}</span>
+                        <strong className="tabular-nums">
+                          {partido.incorporacionesRival!.total}
+                          <span className="text-purple-300 font-normal text-base">
+                            {" "}({partido.incorporacionesRival!.conDisparo} {t("res_inc_con")})
+                          </span>
+                        </strong>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-purple-900/30 rounded-lg p-5">
+                  <div className="text-xl text-purple-300 font-bold mb-3">{t("res_divididos")}</div>
+                  <div className="text-lg space-y-2">
+                    <div className="flex justify-between"><span>{t("res_ganados")}</span><strong>{totalesEquipo.bdg}</strong></div>
+                    <div className="flex justify-between"><span>{t("res_no_ganados")}</span><strong>{totalesEquipo.bdp}</strong></div>
+                    <div className="border-t border-purple-700/50 mt-3 pt-3 flex justify-between text-purple-200 text-xl font-bold">
+                      <span>{t("res_ratio")}</span>
+                      <strong>{(totalesEquipo.bdg + totalesEquipo.bdp) > 0
+                        ? `${Math.round(totalesEquipo.bdg / (totalesEquipo.bdg + totalesEquipo.bdp) * 100)}%`
+                        : "—"}</strong>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -724,14 +787,26 @@ export default function ResumenPage() {
           <p className="text-base text-zinc-500 mb-4">
             {t("res_indiv_nota")}
           </p>
-          <table className="text-base min-w-[780px] w-full">
+          {/* table-fixed + colgroup para que TODAS las columnas de números
+              midan lo mismo (pedido Arkaitz 22/8: "por un tema visual").
+              Sin table-fixed cada una se ajusta a su contenido y quedan
+              desiguales. El nombre del jugador se lleva el 18%. */}
+          <table className="text-base min-w-[780px] w-full table-fixed">
+            <colgroup>
+              <col className="w-[18%]" />
+              {Array.from({ length: esDirecto ? 13 : 15 }).map((_, i) => (
+                <col key={i} />
+              ))}
+            </colgroup>
             <thead className="text-base border-b border-zinc-700">
               <tr className="text-zinc-400">
                 <th rowSpan={2} className="text-left py-2 px-2 align-bottom border-r border-zinc-800">{t("res_col_jug")}</th>
                 <th colSpan={5} className="text-center px-1 bg-emerald-900/30 text-emerald-300 text-base font-bold">{t("res_col_disparos")}</th>
                 <th colSpan={2} className="text-center px-1 bg-red-900/30 text-red-300 text-base font-bold">{t("res_col_perd")}</th>
                 <th colSpan={2} className="text-center px-1 bg-green-900/30 text-green-300 text-base font-bold">{t("res_col_recup")}</th>
-                <th colSpan={2} className="text-center px-1 bg-purple-900/30 text-purple-300 text-base font-bold">{t("res_col_div")}</th>
+                {!esDirecto && (
+                  <th colSpan={2} className="text-center px-1 bg-purple-900/30 text-purple-300 text-base font-bold">{t("res_col_div")}</th>
+                )}
                 <th colSpan={4} className="text-center px-1 bg-yellow-900/30 text-yellow-300 text-base font-bold">{t("res_col_goles")}</th>
               </tr>
               <tr className="text-zinc-500 text-base">
@@ -744,8 +819,12 @@ export default function ResumenPage() {
                 <th className="text-center px-1 bg-red-900/10" title={t("res_title_no_forzada")}>PNF</th>
                 <th className="text-center px-1 bg-green-900/10">{t("res_th_robos")}</th>
                 <th className="text-center px-1 bg-green-900/10">{t("res_th_cortes")}</th>
-                <th className="text-center px-1 bg-purple-900/10" title={t("res_title_ganados")}>BDG</th>
-                <th className="text-center px-1 bg-purple-900/10" title={t("res_title_perdidos")}>BDP</th>
+                {!esDirecto && (
+                  <>
+                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_ganados")}>BDG</th>
+                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_perdidos")}>BDP</th>
+                  </>
+                )}
                 <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_goles_marcados")}>{t("res_abbr_g")}</th>
                 <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_asistencias")}>{t("res_abbr_a")}</th>
                 <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_gf")}>{t("res_abbr_gf")}</th>
@@ -772,9 +851,13 @@ export default function ResumenPage() {
                     {/* Recuperaciones */}
                     <td className="text-center font-mono tabular-nums px-1 bg-green-900/10">{c?.robos ?? 0}</td>
                     <td className="text-center font-mono tabular-nums px-1 bg-green-900/10">{c?.cortes ?? 0}</td>
-                    {/* Divididos */}
-                    <td className="text-center font-mono tabular-nums px-1 bg-purple-900/10">{c?.bdg ?? 0}</td>
-                    <td className="text-center font-mono tabular-nums px-1 bg-purple-900/10">{c?.bdp ?? 0}</td>
+                    {/* Divididos: en directo no se cogen, así que ni se pintan */}
+                    {!esDirecto && (
+                      <>
+                        <td className="text-center font-mono tabular-nums px-1 bg-purple-900/10">{c?.bdg ?? 0}</td>
+                        <td className="text-center font-mono tabular-nums px-1 bg-purple-900/10">{c?.bdp ?? 0}</td>
+                      </>
+                    )}
                     {/* Goles + presencia */}
                     <td className="text-center font-mono tabular-nums px-1 bg-yellow-900/10 font-bold text-lg">{r.goles}</td>
                     <td className="text-center font-mono tabular-nums px-1 bg-yellow-900/10">{r.asistencias}</td>
