@@ -563,23 +563,26 @@ export default function PartidoPage() {
         {/* Faltas / amarillas (todo el partido) / TM */}
         <div className="flex items-center gap-x-3 ml-auto text-sm">
           <span className="text-zinc-500 text-[10px] uppercase tracking-wide">{t("part_stats_parte", { parte: p })}</span>
-          <span>
-            <span className="text-emerald-400 font-bold">I</span> {t("part_faltas")}{" "}
+          {/* Las faltas, en grande: son lo que hay que ver de un vistazo desde
+              el banquillo (pedido del 22/8, en pleno partido). El tamaño va en
+              ESTE span, no en el contenedor, para no tocar amarillas ni TM. */}
+          <span className="text-2xl font-bold">
+            <span className="text-emerald-400">I</span> {t("part_faltas")}{" "}
             <strong className={sFalt.inter >= 5 ? "text-red-400" : ""}>{sFalt.inter}</strong>
             <span className="text-zinc-600 mx-1">/</span>
-            <span className="text-red-400 font-bold">R</span> {t("part_faltas")}{" "}
+            <span className="text-red-400">R</span> {t("part_faltas")}{" "}
             <strong className={sFalt.rival >= 5 ? "text-red-400" : ""}>{sFalt.rival}</strong>
           </span>
           <span>🟨 <strong>{sAma.inter}</strong><span className="text-zinc-600">/</span><strong>{sAma.rival}</strong></span>
           <span>🛑 TM <strong>{sTM.inter}</strong><span className="text-zinc-600">/</span><strong>{sTM.rival}</strong></span>
         </div>
         {/* Avisos de faltas (solo el más alto que aplique) + tarjetas del rival */}
-        {sFalt.inter === 4 && <span className="bg-amber-600 rounded px-2 py-0.5 text-xs font-bold">{t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}</span>}
-        {sFalt.inter === 5 && <span className="bg-orange-600 rounded px-2 py-0.5 text-xs font-bold">{t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC })}</span>}
-        {sFalt.inter >= 6 && <span className="bg-red-700 rounded px-2 py-0.5 text-xs font-bold">{t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC })}</span>}
-        {sFalt.rival === 4 && <span className="bg-amber-600 rounded px-2 py-0.5 text-xs font-bold">{t("part_rival_4falta")}</span>}
-        {sFalt.rival === 5 && <span className="bg-orange-600 rounded px-2 py-0.5 text-xs font-bold">{t("part_rival_5falta")}</span>}
-        {sFalt.rival >= 6 && <span className="bg-emerald-700 rounded px-2 py-0.5 text-xs font-bold">{t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC })}</span>}
+        {sFalt.inter === 4 && <span className="bg-amber-600 rounded px-3 py-1 text-base font-bold">{t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}</span>}
+        {sFalt.inter === 5 && <span className="bg-orange-600 rounded px-3 py-1 text-base font-bold">{t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC })}</span>}
+        {sFalt.inter >= 6 && <span className="bg-red-700 rounded px-3 py-1 text-base font-bold">{t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC })}</span>}
+        {sFalt.rival === 4 && <span className="bg-amber-600 rounded px-3 py-1 text-base font-bold">{t("part_rival_4falta")}</span>}
+        {sFalt.rival === 5 && <span className="bg-orange-600 rounded px-3 py-1 text-base font-bold">{t("part_rival_5falta")}</span>}
+        {sFalt.rival >= 6 && <span className="bg-emerald-700 rounded px-3 py-1 text-base font-bold">{t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC })}</span>}
         {(() => {
           const evs = partido.eventos as any[];
           const amaRival = evs.filter((e) => e.tipo === "amarilla" && e.equipo === "RIVAL" && e.jugador).map((e) => e.jugador as string);
