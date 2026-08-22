@@ -238,10 +238,17 @@ export default function ResumenPage() {
       {/* HEADER */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <button onClick={() => router.push("/partido")}
-            className="text-base text-zinc-400 hover:text-zinc-200">
-            {t("res_volver_partido")}
-          </button>
+          {partido.estado === "en_curso" ? (
+            <button onClick={() => router.push("/partido")}
+              className="text-base text-zinc-400 hover:text-zinc-200">
+              {t("res_volver_partido")}
+            </button>
+          ) : (
+            <Link href="/"
+              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base">
+              {t("inicio")}
+            </Link>
+          )}
           <h1 className="text-3xl font-bold">{t("res_titulo")}</h1>
           <Link href="/" className="text-base text-zinc-400 hover:text-zinc-200">
             {t("res_inicio_flecha")}
@@ -807,11 +814,13 @@ export default function ResumenPage() {
       )}
 
       {/* FOOTER — acciones */}
-      <div className="mt-6 grid grid-cols-3 gap-2">
-        <button onClick={() => router.push("/partido")}
-          className="py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base">
-          {t("res_volver_partido")}
-        </button>
+      <div className={`mt-6 grid gap-2 ${partido.estado === "en_curso" ? "grid-cols-3" : "grid-cols-2"}`}>
+        {partido.estado === "en_curso" && (
+          <button onClick={() => router.push("/partido")}
+            className="py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base">
+            {t("res_volver_partido")}
+          </button>
+        )}
         <button onClick={() => exportarJSON(partido)}
           className="py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-base font-bold">
           {t("res_exportar_json")}
