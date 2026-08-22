@@ -352,6 +352,28 @@ export default function PartidoPage() {
           encima de cualquier modal (z-[60] > z-50 de los ModalShell). En futsal
           el reloj se arranca/para sin parar, también mientras metes disparos,
           pérdidas o faltas con un modal abierto. Pedido Arkaitz 10/8/2026. */}
+      {/* QUIÉN SACA — visible mientras la parte no ha arrancado. Antes solo
+          salía un aviso pasajero al pasar de parte, y para cuando ibas a
+          sacar ya no estaba (pedido Arkaitz 22/8). */}
+      {(() => {
+        if (corriendo) return null;
+        const saca = sacaEn(p, partido.saqueInicial1T);
+        if (!saca) return null;
+        // solo al principio de la parte: si ya se ha jugado, estorba
+        if ((partido.cronometro.segundosParte ?? 0) > 0) return null;
+        const esNuestro = saca === "INTER";
+        return (
+          <div className={`fixed top-2 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-xl
+                           text-base font-bold shadow-lg shadow-black/60 border ${
+            esNuestro ? "bg-emerald-700 border-emerald-300/50" : "bg-zinc-700 border-zinc-400/50"
+          }`}>
+            {t("part_saca_badge", {
+              equipo: esNuestro ? CLIENTE.nombreCorto : cfg.rival,
+            })}
+          </div>
+        );
+      })()}
+
       <div className="fixed top-2 right-2 z-[60]">
         {!corriendo
           ? <button
@@ -701,7 +723,15 @@ export default function PartidoPage() {
                 {estaExpulsado ? (
                   <div className="text-[10px] font-bold text-red-200">{t("part_expulsado")}</div>
                 ) : (
-                  <div className="text-lg font-mono tabular-nums leading-none mt-1">{formatMMSS(seg)}</div>
+                  <>
+                    {/* arriba, lo que lleva SENTADO (para decidir el cambio) y
+                        debajo, lo que lleva JUGADO en esta parte — que es lo
+                        que hace falta para repartir minutos (pedido 22/8). */}
+                    <div className="text-lg font-mono tabular-nums leading-none mt-1">{formatMMSS(seg)}</div>
+                    <div className="text-[11px] font-mono tabular-nums leading-none mt-0.5 text-zinc-400">
+                      {formatMMSS(segundosEnParte(nombre, p))}
+                    </div>
+                  </>
                 )}
               </button>
             );
@@ -1425,7 +1455,7 @@ function ModalCambio(props: {
       {sale && (
         <Paso n={2} titulo={t("mc_entra", { sale })} activo={true}>
           <div className="flex flex-wrap gap-2">
-            {props.banquillo.map((n) => (
+            {porDorsal(props.banquillo).map((n) => (
               <button key={n}
                 onClick={() => props.onConfirmar(sale, n)}
                 className="px-4 py-3 bg-emerald-700 hover:bg-emerald-600 rounded text-base font-bold">
@@ -1823,6 +1853,18 @@ function ModalTM(props: {
 // juego abierto (lo que más se marca), a la derecha el balón parado y las
 // superioridades. El VALOR sigue siendo el español canónico; solo la etiqueta
 // se traduce, vía labelAccionGol().
+/** Ordena por dorsal. SOLO para los paneles de cambio: ahí se busca a alguien
+ *  concreto y el número es lo que se lee de un vistazo. En el banquillo de la
+ *  pantalla general manda el otro orden (el que menos lleva sentado, primero),
+ *  que es el que sirve para decidir A QUIÉN meter. Pedido Arkaitz 22/8. */
+function porDorsal(nombres: string[]): string[] {
+  return [...nombres].sort((a, b) => {
+    const da = Number(ROSTER.find((j) => j.nombre === a)?.dorsal ?? 999);
+    const db = Number(ROSTER.find((j) => j.nombre === b)?.dorsal ?? 999);
+    return (da - db) || a.localeCompare(b);
+  });
+}
+
 const ACCIONES_GOL_IZQ = [
   "Robo zona alta", "Ataque posicional", "1x1 banda", "Contraataque",
   "2ª jugada", "Salida de presión",
@@ -1843,6 +1885,9 @@ function ModalGol(props: {
 }) {
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
   const [goleador, setGoleador] = useState("");
+  // Gol a favor que mete el rival en su propia puerta: no lo marca nadie
+  // nuestro, así que no hay goleador ni asistente (pedido Arkaitz 22/8).
+  const [enPropia, setEnPropia] = useState(false);
   const [asistente, setAsistente] = useState<string | "OMIT" | "">("");
   const [accion, setAccion] = useState("");
   const [zonaCampo, setZonaCampo] = useState("");
@@ -1854,7 +1899,12 @@ function ModalGol(props: {
 
   const aplicar = (zp: string) => {
     const ev: any = { tipo: "gol", equipo };
-    if (equipo === "INTER") {
+    if (equipo === "INTER" && enPropia) {
+      // En propia del rival: sin goleador ni asistente. Los 5 nuestros SÍ
+      // estaban en pista, así que el quinteto va entero (cuenta para el +/−).
+      ev.enPropia = true;
+      ev.cuarteto = [...props.enPista];
+    } else if (equipo === "INTER") {
       ev.goleador = goleador;
       if (asistente && asistente !== "OMIT") ev.asistente = asistente;
       ev.cuarteto = props.enPista.filter((n) => n !== goleador);
@@ -1883,7 +1933,10 @@ function ModalGol(props: {
   // para no depender del setState asíncrono. Goleador/asistente ya están fijados.
   const aplicarDirecto = (acc: string) => {
     const ev: any = { tipo: "gol", equipo };
-    if (equipo === "INTER") {
+    if (equipo === "INTER" && enPropia) {
+      ev.enPropia = true;
+      ev.cuarteto = [...props.enPista];
+    } else if (equipo === "INTER") {
       ev.goleador = goleador;
       if (asistente && asistente !== "OMIT") ev.asistente = asistente;
       ev.cuarteto = props.enPista.filter((n) => n !== goleador);
@@ -1916,11 +1969,19 @@ function ModalGol(props: {
 
       {equipo === "INTER" && (
         <>
-          <Paso n={2} titulo={t("mg_goleador")} activo={!goleador}>
-            <ChipsJugador opciones={props.enPista} seleccionado={goleador} onSelect={setGoleador} />
+          <Paso n={2} titulo={t("mg_goleador")} activo={!goleador && !enPropia}>
+            <ChipsJugador opciones={props.enPista} seleccionado={enPropia ? "" : goleador}
+              onSelect={(n) => { setGoleador(n); setEnPropia(false); }} />
+            <button
+              onClick={() => { setEnPropia(true); setGoleador(""); setAsistente("OMIT"); }}
+              className={`mt-2 w-full py-3 rounded-lg text-base font-bold ${
+                enPropia ? "bg-amber-600" : "bg-zinc-800 hover:bg-zinc-700"
+              }`}>
+              {t("mg_en_propia")}
+            </button>
           </Paso>
 
-          {goleador && (
+          {goleador && !enPropia && (
             <Paso n={3} titulo={t("mg_asistente")} activo={!asistente}>
               <div className="flex flex-wrap gap-2">
                 {props.enPista.filter((n) => n !== goleador).map((n) => (
@@ -1939,7 +2000,7 @@ function ModalGol(props: {
         </>
       )}
 
-      {(equipo === "RIVAL" || (goleador && asistente)) && (
+      {(equipo === "RIVAL" || enPropia || (goleador && asistente)) && (
         <Paso n={equipo === "RIVAL" ? 2 : 4} titulo={t("mg_accion_gol")} activo={!accion}>
           <div className="grid grid-cols-2 gap-x-3 gap-y-2">
             {[ACCIONES_GOL_IZQ, ACCIONES_GOL_DER].map((columna, i) => (
@@ -2398,8 +2459,9 @@ function ModalAccionIndividual(props: {
 
         {/* CAMBIO DIRECTO: tap en un jugador del banquillo y se hace el cambio
             inmediatamente. Botones GRANDES con el DORSAL bien visible (en vez
-            de la flecha), en el mismo orden que el banquillo de la pantalla
-            (último en salir a la izquierda; sin jugar, al final). */}
+            de la flecha), ORDENADOS POR DORSAL: aquí se busca a uno concreto,
+            así que manda el número. El banquillo de la pantalla general sigue
+            con su orden (el que menos lleva sentado, primero). */}
         <div className="mt-4 pt-3 border-t border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-300 mb-2">
             {t("mai_cambio_rapido")}
@@ -2408,7 +2470,7 @@ function ModalAccionIndividual(props: {
             <p className="text-xs text-zinc-500">{t("mai_no_banquillo")}</p>
           ) : (
             <div className="grid grid-cols-4 gap-2">
-              {props.banquillo.map((n) => {
+              {porDorsal(props.banquillo).map((n) => {
                 const dorsal = ROSTER.find((j) => j.nombre === n)?.dorsal || "";
                 const esPor = ROSTER.find((j) => j.nombre === n)?.posicion === "PORTERO";
                 return (
@@ -2904,6 +2966,13 @@ function ModalCambioParte(props: {
       bdp: acc.bdp + (c.bdp || 0),
     };
   }, { dpp:0,dpa:0,dpf:0,dpb:0,pf:0,pnf:0,robos:0,cortes:0,bdg:0,bdp:0 });
+
+  const esDirectoMCP = (props.partido.modo ?? "directo") === "directo";
+  // Incorporaciones del portero rival EN ESTA PARTE (los eventos llevan parte).
+  const incParte = (props.partido.eventos as any[])
+    .filter((e) => e.tipo === "incorporacion_rival" && e.parte === props.desde)
+    .reduce((a, e) => e.conDisparo ? { ...a, con: a.con + 1 } : { ...a, sin: a.sin + 1 },
+            { con: 0, sin: 0 });
   // Acciones colectivas de equipo (aparte de los jugadores): recuperación de
   // equipo = robos; pérdida de equipo = pf (forzada).
   const _cEq = partido.acciones.porJugador[JUGADOR_EQUIPO];
@@ -3061,17 +3130,31 @@ function ModalCambioParte(props: {
             <span>{t("mcp_total_lbl")}</span><strong>{tot.robos + tot.cortes + recEquipo}</strong>
           </div>
         </div>
-        <div className="bg-purple-900/20 rounded-lg p-2 border border-purple-700/20">
-          <div className="text-purple-300 font-bold mb-1">{t("mcp_divididos")}</div>
-          <div className="flex justify-between"><span>{t("mcp_ganados")}</span><strong>{tot.bdg}</strong></div>
-          <div className="flex justify-between"><span>{t("mcp_no_ganados")}</span><strong>{tot.bdp}</strong></div>
-          <div className="border-t border-purple-700/40 mt-1 pt-1 flex justify-between text-purple-200">
-            <span>{t("mcp_ratio")}</span>
-            <strong>{(tot.bdg + tot.bdp) > 0
-              ? `${Math.round(tot.bdg / (tot.bdg + tot.bdp) * 100)}%`
-              : "—"}</strong>
+        {/* En DIRECTO no se cogen balones divididos, así que ese cuadro salía
+            siempre a cero. Ese hueco lo ocupan las incorporaciones del portero
+            rival de esta parte, que sí se apuntan (Arkaitz 22/8). */}
+        {esDirectoMCP ? (
+          <div className="bg-purple-900/20 rounded-lg p-2 border border-purple-700/20">
+            <div className="text-purple-300 font-bold mb-1">{t("mcp_incorporaciones")}</div>
+            <div className="flex justify-between"><span>{t("mcp_inc_con")}</span><strong>{incParte.con}</strong></div>
+            <div className="flex justify-between"><span>{t("mcp_inc_sin")}</span><strong>{incParte.sin}</strong></div>
+            <div className="border-t border-purple-700/40 mt-1 pt-1 flex justify-between text-purple-200">
+              <span>{t("mcp_total_lbl")}</span><strong>{incParte.con + incParte.sin}</strong>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-purple-900/20 rounded-lg p-2 border border-purple-700/20">
+            <div className="text-purple-300 font-bold mb-1">{t("mcp_divididos")}</div>
+            <div className="flex justify-between"><span>{t("mcp_ganados")}</span><strong>{tot.bdg}</strong></div>
+            <div className="flex justify-between"><span>{t("mcp_no_ganados")}</span><strong>{tot.bdp}</strong></div>
+            <div className="border-t border-purple-700/40 mt-1 pt-1 flex justify-between text-purple-200">
+              <span>{t("mcp_ratio")}</span>
+              <strong>{(tot.bdg + tot.bdp) > 0
+                ? `${Math.round(tot.bdg / (tot.bdg + tot.bdp) * 100)}%`
+                : "—"}</strong>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* INDIVIDUAL — solo top scorers de cada categoría para no saturar */}
