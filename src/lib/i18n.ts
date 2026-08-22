@@ -311,6 +311,7 @@ export const CATALOGO: Record<string, Entrada> = {
   part_no_en_curso: { es: "No hay partido en curso.", en: "No match in progress.", it: "Nessuna partita in corso." },
   part_crear_nuevo: { es: "🏁 Crear partido nuevo", en: "🏁 Create new match", it: "🏁 Crea nuova partita" },
   part_fin_parte: { es: "⏱️ Fin de parte", en: "⏱️ End of period", it: "⏱️ Fine tempo" },
+  part_saca_badge: { es: "⚽ Saca {equipo}", en: "⚽ {equipo} kicks off", it: "⚽ Batte {equipo}" },
   part_iniciar: { es: "▶ INICIAR", en: "▶ START", it: "▶ AVVIA" },
   part_pausar: { es: "⏸ PAUSAR", en: "⏸ PAUSE", it: "⏸ PAUSA" },
   part_volver_parte_confirm: {
@@ -575,6 +576,10 @@ export const CATALOGO: Record<string, Entrada> = {
   mg_goleador: { es: "Goleador (tap)", en: "Scorer (tap)", it: "Marcatore (tocca)" },
   mg_asistente: { es: "Asistente (tap o saltar)", en: "Assist (tap or skip)", it: "Assist (tocca o salta)" },
   mg_sin_asistente: { es: "sin asistente", en: "no assist", it: "senza assist" },
+  mg_en_propia: { es: "🙃 En propia del rival (no la marca nadie nuestro)",
+                  en: "🙃 Rival own goal (none of ours scored it)",
+                  it: "🙃 Autorete avversaria (nessuno dei nostri)" },
+
   mg_accion_gol: { es: "Acción del gol", en: "Goal action", it: "Azione del gol" },
   mg_zona_tira: { es: "Zona desde donde se REMATÓ", en: "Zone the goal was SHOT from", it: "Zona da cui si è TIRATO" },
   mg_zona_asistencia: { es: "Zona desde donde se dio la ASISTENCIA (el pase)", en: "Zone the ASSIST (pass) was given from", it: "Zona da cui è stato dato l'ASSIST (il passaggio)" },
@@ -775,6 +780,9 @@ export const CATALOGO: Record<string, Entrada> = {
   mcp_recuperaciones: { es: "✅ Recuperaciones", en: "✅ Recoveries", it: "✅ Recuperi" },
   mcp_robos: { es: "Robos", en: "Steals", it: "Recuperi palla" },
   mcp_cortes: { es: "Cortes", en: "Interceptions", it: "Intercetti" },
+  mcp_incorporaciones: { es: "🧤 Incorporaciones rival", en: "🧤 Rival GK as outfield", it: "🧤 Portiere di movimento" },
+  mcp_inc_con: { es: "Con disparo", en: "With shot", it: "Con tiro" },
+  mcp_inc_sin: { es: "Sin disparo", en: "No shot", it: "Senza tiro" },
   mcp_divididos: { es: "⚖️ Balones divididos", en: "⚖️ Loose balls", it: "⚖️ Contrasti" },
   mcp_ganados: { es: "Ganados", en: "Won", it: "Vinti" },
   mcp_no_ganados: { es: "No ganados", en: "Lost", it: "Persi" },
