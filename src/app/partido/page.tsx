@@ -8,8 +8,8 @@ import { formatMMSS, colorTiempoPista, colorTiempoBanquillo } from "@/lib/utils"
 import { segundosVivos, formatCuentaAtras, msHastaSiguienteCambio } from "@/lib/reloj";
 import { Campo } from "@/components/Campo";
 import { Porteria } from "@/components/Porteria";
-import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo } from "@/lib/db";
-import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
+import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo, Evento } from "@/lib/db";
+import { direccionAtaque, sacaEn, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelResultadoDisparo, labelAccionGol } from "@/lib/i18n";
 
 export default function PartidoPage() {
@@ -24,7 +24,7 @@ export default function PartidoPage() {
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte, setModo,
-  setDireccionAtaque, } = usePartido();
+    setDireccionAtaque, setSaqueInicial } = usePartido();
 
   // Estado UI
   const [modalCambio, setModalCambio] = useState<{ sale: string } | null>(null);
@@ -47,6 +47,10 @@ export default function PartidoPage() {
   const [modalTiempos, setModalTiempos] = useState(false);
   const [modalDisparoRival, setModalDisparoRival] = useState(false);
   const [modalIncorporacion, setModalIncorporacion] = useState(false);
+  // Al darle a iniciar por primera vez se pregunta quién saca. Con eso, al
+  // empezar la 2ª parte el crono ya sabe a quién le toca y lo recuerda
+  // (Arkaitz 22/8/2026: antes había que acordarse de memoria).
+  const [modalSaque, setModalSaque] = useState(false);
   const [modalCambioParte, setModalCambioParte] = useState(false);
   // Aviso corto tras una acción que se guarda SIN abrir modal (pérdida y
   // recuperación de equipo). Arkaitz: "le doy al botón y, al no pasar nada, no
@@ -344,14 +348,27 @@ export default function PartidoPage() {
           pérdidas o faltas con un modal abierto. Pedido Arkaitz 10/8/2026. */}
       <div className="fixed top-2 right-2 z-[60]">
         {!corriendo
-          ? <button onClick={play} aria-label={t("part_iniciar")}
+          ? <button
+              onClick={() => {
+                // Antes de arrancar el partido, quién saca. Solo la 1ª vez:
+                // si ya está anotado, o no es el principio, arranca directo.
+                if (!partido.saqueInicial1T && p === "1T"
+                    && partido.eventos.length === 0) {
+                  setModalSaque(true);
+                  return;
+                }
+                play();
+              }}
+              aria-label={t("part_iniciar")}
               className="px-5 py-3 bg-green-700 hover:bg-green-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-green-300/40">▶ {t("part_iniciar")}</button>
           : <button onClick={pausa} aria-label={t("part_pausar")}
               className="px-5 py-3 bg-orange-700 hover:bg-orange-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-orange-200/40">⏸ {t("part_pausar")}</button>}
       </div>
 
       {/* HEADER (compacto) */}
-      <div className="flex items-center justify-between pr-36 flex-none">
+      {/* pr-52: el de iniciar/parar es flotante (fixed, arriba a la derecha) y
+          con pr-36 los controles de parte le quedaban DEBAJO (Arkaitz 22/8). */}
+      <div className="flex items-center justify-between pr-52 flex-none">
         <div className="flex items-center gap-3">
           {/* Reloj grande: componente propio que se repinta JUSTO en cada
               límite de segundo (no cada 250 ms) y cuenta atrás tipo marcador
@@ -579,7 +596,7 @@ export default function PartidoPage() {
           espacio va a las dos filas de botones, 20 % a cada una: de ahí el
           6 / 2 / 2 de los `flex-[n]`. Antes la pista se quedaba con TODO el
           sobrante (flex-1) y los botones tenían la altura justa del texto. */}
-      <div className="bg-zinc-900 rounded-xl p-2 flex-[6] min-h-[80px] flex flex-col">
+      <div className="bg-zinc-900 rounded-xl p-2 flex-[42] min-h-[70px] flex flex-col">
         <h2 className="text-zinc-400 text-xs mb-1 flex-none">{t("part_en_pista")}</h2>
         <div className="grid grid-cols-5 gap-2 flex-1 min-h-0">
           {enPistaVista.map((nombre) => {
@@ -632,8 +649,11 @@ export default function PartidoPage() {
 
       {/* BANQUILLO — una fila hasta 8 jugadores; a partir de 9, dos filas
           (con 10 en una fila los nombres se cortaban en el iPad). */}
-      <div className="bg-zinc-900 rounded-xl p-2 flex-none">
-        <h2 className="text-zinc-400 text-xs mb-1">{t("part_banquillo")}</h2>
+      {/* El 30 % que cede la pista viene AQUÍ (Arkaitz 22/8). El banquillo pasa
+          de alto fijo a repartirse el espacio; con dos filas, mitad para cada
+          una. Proporción final: pista 42 · botones 20+20 · banquillo 18. */}
+      <div className="bg-zinc-900 rounded-xl p-2 flex-[18] min-h-[70px] flex flex-col">
+        <h2 className="text-zinc-400 text-xs mb-1 flex-none">{t("part_banquillo")}</h2>
         <div className="grid gap-1.5"
           style={{ gridTemplateColumns: `repeat(${banquilloVista.length <= 8 ? Math.max(1, banquilloVista.length) : Math.ceil(banquilloVista.length / 2)}, minmax(0, 1fr))` }}>
           {banquilloVista.map((nombre) => {
@@ -683,7 +703,7 @@ export default function PartidoPage() {
       {/* BOTONES ACCIÓN COLECTIVA — RESTAURADO 20/5/2026 noche:
           Arkaitz aclaró que "omitir guardar" no significaba eliminar el
           botón, sino simplificar el flujo del modal. El botón vuelve. */}
-      <div className="grid grid-cols-9 gap-1.5 flex-[2] min-h-0">
+      <div className="grid grid-cols-8 gap-1.5 flex-[20] min-h-0">
         <BotonAccion label={t("btn_gol")} color="bg-emerald-700" onClick={() => setModalGol(true)} />
         <BotonAccion label={t("btn_disp_rival")} color="bg-red-700" onClick={() => setModalDisparoRival(true)} />
         <BotonAccion label={t("btn_incorporacion")} color="bg-amber-700"
@@ -691,7 +711,6 @@ export default function PartidoPage() {
         <BotonAccion label={t("btn_falta")} color="bg-orange-600" onClick={() => setModalFalta(true)} />
         <BotonAccion label={t("btn_amarilla")} color="bg-yellow-400 text-zinc-950" onClick={() => setModalAmarilla(true)} />
         <BotonAccion label={t("btn_roja")} color="bg-red-950 border-2 border-red-500" onClick={() => setModalRoja(true)} />
-        <BotonAccion label={t("btn_cambio")} color="bg-zinc-700" onClick={() => setModalCambio({ sale: "" })} />
         <BotonAccion label={t("btn_tm")} color="bg-purple-700" onClick={() => setModalTM(true)} />
         <BotonAccion label={t("btn_pen10m")} color="bg-pink-700" onClick={() => setModalPen(true)} />
       </div>
@@ -699,30 +718,36 @@ export default function PartidoPage() {
           guardan como "#EQUIPO") + navegación, TODO en una fila para no
           consumir altura. Pérdida de EQUIPO = SIEMPRE forzada (pf); la no
           forzada siempre es de un jugador (decisión Arkaitz 10/8). */}
-      <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-[2] min-h-0`}>
+      <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-[20] min-h-0`}>
         <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "robos");
                                  mostrarAviso(t("aviso_recuperacion_equipo")); }}
-          className="h-full min-h-[44px] py-2 bg-green-800 hover:bg-green-700 active:bg-green-500
-                     active:scale-95 transition rounded-lg text-sm font-bold leading-tight">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-green-800 hover:bg-green-700 active:bg-green-500
+                     active:scale-95 transition rounded-lg text-base font-bold leading-none leading-tight">
           {t("btn_recuperacion_equipo")}
         </button>
         <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "pf");
                                  mostrarAviso(t("aviso_perdida_equipo")); }}
-          className="h-full min-h-[44px] py-2 bg-rose-900 hover:bg-rose-800 active:bg-rose-600
-                     active:scale-95 transition rounded-lg text-sm font-bold leading-tight">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-rose-900 hover:bg-rose-800 active:bg-rose-600
+                     active:scale-95 transition rounded-lg text-base font-bold leading-none leading-tight">
           {t("btn_perdida_equipo")}
         </button>
-        <button onClick={deshacerUltimoEvento}
-          className="h-full min-h-[44px] py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+        <button onClick={() => {
+                  const ultimo = partido.eventos[partido.eventos.length - 1];
+                  const desc = describirEvento(ultimo, cfg.rival);
+                  deshacerUltimoEvento();
+                  mostrarAviso(desc ? t("aviso_deshecho", { que: desc })
+                                     : t("aviso_nada_deshacer"));
+                }}
+          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base font-bold leading-none">
           {t("btn_deshacer")}
         </button>
         <button onClick={() => setModalTiempos(true)}
-          className="h-full min-h-[44px] py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base font-bold leading-none">
           {t("btn_tiempos")}
         </button>
         {cfg.permiteTanda && (
           <button onClick={() => { iniciarTanda(); setModalTanda(true); }}
-            className={`h-full min-h-[44px] py-2 rounded-lg text-sm font-bold ${
+            className={`h-full min-h-[44px] py-1 px-0.5 rounded-lg text-base font-bold leading-none ${
               partido.tanda?.tiros.length
                 ? "bg-pink-700 hover:bg-pink-600"
                 : "bg-zinc-800 hover:bg-zinc-700"
@@ -732,11 +757,11 @@ export default function PartidoPage() {
           </button>
         )}
         <button onClick={() => router.push("/resumen")}
-          className="h-full min-h-[44px] py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-bold">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-base font-bold leading-none">
           {t("btn_resumen")}
         </button>
         <button onClick={() => router.push("/")}
-          className="h-full min-h-[44px] py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+          className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base font-bold leading-none">
           {t("inicio")}
         </button>
       </div>
@@ -1012,6 +1037,33 @@ export default function PartidoPage() {
         />
       )}
 
+      {/* SAQUE INICIAL. Se pregunta una sola vez, al arrancar el partido, y con
+          eso el crono ya sabe a quién le toca sacar en la 2ª parte. */}
+      {modalSaque && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg">
+            <h3 className="text-2xl font-bold mb-1">⚽ {t("saque_titulo")}</h3>
+            <p className="text-base text-zinc-400 mb-5">{t("saque_sub")}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => { setSaqueInicial("INTER"); setModalSaque(false); play(); }}
+                className="py-8 bg-emerald-700 hover:bg-emerald-600 rounded-xl text-xl font-bold">
+                {CLIENTE.nombreCorto}
+              </button>
+              <button
+                onClick={() => { setSaqueInicial("RIVAL"); setModalSaque(false); play(); }}
+                className="py-8 bg-red-800 hover:bg-red-700 rounded-xl text-xl font-bold">
+                {cfg.rival}
+              </button>
+            </div>
+            <button onClick={() => { setModalSaque(false); play(); }}
+              className="mt-5 w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
+              {t("saque_sin_anotar")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* INCORPORACIÓN del portero rival. Dos toques como mucho: si fue con
           disparo, encadena directamente el modal de disparo rival, que es el
           flujo que Arkaitz ya tiene en los dedos. */}
@@ -1102,8 +1154,19 @@ export default function PartidoPage() {
           desde={p}
           onCerrar={() => setModalCambioParte(false)}
           onContinuarSiguienteParte={() => {
+            const orden: ParteId[] = ["1T", "2T", "PR1", "PR2"];
+            const siguiente = orden[orden.indexOf(p) + 1];
             avanzarParte();
             setModalCambioParte(false);
+            // Quién saca en la parte que empieza. Es el momento exacto en que
+            // hace falta saberlo y en el que nadie se acuerda (Arkaitz 22/8).
+            const saca = siguiente
+              ? sacaEn(siguiente, partido.saqueInicial1T) : undefined;
+            if (saca) {
+              mostrarAviso(t("aviso_saca", {
+                equipo: saca === "INTER" ? CLIENTE.nombreCorto : cfg.rival,
+              }));
+            }
           }}
           onConfigurarProrroga={(minutos) => {
             setDuracionesParte({ PR1: minutos, PR2: minutos });
@@ -1160,6 +1223,48 @@ function RelojGrande(props: { segundosParte: number; ultimoStart: number | null;
   );
 }
 
+/** Cómo contarle a Arkaitz QUÉ se acaba de deshacer.
+ *
+ *  Deshacer era un salto de fe: pulsabas y no sabías si te habías cargado el
+ *  gol o la falta de antes. Ahora el aviso lo dice (Arkaitz 22/8/2026).
+ */
+function describirEvento(ev: Evento | undefined, rival: string): string {
+  if (!ev) return "";
+  const e: any = ev;
+  const quien = (n?: string) => (n ? ` de ${n}` : "");
+  switch (e.tipo) {
+    case "gol":
+      return e.equipo === "INTER"
+        ? `gol${quien(e.goleador)}` : `gol de ${rival}`;
+    case "falta":
+      return `falta${e.equipo === "INTER" ? quien(e.jugador) : ` de ${rival}`}`;
+    case "amarilla":  return `amarilla${quien(e.jugador)}`;
+    case "roja":      return `roja${quien(e.jugador)}`;
+    case "tiempo_muerto":
+      return `tiempo muerto${e.equipo === "INTER" ? "" : ` de ${rival}`}`;
+    case "cambio":    return `cambio (entró ${e.entra}, salió ${e.sale})`;
+    case "disparo":
+      return e.equipo === "INTER"
+        ? `disparo${quien(e.jugador)}` : `disparo de ${rival}`;
+    case "penalti":   return `penalti${quien(e.tirador)}`;
+    case "diezm":     return `10 m${quien(e.tirador)}`;
+    case "incorporacion_rival":
+      return `incorporación del portero de ${rival}`;
+    case "accion_individual": {
+      const acc: Record<string, string> = {
+        pf: "pérdida forzada", pnf: "pérdida no forzada", robos: "robo",
+        cortes: "corte", bdg: "balón dividido ganado",
+        bdp: "balón dividido perdido",
+      };
+      const nombre = acc[e.accion] ?? e.accion;
+      return e.jugador === JUGADOR_EQUIPO
+        ? `${nombre} de equipo` : `${nombre}${quien(e.jugador)}`;
+    }
+    default: return String(e.tipo).replace(/_/g, " ");
+  }
+}
+
+
 function BotonAccion(props: { label: string; color: string; onClick: () => void }) {
   // Altura contenida (antes py-9/text-2xl: ~100 px que obligaban a hacer scroll
   // en el iPad). Sigue siendo un botón grande para el dedo (~56 px).
@@ -1172,7 +1277,7 @@ function BotonAccion(props: { label: string; color: string; onClick: () => void 
   );
 }
 
-function ModalShell(props: { titulo: string; onCerrar: () => void; children: React.ReactNode; maxW?: string; tituloClass?: string }) {
+function ModalShell(props: { titulo: string; onCerrar: () => void; children: React.ReactNode; maxW?: string; tituloClass?: string; clase?: string }) {
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
       onClick={props.onCerrar}>
@@ -1182,7 +1287,9 @@ function ModalShell(props: { titulo: string; onCerrar: () => void; children: Rea
           <h2 className={`${props.tituloClass || "text-2xl"} font-bold`}>{props.titulo}</h2>
           <button onClick={props.onCerrar} className="text-zinc-400 text-3xl leading-none px-2">×</button>
         </div>
-        {props.children}
+        {/* `clase` escala el contenido entero de golpe: con text-[1.2em] todo
+            lo de dentro crece un 20 % sin tocar cada botón por separado. */}
+        <div className={props.clase}>{props.children}</div>
       </div>
     </div>
   );
@@ -1703,12 +1810,19 @@ function ModalTM(props: {
 // canónico (no se traduce, para no romper datos ni las comparaciones
 // accion === "Penalti" / "10m"). Solo se traduce la ETIQUETA mostrada en el
 // botón, vía labelAccionGol() (importado de @/lib/i18n).
-const ACCIONES_GOL = [
-  "Córner", "Banda", "Falta", "5x4", "4x5", "4x3", "3x4", "Contraataque",
-  "Robo zona alta", "Salida de presión", "1x1 banda", "Ataque posicional", "10m", "Penalti",
-  "2ª jugada",
-  "Otra",
+// Dos columnas, en el orden que pidió Arkaitz (22/8/2026): a la izquierda el
+// juego abierto (lo que más se marca), a la derecha el balón parado y las
+// superioridades. El VALOR sigue siendo el español canónico; solo la etiqueta
+// se traduce, vía labelAccionGol().
+const ACCIONES_GOL_IZQ = [
+  "Robo zona alta", "Ataque posicional", "1x1 banda", "Contraataque",
+  "2ª jugada", "Salida de presión",
 ];
+const ACCIONES_GOL_DER = [
+  "Córner", "Banda", "Falta", "10m", "Penalti",
+  "5x4", "4x5", "4x3", "3x4", "Otra",
+];
+const ACCIONES_GOL = [...ACCIONES_GOL_IZQ, ...ACCIONES_GOL_DER];
 
 function ModalGol(props: {
   directo: boolean;
@@ -1776,7 +1890,8 @@ function ModalGol(props: {
   };
 
   return (
-    <ModalShell titulo={t("mg_titulo")} onCerrar={props.onCerrar}>
+    <ModalShell titulo={t("mg_titulo")} onCerrar={props.onCerrar}
+      maxW="max-w-6xl" tituloClass="text-3xl" clase="text-[1.2em]">
       <Paso n={1} titulo={t("mam_equipo")} activo={!equipo}>
         <div className="grid grid-cols-2 gap-2">
           <button onClick={() => setEquipo("INTER")}
@@ -1817,15 +1932,19 @@ function ModalGol(props: {
 
       {(equipo === "RIVAL" || (goleador && asistente)) && (
         <Paso n={equipo === "RIVAL" ? 2 : 4} titulo={t("mg_accion_gol")} activo={!accion}>
-          <div className="flex flex-wrap gap-2">
-            {ACCIONES_GOL.map((a) => (
-              <button key={a} onClick={() => {
-                  if (props.directo) { aplicarDirecto(a); return; }
-                  setAccion(a);
-                }}
-                className={`px-3 py-2 rounded text-sm ${
-                  accion === a ? "bg-emerald-700" : "bg-zinc-800"
-                }`}>{labelAccionGol(a)}</button>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+            {[ACCIONES_GOL_IZQ, ACCIONES_GOL_DER].map((columna, i) => (
+              <div key={i} className="flex flex-col gap-2">
+                {columna.map((a) => (
+                  <button key={a} onClick={() => {
+                      if (props.directo) { aplicarDirecto(a); return; }
+                      setAccion(a);
+                    }}
+                    className={`px-3 py-2.5 rounded text-base font-semibold ${
+                      accion === a ? "bg-emerald-700" : "bg-zinc-800 hover:bg-zinc-700"
+                    }`}>{labelAccionGol(a)}</button>
+                ))}
+              </div>
             ))}
           </div>
         </Paso>

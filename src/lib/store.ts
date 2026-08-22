@@ -1348,6 +1348,11 @@ export function usePartido() {
    *  (sorteo, el árbitro decide otra cosa) y hasta ahora había que rehacer el
    *  partido. Solo toca la config: los eventos ya guardados conservan su zona
    *  tal cual, y `direccionAtaque()` deriva de aquí el resto de partes. */
+  /** Deja anotado quién saca en la 1ª parte (se pregunta al iniciar). */
+  function setSaqueInicial(quien: "INTER" | "RIVAL") {
+    setPartido((prev) => ({ ...prev, saqueInicial1T: quien }));
+  }
+
   function setDireccionAtaque(dir: "izq" | "der") {
     setPartido((prev) => (prev.config
       ? { ...prev, config: { ...prev.config, direccionInter1T: dir } }
@@ -1363,6 +1368,6 @@ export function usePartido() {
     editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte, setModo,
-    setDireccionAtaque,
+    setDireccionAtaque, setSaqueInicial,
   };
 }

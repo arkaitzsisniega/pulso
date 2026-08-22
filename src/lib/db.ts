@@ -42,6 +42,18 @@ export interface ConfigPartido {
   direccionInter1T: "izq" | "der";
 }
 
+/** Quién saca en una parte dada, sabiendo quién sacó en la primera.
+ *  En la 2ª saca el que NO sacó en la 1ª; las prórrogas se sortean, así que
+ *  ahí no se afirma nada. */
+export function sacaEn(parte: ParteId,
+                       saque1T: "INTER" | "RIVAL" | undefined) {
+  if (!saque1T) return undefined;
+  if (parte === "1T") return saque1T;
+  if (parte === "2T") return saque1T === "INTER" ? "RIVAL" : "INTER";
+  return undefined;      // prórroga: se sortea de nuevo
+}
+
+
 /** Calcula hacia dónde ataca un equipo en una parte dada del partido.
  *  Devuelve "der" (portería rival a la derecha) o "izq". El componente
  *  Campo se renderiza siempre con el atacante hacia la DERECHA por defecto;
@@ -337,6 +349,10 @@ export interface Partido {
   /** Incorporaciones del portero rival. Opcional: los partidos guardados antes
    *  del 20/8/2026 no la tienen y se leen como ceros. */
   incorporacionesRival?: IncorporacionesRival;
+  /** Quién saca en la 1ª parte. En la 2ª saca el otro, así que con guardar
+   *  este basta. Se pregunta al darle a iniciar por primera vez; `undefined`
+   *  = partidos anteriores al 22/8/2026, que no lo llevan. */
+  saqueInicial1T?: "INTER" | "RIVAL";
   tanda: TandaPenaltis;
   /** ms del último cambio (para auto-save / recuperación). */
   actualizado: number;
