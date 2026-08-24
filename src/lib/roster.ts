@@ -42,12 +42,12 @@ export const ROSTER_REAL: Jugador[] = [
   { dorsal: "21", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
   // Portero filial
   { dorsal: "28", nombre: "JUGADOR", posicion: "PORTERO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "JUGADOR", posicion: "PORTERO", equipo: "FILIAL" },
+  { dorsal: "29", nombre: "JUGADOR", posicion: "PORTERO", equipo: "FILIAL" },
   // Campo filial
   { dorsal: "15", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "32", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "31", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "33", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
 // Roster DEMO — nombres FALSOS (mismo mapeo que dashboard/bot: JUGADOR→REYES,
@@ -73,12 +73,12 @@ export const ROSTER_DEMO: Jugador[] = [
   { dorsal: "21", nombre: "ARANDA", posicion: "CAMPO", equipo: "PRIMER" },
   // Portero filial
   { dorsal: "28", nombre: "PASTOR", posicion: "PORTERO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "MENDEZ", posicion: "PORTERO", equipo: "FILIAL" },
+  { dorsal: "29", nombre: "MENDEZ", posicion: "PORTERO", equipo: "FILIAL" },
   // Campo filial
   { dorsal: "15", nombre: "LOZANO", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "MOLINA", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "TORRES", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "", nombre: "VEGA", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "32", nombre: "MOLINA", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "31", nombre: "TORRES", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "33", nombre: "VEGA", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
 // El roster ACTIVO (ROSTER / PORTEROS / CAMPO) lo expone `@/lib/clientes` según
