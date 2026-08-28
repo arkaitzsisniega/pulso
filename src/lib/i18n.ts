@@ -258,10 +258,13 @@ export const CATALOGO: Record<string, Entrada> = {
     en: "Allow penalty shootout if drawn (knockout)",
     it: "Consenti serie di rigori in caso di pareggio (eliminazione diretta)",
   },
+  // {equipo} y no "INTER" fijo: esta misma pantalla la ven la demo comercial y
+  // el filial, y preguntaba por el Inter en los tres builds (visto 28/8 al
+  // montar el crono del filial).
   nuevo_direccion_pregunta: {
-    es: "¿Hacia dónde ataca INTER en la 1ª parte? (vista del banquillo)",
-    en: "Which way does INTER attack in the 1st period? (bench view)",
-    it: "Verso dove attacca l'INTER nel 1º tempo? (vista dalla panchina)",
+    es: "¿Hacia dónde ataca {equipo} en la 1ª parte? (vista del banquillo)",
+    en: "Which way does {equipo} attack in the 1st period? (bench view)",
+    it: "Verso dove attacca {equipo} nel 1º tempo? (vista dalla panchina)",
   },
   nuevo_izquierda: { es: "← Izquierda", en: "← Left", it: "← Sinistra" },
   nuevo_derecha: { es: "Derecha →", en: "Right →", it: "Destra →" },

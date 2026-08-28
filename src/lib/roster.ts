@@ -81,6 +81,29 @@ export const ROSTER_DEMO: Jugador[] = [
   { dorsal: "33", nombre: "VEGA", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
+/**
+ * Plantilla del FILIAL (cliente "filial", 28/8/2026).
+ *
+ * ⚠️ INCOMPLETA: aquí solo están los filiales que YA conocemos porque entrenan
+ * con el primer equipo (JUGADORES_ROSTER del Sheet). La plantilla real del
+ * filial es más larga y la tiene que dar Arkaitz: dorsal, nombre y si es
+ * portero o de campo. Hasta entonces el crono del filial funciona, pero solo
+ * ofrece a estos.
+ *
+ * `equipo` va como "PRIMER" a propósito: dentro del build del filial, ELLOS son
+ * el primer equipo — el campo solo sirve para agrupar en las listas.
+ */
+export const ROSTER_FILIAL: Jugador[] = [
+  // Porteros
+  { dorsal: "28", nombre: "OSCAR", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "29", nombre: "ANDRES", posicion: "PORTERO", equipo: "PRIMER" },
+  // Campo
+  { dorsal: "15", nombre: "JAIME", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "31", nombre: "ANCHU", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "32", nombre: "GABRI", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "33", nombre: "PABLO", posicion: "CAMPO", equipo: "PRIMER" },
+];
+
 // El roster ACTIVO (ROSTER / PORTEROS / CAMPO) lo expone `@/lib/clientes` según
 // el cliente del build (NEXT_PUBLIC_CLIENTE). Aquí quedan solo los DATOS crudos
 // (ROSTER_REAL / ROSTER_DEMO) para que clientes.ts los componga SIN dependencia

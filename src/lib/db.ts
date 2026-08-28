@@ -4,6 +4,7 @@
  * para offline + recuperación tras cierre accidental de la pestaña.
  */
 import Dexie, { type Table } from "dexie";
+import { CLIENTE_ID } from "@/lib/clientes";
 
 export type ParteId = "1T" | "2T" | "PR1" | "PR2";
 
@@ -358,10 +359,25 @@ export interface Partido {
   actualizado: number;
 }
 
+/**
+ * Nombre de la base local, POR CLIENTE.
+ *
+ * IndexedDB se guarda por ORIGEN, no por ruta: el crono del Inter
+ * (/arkaitz-2526/crono/) y cualquier otro build (demo, filial) viven todos en
+ * `arkaitzsisniega.github.io`. Con un nombre fijo compartirían la MISMA base:
+ * abrir el crono del filial en el mismo navegador enseñaría —y podría pisar—
+ * el partido del primer equipo. Por eso cada cliente tiene la suya.
+ *
+ * El Inter conserva el nombre histórico EXACTO ("crono_partido"): cambiarlo
+ * dejaría atrás los partidos ya guardados, incluido uno a medias.
+ */
+const NOMBRE_DB =
+  CLIENTE_ID === "inter" ? "crono_partido" : `crono_partido_${CLIENTE_ID}`;
+
 class CronoDB extends Dexie {
   partidos!: Table<Partido, string>;
   constructor() {
-    super("crono_partido");
+    super(NOMBRE_DB);
     this.version(1).stores({
       partidos: "id, estado, actualizado",
     });

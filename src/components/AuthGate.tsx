@@ -19,7 +19,7 @@
  */
 import { useEffect, useState } from "react";
 import { t, useIdioma } from "@/lib/i18n";
-import { CLIENTE } from "@/lib/clientes";
+import { CLIENTE, PASS_HASHES_CLIENTE } from "@/lib/clientes";
 
 // Las contraseñas válidas (hash SHA-256) salen del CLIENTE activo
 // (src/lib/clientes.ts): una por club por defecto, admite varias.
@@ -63,7 +63,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     setError("");
     try {
       const hash = await sha256(input.trim());
-      if (CLIENTE.passHashes.includes(hash)) {
+      if (PASS_HASHES_CLIENTE.includes(hash)) {
         try {
           localStorage.setItem(STORAGE_KEY, "1");
         } catch {

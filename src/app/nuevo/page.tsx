@@ -270,7 +270,7 @@ export default function NuevoPartido() {
 
         <div className="mt-4 pt-3 border-t border-zinc-800">
           <h3 className="text-sm font-semibold mb-2 text-zinc-300">
-            {t("nuevo_direccion_pregunta")}
+            {t("nuevo_direccion_pregunta", { equipo: NOMBRE_CORTO_TC })}
           </h3>
           <div className="grid grid-cols-2 gap-2">
             <button type="button"

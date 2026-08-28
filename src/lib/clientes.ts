@@ -17,10 +17,16 @@
  *   3. Desplegar con NEXT_PUBLIC_CLIENTE=<id> (+ CRONO_BASEPATH propio).
  *
  * Las contraseñas NUNCA se guardan en claro: solo su hash SHA-256 (igual que
- * el AuthGate). Una por club por defecto, pero `passHashes` es una lista por
- * si algún club quiere varias (una por persona del cuerpo técnico).
+ * el AuthGate), y SOLO viaja al bundle la del club que se está construyendo
+ * (ver PASS_HASHES más abajo). Una por club por defecto; la lista admite
+ * varias por si algún club quiere una por persona del cuerpo técnico.
  */
-import { ROSTER_REAL, ROSTER_DEMO, type Jugador } from "@/lib/roster";
+import {
+  ROSTER_REAL,
+  ROSTER_DEMO,
+  ROSTER_FILIAL,
+  type Jugador,
+} from "@/lib/roster";
 
 export type IdiomaId = "es" | "en" | "it";
 
@@ -37,8 +43,6 @@ export interface ConfigCliente {
   appTitulo: string;
   /** Roster de jugadores de este cliente. */
   roster: Jugador[];
-  /** Hashes SHA-256 de las contraseñas válidas (1+ por club). */
-  passHashes: string[];
   /**
    * Idioma fijo del cliente. Si se define, el crono va siempre en ese idioma y
    * NO se muestra el selector. Si es null, se muestra el selector (caso demo).
@@ -54,6 +58,12 @@ const HASH_INTER =
 // SHA-256 de "pulsodemo2026" — contraseña de la demo comercial CD Pulso.
 const HASH_PULSO =
   "e1152d88d11a421c08846c836010ca89d156a9ce9721226ef9784285a5899b32";
+// SHA-256 de "filial2026" — contraseña del crono del FILIAL. Distinta a
+// propósito: con ella NO se entra en el del primer equipo (ni al revés), que es
+// justo lo que pidió Arkaitz. Cambiarla = generar otro hash y volver a
+// desplegar (printf %s "NUEVA" | shasum -a 256).
+const HASH_FILIAL =
+  "a26a6aa1dc925ae5430ff1c96ea2297a01c8554d77ee64c2bcbf002b02bfddc4";
 
 const CLIENTES: Record<string, ConfigCliente> = {
   inter: {
@@ -63,8 +73,21 @@ const CLIENTES: Record<string, ConfigCliente> = {
     marcaTitulo: "Inter FS",
     appTitulo: "Inter Crono",
     roster: ROSTER_REAL,
-    passHashes: [HASH_INTER],
     idiomaFijo: "es", // el Inter va siempre en español, sin selector
+    demo: false,
+  },
+  // Filial (28/8/2026). MISMO código que el Inter, otro build: su roster, su
+  // contraseña, su URL (/crono-filial/) y su base local. No comparte NADA con
+  // el crono del primer equipo, así que desde aquí no se puede tocar un partido
+  // del Inter aunque se abra en el mismo navegador.
+  filial: {
+    id: "filial",
+    nombreCorto: "FILIAL",
+    nombreLargo: "Inter JP Financial B",
+    marcaTitulo: "Inter FS · Filial",
+    appTitulo: "Crono Filial",
+    roster: ROSTER_FILIAL,
+    idiomaFijo: "es",
     demo: false,
   },
   pulso: {
@@ -74,11 +97,28 @@ const CLIENTES: Record<string, ConfigCliente> = {
     marcaTitulo: "CD Pulso",
     appTitulo: "Crono CD Pulso",
     roster: ROSTER_DEMO,
-    passHashes: [HASH_PULSO],
     idiomaFijo: null, // la demo muestra el selector de idioma (es/en/it)
     demo: true,
   },
 };
+
+/**
+ * Hashes de contraseña del cliente ACTIVO.
+ *
+ * Va aparte del registro CLIENTES y con ternarios sobre
+ * `process.env.NEXT_PUBLIC_CLIENTE` a propósito: Next sustituye esa variable
+ * por un literal en build, el minificador pliega el ternario y los hashes de
+ * los OTROS clubes desaparecen del bundle. Metidos dentro de CLIENTES viajaban
+ * todos en todos los builds — comprobado el 28/8: el build del filial llevaba
+ * dentro el hash del Inter, y "inter1977" se saca de un SHA-256 con un
+ * diccionario. Cada club se lleva solo el suyo.
+ */
+const PASS_HASHES: string[] =
+  process.env.NEXT_PUBLIC_CLIENTE === "pulso"
+    ? [HASH_PULSO]
+    : process.env.NEXT_PUBLIC_CLIENTE === "filial"
+      ? [HASH_FILIAL]
+      : [HASH_INTER];
 
 const _ID = (process.env.NEXT_PUBLIC_CLIENTE || "inter").toLowerCase();
 
@@ -91,6 +131,9 @@ export const CLIENTE: ConfigCliente = CLIENTES[_ID] ?? CLIENTES.inter;
 // Roster activo y derivados (lo que consumen los componentes). Reemplaza a los
 // antiguos exports de `roster.ts` (que ahora solo guarda los datos crudos).
 export const ROSTER: Jugador[] = CLIENTE.roster;
+
+/** Hashes SHA-256 válidos para el login de ESTE build (ver PASS_HASHES). */
+export const PASS_HASHES_CLIENTE: string[] = PASS_HASHES;
 export const PORTEROS: Jugador[] = ROSTER.filter((j) => j.posicion === "PORTERO");
 export const CAMPO: Jugador[] = ROSTER.filter((j) => j.posicion === "CAMPO");
 
