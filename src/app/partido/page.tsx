@@ -301,6 +301,21 @@ export default function PartidoPage() {
     .sort((a, b) => (b.seg - a.seg) || (a.i - b.i))
     .map((x) => x.n);
 
+  // Cambiar de modo con el partido ya empezado: se avisa. Antes de que ruede
+  // el balón (reloj a 0 y sin eventos) se cambia sin preguntar, que es cuando
+  // de verdad se elige el modo.
+  const pedirCambioModo = (nuevo: "directo" | "video") => {
+    if (nuevo === (partido.modo ?? "directo")) return;
+    const empezado = (partido.eventos?.length ?? 0) > 0
+      || (partido.cronometro?.segundosParte ?? 0) > 0
+      || partido.cronometro?.parteActual !== "1T";
+    if (empezado && !confirm(t("part_modo_confirm", {
+          modo: nuevo === "video" ? t("part_modo_video") : t("part_modo_directo") }))) {
+      return;
+    }
+    setModo(nuevo);
+  };
+
   // Orden VISUAL del banquillo: el que ha salido del campo MÁS RECIENTEMENTE a
   // la IZQUIERDA … y los que aún NO han jugado, los últimos (en orden de
   // convocatoria). Pedido por Arkaitz (16/8). Se usa también en las listas de
@@ -550,11 +565,17 @@ export default function PartidoPage() {
           obligaba a hacer scroll en el iPad. */}
       <div className="flex items-center gap-x-3 gap-y-1 flex-wrap flex-none text-sm">
         <div className="inline-flex rounded-lg overflow-hidden border border-zinc-700" title={directo ? t("part_modo_directo_nota") : t("part_modo_video_nota")}>
-          <button onClick={() => setModo("directo")}
+          {/* Cambiar de modo EN PLENO PARTIDO no es un ajuste cualquiera:
+              cambia lo que piden los modales y lo que enseña el resumen (en
+              vídeo salen los balones divididos; en directo, las
+              incorporaciones del portero). Y son dos botones diminutos en una
+              fila apretada, a un toque de distancia con el iPad en la mano.
+              Con el reloj ya corrido se pregunta antes (30/8/2026). */}
+          <button onClick={() => pedirCambioModo("directo")}
             className={`px-2.5 py-1 text-xs font-bold ${directo ? "bg-red-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
             🔴 {t("part_modo_directo")}
           </button>
-          <button onClick={() => setModo("video")}
+          <button onClick={() => pedirCambioModo("video")}
             className={`px-2.5 py-1 text-xs font-bold ${!directo ? "bg-sky-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
             🎥 {t("part_modo_video")}
           </button>
