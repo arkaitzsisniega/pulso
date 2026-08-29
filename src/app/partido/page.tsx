@@ -301,6 +301,21 @@ export default function PartidoPage() {
     .sort((a, b) => (b.seg - a.seg) || (a.i - b.i))
     .map((x) => x.n);
 
+  // Cambiar de modo con el partido ya empezado: se avisa. Antes de que ruede
+  // el balón (reloj a 0 y sin eventos) se cambia sin preguntar, que es cuando
+  // de verdad se elige el modo.
+  const pedirCambioModo = (nuevo: "directo" | "video") => {
+    if (nuevo === (partido.modo ?? "directo")) return;
+    const empezado = (partido.eventos?.length ?? 0) > 0
+      || (partido.cronometro?.segundosParte ?? 0) > 0
+      || partido.cronometro?.parteActual !== "1T";
+    if (empezado && !confirm(t("part_modo_confirm", {
+          modo: nuevo === "video" ? t("part_modo_video") : t("part_modo_directo") }))) {
+      return;
+    }
+    setModo(nuevo);
+  };
+
   // Orden VISUAL del banquillo: el que ha salido del campo MÁS RECIENTEMENTE a
   // la IZQUIERDA … y los que aún NO han jugado, los últimos (en orden de
   // convocatoria). Pedido por Arkaitz (16/8). Se usa también en las listas de
@@ -550,11 +565,17 @@ export default function PartidoPage() {
           obligaba a hacer scroll en el iPad. */}
       <div className="flex items-center gap-x-3 gap-y-1 flex-wrap flex-none text-sm">
         <div className="inline-flex rounded-lg overflow-hidden border border-zinc-700" title={directo ? t("part_modo_directo_nota") : t("part_modo_video_nota")}>
-          <button onClick={() => setModo("directo")}
+          {/* Cambiar de modo EN PLENO PARTIDO no es un ajuste cualquiera:
+              cambia lo que piden los modales y lo que enseña el resumen (en
+              vídeo salen los balones divididos; en directo, las
+              incorporaciones del portero). Y son dos botones diminutos en una
+              fila apretada, a un toque de distancia con el iPad en la mano.
+              Con el reloj ya corrido se pregunta antes (30/8/2026). */}
+          <button onClick={() => pedirCambioModo("directo")}
             className={`px-2.5 py-1 text-xs font-bold ${directo ? "bg-red-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
             🔴 {t("part_modo_directo")}
           </button>
-          <button onClick={() => setModo("video")}
+          <button onClick={() => pedirCambioModo("video")}
             className={`px-2.5 py-1 text-xs font-bold ${!directo ? "bg-sky-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
             🎥 {t("part_modo_video")}
           </button>
@@ -724,12 +745,18 @@ export default function PartidoPage() {
                   <div className="text-[10px] font-bold text-red-200">{t("part_expulsado")}</div>
                 ) : (
                   <>
-                    {/* arriba, lo que lleva SENTADO (para decidir el cambio) y
-                        debajo, lo que lleva JUGADO en esta parte — que es lo
-                        que hace falta para repartir minutos (pedido 22/8). */}
+                    {/* Arriba, lo que lleva SENTADO (para decidir el cambio).
+                        Debajo, lo jugado: esta parte · TOTAL del partido. El
+                        total lo pidió Arkaitz el 30/8 — es con lo que se
+                        reparten minutos de verdad, así que va destacado; el de
+                        la parte (pedido el 22/8) se queda al lado, en gris. */}
                     <div className="text-lg font-mono tabular-nums leading-none mt-1">{formatMMSS(seg)}</div>
-                    <div className="text-[11px] font-mono tabular-nums leading-none mt-0.5 text-zinc-400">
-                      {formatMMSS(segundosEnParte(nombre, p))}
+                    <div className="text-[11px] font-mono tabular-nums leading-none mt-0.5">
+                      <span className="text-zinc-500">{formatMMSS(segundosEnParte(nombre, p))}</span>
+                      <span className="text-zinc-600">{" · "}</span>
+                      <span className="text-zinc-300 font-bold">
+                        {formatMMSS(partido.tiempos[nombre]?.totalSegundos ?? 0)}
+                      </span>
                     </div>
                   </>
                 )}
@@ -1865,13 +1892,17 @@ function porDorsal(nombres: string[]): string[] {
   });
 }
 
+// Dos columnas: izquierda juego abierto, derecha balón parado y superioridades.
+// "Incorporación de portero" (atacamos con el portero arriba) y "Defensa de
+// incorporación" (marcamos con el portero rival subido) van con las
+// superioridades, que es su familia (pedido de Arkaitz 30/8/2026).
 const ACCIONES_GOL_IZQ = [
   "Robo zona alta", "Ataque posicional", "1x1 banda", "Contraataque",
-  "2ª jugada", "Salida de presión",
+  "2ª jugada", "Salida de presión", "Incorporación de portero",
 ];
 const ACCIONES_GOL_DER = [
   "Córner", "Banda", "Falta", "10m", "Penalti",
-  "5x4", "4x5", "4x3", "3x4", "Otra",
+  "5x4", "4x5", "4x3", "3x4", "Defensa de incorporación", "Otra",
 ];
 const ACCIONES_GOL = [...ACCIONES_GOL_IZQ, ...ACCIONES_GOL_DER];
 
