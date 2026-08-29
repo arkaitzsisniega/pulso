@@ -55,6 +55,11 @@ export default function Home() {
           {t("home_nuevo")}
         </Link>
 
+        <Link href="/totales"
+          className="block w-full py-3 mb-8 -mt-6 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-center font-bold text-zinc-200">
+          {t("home_totales")}
+        </Link>
+
         <h2 className="text-lg font-bold text-zinc-300 mb-3">{t("home_guardados")}</h2>
 
         {!cargado ? (

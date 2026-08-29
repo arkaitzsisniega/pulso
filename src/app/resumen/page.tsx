@@ -904,6 +904,10 @@ export default function ResumenPage() {
             {t("res_volver_partido")}
           </button>
         )}
+        <button onClick={() => router.push("/informe?imprimir=1")}
+          className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-bold mr-2">
+          {t("res_informe_pdf")}
+        </button>
         <button onClick={() => exportarJSON(partido)}
           className="py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-base font-bold">
           {t("res_exportar_json")}

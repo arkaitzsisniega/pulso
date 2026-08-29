@@ -208,6 +208,10 @@ export const CATALOGO: Record<string, Entrada> = {
   home_modo_video: { es: "🎥 Vídeo", en: "🎥 Video", it: "🎥 Video" },
   home_estado_curso: { es: "En curso", en: "In progress", it: "In corso" },
   home_estado_fin: { es: "Finalizado", en: "Finished", it: "Finita" },
+  home_totales: { es: "📊 Totales de la temporada", en: "📊 Season totals",
+                  it: "📊 Totali della stagione" },
+  res_informe_pdf: { es: "📄 Informe PDF", en: "📄 PDF report",
+                     it: "📄 Report PDF" },
   home_offline: {
     es: "Funciona offline. Instala en el iPad como app: Compartir → Añadir a pantalla inicio.",
     en: "Works offline. Install on the iPad as an app: Share → Add to Home Screen.",
