@@ -49,8 +49,24 @@ export default function SWRegister() {
       window.location.reload();
     };
     navigator.serviceWorker.addEventListener("controllerchange", alCambiarDeSW);
+
+    // Y AL VOLVER A LA APP. En un iPad, reabrir desde el selector de apps
+    // REANUDA la página: no hay navegación, no se pide nada a la red y el
+    // service worker ni se entera de que hay versión nueva. Podías cerrar y
+    // abrir veinte veces y seguir con el crono de hace semanas (30/8/2026:
+    // le pasó a Arkaitz con un build anterior al 22/8). Al volver a primer
+    // plano se pregunta explícitamente.
+    const alVolver = () => {
+      if (document.visibilityState !== "visible") return;
+      navigator.serviceWorker.getRegistration()
+        .then((reg) => reg?.update())
+        .catch(() => {});
+    };
+    document.addEventListener("visibilitychange", alVolver);
+
     return () => {
       navigator.serviceWorker.removeEventListener("controllerchange", alCambiarDeSW);
+      document.removeEventListener("visibilitychange", alVolver);
     };
   }, []);
 
