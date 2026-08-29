@@ -104,3 +104,16 @@ export const CAMPO: Jugador[] = ROSTER.filter((j) => j.posicion === "CAMPO");
 export const NOMBRE_CORTO_TC: string =
   CLIENTE.nombreCorto.charAt(0).toUpperCase() +
   CLIENTE.nombreCorto.slice(1).toLowerCase();
+
+/**
+ * Versión desplegada, para poder MIRAR qué build tiene el iPad.
+ *
+ * El 30/8/2026 Arkaitz echó en falta tres cambios que llevaban desplegados
+ * desde el 22: su iPad servía un crono viejo desde la caché y no había forma
+ * de saberlo sin ponerse a comparar. Con esto se ve en la pantalla de inicio.
+ * La inyecta el workflow al construir (NEXT_PUBLIC_VERSION = SHA del commit);
+ * en local queda "dev".
+ */
+export const VERSION_CRONO: string =
+  (process.env.NEXT_PUBLIC_VERSION || "dev").slice(0, 7);
+

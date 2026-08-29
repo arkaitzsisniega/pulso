@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { type Partido } from "@/lib/db";
 import { listarPartidos, marcarPartidoActivo, rehacerPartido, borrarPartido } from "@/lib/store";
 import { t, useIdioma } from "@/lib/i18n";
-import { CLIENTE } from "@/lib/clientes";
+import { CLIENTE, VERSION_CRONO } from "@/lib/clientes";
 
 export default function Home() {
   useIdioma();
@@ -115,6 +115,7 @@ export default function Home() {
 
         <div className="mt-10 text-xs text-zinc-500 text-center">
           {t("home_offline")}
+          <span className="ml-2 opacity-50 font-mono">· v{VERSION_CRONO}</span>
         </div>
       </div>
     </div>

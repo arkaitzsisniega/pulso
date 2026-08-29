@@ -369,6 +369,14 @@ export const CATALOGO: Record<string, Entrada> = {
   part_modo: { es: "Modo:", en: "Mode:", it: "Modalità:" },
   part_modo_directo: { es: "DIRECTO", en: "LIVE", it: "DIRETTA" },
   part_modo_video: { es: "VÍDEO", en: "VIDEO", it: "VIDEO" },
+  part_modo_confirm: {
+    es: "¿Cambiar a {modo} con el partido empezado?\n\nCambia lo que se te "
+      + "pide al apuntar y lo que sale en el resumen.",
+    en: "Switch to {modo} with the match under way?\n\nIt changes what you "
+      + "are asked to log and what the summary shows.",
+    it: "Passare a {modo} a partita iniziata?\n\nCambia cosa ti viene chiesto "
+      + "e cosa mostra il riepilogo.",
+  },
   part_modo_directo_nota: { es: "rápido · sin zonas", en: "fast · no zones", it: "veloce · senza zone" },
   part_modo_video_nota: { es: "detalle completo · con zonas", en: "full detail · with zones", it: "dettaglio completo · con zone" },
   part_ajustar_nota: {
