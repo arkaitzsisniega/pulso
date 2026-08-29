@@ -82,27 +82,77 @@ export const ROSTER_DEMO: Jugador[] = [
 ];
 
 /**
- * Plantilla del FILIAL (cliente "filial", 28/8/2026).
+ * Plantilla del FILIAL (cliente "filial"). Datos de Arkaitz, 29/8/2026.
  *
- * ⚠️ INCOMPLETA: aquí solo están los filiales que YA conocemos porque entrenan
- * con el primer equipo (JUGADORES_ROSTER del Sheet). La plantilla real del
- * filial es más larga y la tiene que dar Arkaitz: dorsal, nombre y si es
- * portero o de campo. Hasta entonces el crono del filial funciona, pero solo
- * ofrece a estos.
+ * Son DOS equipos, y por eso están los dos aquí: el filial (INTER F.S. B) y el
+ * juvenil de División de Honor, que es el escalón de abajo. Los juveniles
+ * juegan muchas veces con el B, así que el cuerpo técnico necesita a los 29 a
+ * mano — pero no todos en cada partido.
  *
- * `equipo` va como "PRIMER" a propósito: dentro del build del filial, ELLOS son
- * el primer equipo — el campo solo sirve para agrupar en las listas.
+ * De ahí el uso del campo `equipo`, que en este build significa otra cosa que
+ * en el del primer equipo:
+ *   · "PRIMER" = plantilla del B  → sale preseleccionado en convocados (verde)
+ *   · "FILIAL" = juvenil DH       → hay que tocarlo para convocarlo (gris)
+ * Así el caso normal (juegan los del B) no obliga a tocar nada, y subir a un
+ * juvenil es un toque.
+ *
+ * Los DORSALES son los suyos, los de su ficha, no los que llevan cuando
+ * entrenan con el primer equipo (Óscar es el 28 arriba y el 01 aquí). En el
+ * banquillo del filial lo que se ve en la espalda es este número.
+ *
+ * Nombres cortos y sin repetir, que es lo que se grita: hay dos Gutiérrez
+ * (Alejandro y Fabio), dos Sánchez (Alejandro y Héctor) y tres Adrianes
+ * (Comas, Lucas y Pascual).
  */
 export const ROSTER_FILIAL: Jugador[] = [
-  // Porteros
-  { dorsal: "28", nombre: "OSCAR", posicion: "PORTERO", equipo: "PRIMER" },
-  { dorsal: "29", nombre: "ANDRES", posicion: "PORTERO", equipo: "PRIMER" },
-  // Campo
-  { dorsal: "15", nombre: "JAIME", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "31", nombre: "ANCHU", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "32", nombre: "GABRI", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "33", nombre: "PABLO", posicion: "CAMPO", equipo: "PRIMER" },
+  // ── INTER F.S. B ──
+  { dorsal: "01", nombre: "OSCAR", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "25", nombre: "ANDRES", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "19", nombre: "RISQUEZ", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "03", nombre: "ALEX GUTIERREZ", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "07", nombre: "ANCHU", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "04", nombre: "FABIO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "05", nombre: "CESAR", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "22", nombre: "EVANGELIO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "20", nombre: "PECELLIN", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "99", nombre: "ALEX SANCHEZ", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "08", nombre: "MARCOS", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "11", nombre: "PABLO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "10", nombre: "GABRI", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "09", nombre: "MURILO", posicion: "CAMPO", equipo: "PRIMER" },
+  // ── INTER F.S. JUVENIL DH ──
+  { dorsal: "55", nombre: "HECTOR", posicion: "PORTERO", equipo: "FILIAL" },
+  { dorsal: "32", nombre: "COMAS", posicion: "PORTERO", equipo: "FILIAL" },
+  { dorsal: "66", nombre: "VILLACORTA", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "34", nombre: "SANABRIA", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "80", nombre: "NICO", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "88", nombre: "PASTOR", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "70", nombre: "GUILLE", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "12", nombre: "BERMUDEZ", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "39", nombre: "IBAI", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "35", nombre: "CORDON", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "14", nombre: "LUCAS", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "27", nombre: "PASCUAL", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "21", nombre: "SOBRIN", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "17", nombre: "CARRILLO", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "15", nombre: "MATEO", posicion: "CAMPO", equipo: "FILIAL" },
 ];
+
+/** Nombre completo de cada uno del filial, para la guía en papel y para no
+ *  perder de vista a quién corresponde cada mote. */
+export const NOMBRES_FILIAL: Record<string, string> = {
+  OSCAR: "Óscar Delgado", ANDRES: "Andrés García", RISQUEZ: "Raúl Risquez",
+  "ALEX GUTIERREZ": "Alejandro Gutiérrez", ANCHU: "Ángel Luis Anchuelo",
+  FABIO: "Fabio Gutiérrez", CESAR: "César Paramio", EVANGELIO: "Luis Evangelio",
+  PECELLIN: "Daniel Pecellín", "ALEX SANCHEZ": "Alejandro Sánchez",
+  MARCOS: "Marcos Lorenzo", PABLO: "Pablo Palacios", GABRI: "Gabriel Marín",
+  MURILO: "Murilo Nunes",
+  HECTOR: "Héctor Sánchez", COMAS: "Adrián Comas", VILLACORTA: "Diego Villacorta",
+  SANABRIA: "Roberto Sanabria", NICO: "Nicolás Martínez", PASTOR: "Alejandro Pastor",
+  GUILLE: "Guillermo Menéndez", BERMUDEZ: "David Bermúdez", IBAI: "Ibai González",
+  CORDON: "Carlos Cordón", LUCAS: "Adrián Lucas", PASCUAL: "Adrián Pascual",
+  SOBRIN: "Rodrigo Sobrín", CARRILLO: "Raúl Carrillo", MATEO: "Mateo Barrero",
+};
 
 // El roster ACTIVO (ROSTER / PORTEROS / CAMPO) lo expone `@/lib/clientes` según
 // el cliente del build (NEXT_PUBLIC_CLIENTE). Aquí quedan solo los DATOS crudos
