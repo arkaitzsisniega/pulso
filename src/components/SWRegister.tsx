@@ -16,12 +16,15 @@ export default function SWRegister() {
     const host = window.location.hostname;
     if (host === "localhost" || host === "127.0.0.1") return; // dev: no SW
 
-    // La app vive bajo /arkaitz-2526/crono en producción; "" si se sirviera
-    // en la raíz. Detectamos por la ruta para registrar el SW con el scope
-    // correcto.
-    const base = window.location.pathname.includes("/arkaitz-2526/crono")
-      ? "/arkaitz-2526/crono"
-      : "";
+    // La carpeta donde vive ESTA app, tal cual se usó al construirla. Antes se
+    // adivinaba con `pathname.includes("/arkaitz-2526/crono")`, y ahí estaba el
+    // fallo: "/arkaitz-2526/crono-demo" y "/arkaitz-2526/crono-filial"
+    // CONTIENEN esa cadena. La demo y el filial registraban el service worker
+    // DEL INTER, con el scope del Inter — que no cubre su ruta — y se quedaban
+    // SIN service worker: sin funcionamiento offline, que es justo lo que su
+    // guía les promete para el pabellón (visto el 30/8/2026, comprobado en la
+    // web publicada: controlado = false).
+    const base = (process.env.NEXT_PUBLIC_BASEPATH || "").replace(/\/$/, "");
     navigator.serviceWorker
       .register(`${base}/sw.js`, { scope: `${base}/` })
       .then((reg) => {
