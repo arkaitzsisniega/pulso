@@ -610,6 +610,10 @@ export const CATALOGO: Record<string, Entrada> = {
   acc_ataque_posicional: { es: "Ataque posicional", en: "Positional attack", it: "Attacco posizionale" },
   acc_10m: { es: "10m", en: "10m", it: "10m" },
   acc_penalti: { es: "Penalti", en: "Penalty", it: "Rigore" },
+  acc_incorporacion_portero: { es: "Incorporación de portero",
+                               en: "Flying goalkeeper", it: "Portiere di movimento" },
+  acc_defensa_incorporacion: { es: "Defensa de incorporación",
+                               en: "Defending flying GK", it: "Difesa del portiere di movimento" },
   acc_otra: { es: "Otra", en: "Other", it: "Altro" },
 
   // ══════════════════ MODAL DISPARO RIVAL ══════════════════
@@ -1122,6 +1126,8 @@ const CLAVE_ACCION_GOL: Record<string, string> = {
   "1x1 banda": "acc_1x1_banda", "Ataque posicional": "acc_ataque_posicional",
   "10m": "acc_10m", "10 m": "acc_10m", "Penalti": "acc_penalti",
   "2ª jugada": "acc_2a_jugada", "Otra": "acc_otra",
+  "Incorporación de portero": "acc_incorporacion_portero",
+  "Defensa de incorporación": "acc_defensa_incorporacion",
 };
 
 /** Etiqueta visible de una acción de gol (valor almacenado = ES canónico). */
