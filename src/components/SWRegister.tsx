@@ -24,9 +24,50 @@ export default function SWRegister() {
       : "";
     navigator.serviceWorker
       .register(`${base}/sw.js`, { scope: `${base}/` })
+      .then((reg) => {
+        // Pedir explícitamente que compruebe si hay versión nueva. iOS es
+        // perezoso con esto en una app instalada: el 30/8/2026 Arkaitz cerró
+        // y abrió el crono y seguía con un build de antes del 22/8.
+        reg.update().catch(() => {});
+      })
       .catch(() => {
         /* sin conexión o no soportado: la app sigue igual */
       });
+
+    // Cuando el service worker NUEVO toma el control, la página que se está
+    // viendo sigue siendo la vieja: hay que recargar una vez. Se hace SOLO en
+    // la pantalla de inicio — recargar en mitad de un partido, aunque el
+    // estado se recupere de IndexedDB, es lo último que quiere nadie con el
+    // reloj corriendo.
+    let recargando = false;
+    const alCambiarDeSW = () => {
+      if (recargando) return;
+      const enInicio = window.location.pathname.replace(/\/$/, "")
+        === base.replace(/\/$/, "");
+      if (!enInicio) return;
+      recargando = true;
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", alCambiarDeSW);
+
+    // Y AL VOLVER A LA APP. En un iPad, reabrir desde el selector de apps
+    // REANUDA la página: no hay navegación, no se pide nada a la red y el
+    // service worker ni se entera de que hay versión nueva. Podías cerrar y
+    // abrir veinte veces y seguir con el crono de hace semanas (30/8/2026:
+    // le pasó a Arkaitz con un build anterior al 22/8). Al volver a primer
+    // plano se pregunta explícitamente.
+    const alVolver = () => {
+      if (document.visibilityState !== "visible") return;
+      navigator.serviceWorker.getRegistration()
+        .then((reg) => reg?.update())
+        .catch(() => {});
+    };
+    document.addEventListener("visibilitychange", alVolver);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener("controllerchange", alCambiarDeSW);
+      document.removeEventListener("visibilitychange", alVolver);
+    };
   }, []);
 
   return null;
