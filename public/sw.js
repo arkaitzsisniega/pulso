@@ -15,7 +15,21 @@
  * Es un SW escrito a mano a propósito: next-pwa 5.x no soporta Next 16 +
  * app router + output:export, y para una app estática esto es más robusto.
  */
-const CACHE = "inter-crono-v4";
+// El nombre de la caché lleva la VERSIÓN DEL DESPLIEGUE, que el workflow
+// sustituye por el SHA del commit al publicar (`__VERSION__`).
+//
+// POR QUÉ (30/8/2026): el navegador solo instala un service worker nuevo si
+// `sw.js` cambia byte a byte. Como este fichero es fijo y las peticiones de
+// assets van a caché primero, un iPad podía seguir sirviendo el crono de hace
+// semanas: Arkaitz vio en el partido el cuadro de balones divididos que se
+// había quitado el 22/8, con el arreglo desplegado desde entonces. Con el SHA
+// dentro, cada despliegue cambia este fichero → se instala el SW nuevo →
+// `activate` tira la caché vieja y entra la versión de verdad.
+//
+// En local (sin sustituir) queda "dev", que no estorba: en localhost no se
+// registra el SW.
+const VERSION = "__VERSION__".startsWith("__") ? "dev" : "__VERSION__";
+const CACHE = `inter-crono-${VERSION}`;
 // Carpeta donde vive la app: "/arkaitz-2526/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 const APP_SHELL = [

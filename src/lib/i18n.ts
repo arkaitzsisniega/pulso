@@ -376,6 +376,14 @@ export const CATALOGO: Record<string, Entrada> = {
   part_modo: { es: "Modo:", en: "Mode:", it: "Modalità:" },
   part_modo_directo: { es: "DIRECTO", en: "LIVE", it: "DIRETTA" },
   part_modo_video: { es: "VÍDEO", en: "VIDEO", it: "VIDEO" },
+  part_modo_confirm: {
+    es: "¿Cambiar a {modo} con el partido empezado?\n\nCambia lo que se te "
+      + "pide al apuntar y lo que sale en el resumen.",
+    en: "Switch to {modo} with the match under way?\n\nIt changes what you "
+      + "are asked to log and what the summary shows.",
+    it: "Passare a {modo} a partita iniziata?\n\nCambia cosa ti viene chiesto "
+      + "e cosa mostra il riepilogo.",
+  },
   part_modo_directo_nota: { es: "rápido · sin zonas", en: "fast · no zones", it: "veloce · senza zone" },
   part_modo_video_nota: { es: "detalle completo · con zonas", en: "full detail · with zones", it: "dettaglio completo · con zone" },
   part_ajustar_nota: {
@@ -617,6 +625,10 @@ export const CATALOGO: Record<string, Entrada> = {
   acc_ataque_posicional: { es: "Ataque posicional", en: "Positional attack", it: "Attacco posizionale" },
   acc_10m: { es: "10m", en: "10m", it: "10m" },
   acc_penalti: { es: "Penalti", en: "Penalty", it: "Rigore" },
+  acc_incorporacion_portero: { es: "Incorporación de portero",
+                               en: "Flying goalkeeper", it: "Portiere di movimento" },
+  acc_defensa_incorporacion: { es: "Defensa de incorporación",
+                               en: "Defending flying GK", it: "Difesa del portiere di movimento" },
   acc_otra: { es: "Otra", en: "Other", it: "Altro" },
 
   // ══════════════════ MODAL DISPARO RIVAL ══════════════════
@@ -1129,6 +1141,8 @@ const CLAVE_ACCION_GOL: Record<string, string> = {
   "1x1 banda": "acc_1x1_banda", "Ataque posicional": "acc_ataque_posicional",
   "10m": "acc_10m", "10 m": "acc_10m", "Penalti": "acc_penalti",
   "2ª jugada": "acc_2a_jugada", "Otra": "acc_otra",
+  "Incorporación de portero": "acc_incorporacion_portero",
+  "Defensa de incorporación": "acc_defensa_incorporacion",
 };
 
 /** Etiqueta visible de una acción de gol (valor almacenado = ES canónico). */
