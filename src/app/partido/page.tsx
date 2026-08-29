@@ -724,12 +724,18 @@ export default function PartidoPage() {
                   <div className="text-[10px] font-bold text-red-200">{t("part_expulsado")}</div>
                 ) : (
                   <>
-                    {/* arriba, lo que lleva SENTADO (para decidir el cambio) y
-                        debajo, lo que lleva JUGADO en esta parte — que es lo
-                        que hace falta para repartir minutos (pedido 22/8). */}
+                    {/* Arriba, lo que lleva SENTADO (para decidir el cambio).
+                        Debajo, lo jugado: esta parte · TOTAL del partido. El
+                        total lo pidió Arkaitz el 30/8 — es con lo que se
+                        reparten minutos de verdad, así que va destacado; el de
+                        la parte (pedido el 22/8) se queda al lado, en gris. */}
                     <div className="text-lg font-mono tabular-nums leading-none mt-1">{formatMMSS(seg)}</div>
-                    <div className="text-[11px] font-mono tabular-nums leading-none mt-0.5 text-zinc-400">
-                      {formatMMSS(segundosEnParte(nombre, p))}
+                    <div className="text-[11px] font-mono tabular-nums leading-none mt-0.5">
+                      <span className="text-zinc-500">{formatMMSS(segundosEnParte(nombre, p))}</span>
+                      <span className="text-zinc-600">{" · "}</span>
+                      <span className="text-zinc-300 font-bold">
+                        {formatMMSS(partido.tiempos[nombre]?.totalSegundos ?? 0)}
+                      </span>
                     </div>
                   </>
                 )}
@@ -1865,13 +1871,17 @@ function porDorsal(nombres: string[]): string[] {
   });
 }
 
+// Dos columnas: izquierda juego abierto, derecha balón parado y superioridades.
+// "Incorporación de portero" (atacamos con el portero arriba) y "Defensa de
+// incorporación" (marcamos con el portero rival subido) van con las
+// superioridades, que es su familia (pedido de Arkaitz 30/8/2026).
 const ACCIONES_GOL_IZQ = [
   "Robo zona alta", "Ataque posicional", "1x1 banda", "Contraataque",
-  "2ª jugada", "Salida de presión",
+  "2ª jugada", "Salida de presión", "Incorporación de portero",
 ];
 const ACCIONES_GOL_DER = [
   "Córner", "Banda", "Falta", "10m", "Penalti",
-  "5x4", "4x5", "4x3", "3x4", "Otra",
+  "5x4", "4x5", "4x3", "3x4", "Defensa de incorporación", "Otra",
 ];
 const ACCIONES_GOL = [...ACCIONES_GOL_IZQ, ...ACCIONES_GOL_DER];
 
