@@ -47,7 +47,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold mb-1">{t("home_titulo", { marca: CLIENTE.marcaTitulo })}</h1>
+        <div className="flex items-baseline gap-3 mb-1">
+          <h1 className="text-4xl font-bold">{t("home_titulo", { marca: CLIENTE.marcaTitulo })}</h1>
+          <span className="text-xs font-mono text-zinc-500 whitespace-nowrap">
+            v{VERSION_CRONO}
+          </span>
+        </div>
         <p className="text-zinc-400 mb-6">{t("home_subtitulo", { club: CLIENTE.nombreLargo })}</p>
 
         <Link href="/nuevo"
@@ -115,7 +120,6 @@ export default function Home() {
 
         <div className="mt-10 text-xs text-zinc-500 text-center">
           {t("home_offline")}
-          <span className="ml-2 opacity-50 font-mono">· v{VERSION_CRONO}</span>
         </div>
       </div>
     </div>
