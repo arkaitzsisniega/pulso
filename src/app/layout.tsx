@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 // Cuando se hace `output: 'export'` con basePath, Next NO prefija
 // automáticamente los paths absolutos de manifest/iconos en `metadata`.
 // Hay que añadir el prefijo a mano (en dev no hay prefijo, queda igual).
-const BP = process.env.NEXT_EXPORT === "1" ? (process.env.CRONO_BASEPATH || "/arkaitz-2526/crono") : "";
+const BP = process.env.NEXT_EXPORT === "1" ? (process.env.CRONO_BASEPATH || "/pulso/crono") : "";
 
 // Cada cliente referencia su propio manifest (mismas rutas relativas, solo
 // cambia el nombre del PWA al instalarlo). El Inter mantiene "manifest.json"

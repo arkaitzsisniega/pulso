@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
 // Sólo se activa cuando NEXT_EXPORT=1 (lo usa el workflow / build manual).
 // En dev (`npm run dev`) sigue siendo el server completo normal.
 const isExport = process.env.NEXT_EXPORT === "1";
-const basePath = isExport ? (process.env.CRONO_BASEPATH || "/arkaitz-2526/crono") : "";
+const basePath = isExport ? (process.env.CRONO_BASEPATH || "/pulso/crono") : "";
 
 const nextConfig: NextConfig = {
   output: isExport ? "export" : undefined,

@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PULSO — crono de partido
 
-## Getting Started
+App para llevar el partido de futsal en directo desde un iPad: cronómetro,
+minutos por jugador, cuartetos, goles, disparos, faltas y tarjetas. Funciona
+**sin conexión** (los pabellones no siempre tienen cobertura) y guarda cada
+partido en el propio aparato.
 
-First, run the development server:
+Al terminar genera el informe del partido en PDF y suma la temporada entera en
+la pantalla de Totales, con copia de seguridad para cambiar de iPad.
+
+## Los tres clientes
+
+El mismo código sirve a varios equipos. Lo único que cambia es la variable
+`NEXT_PUBLIC_CLIENTE`, que decide la plantilla, la contraseña, la marca y el
+nombre de la base local:
+
+| Cliente | Dónde se publica | Qué es |
+|---|---|---|
+| `inter` | `/pulso/crono/` | Primer equipo del Inter JP Financial |
+| `filial` | `/pulso/crono-filial/` | Filial (plantilla y contraseña propias) |
+| `pulso` | `/pulso/crono-demo/` | Demo con datos inventados, para enseñar |
+
+Cada cliente tiene **su propia base de datos** en el navegador, así que dos
+equipos en el mismo iPad no se mezclan ni ven los partidos del otro.
+
+> Antes de mayo… ⚠️ **El crono del Inter no se toca el día antes de un partido.**
+
+## Trabajar en local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+En `localhost` no se registra el service worker, así que los cambios se ven al
+recargar sin peleas de caché.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Para reproducir un build igual que el de producción:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+NEXT_EXPORT=1 NEXT_PUBLIC_CLIENTE=inter \
+  CRONO_BASEPATH=/pulso/crono NEXT_PUBLIC_BASEPATH=/pulso/crono \
+  npm run build
+```
 
-## Learn More
+## Publicar
 
-To learn more about Next.js, take a look at the following resources:
+Se publica solo: cada push a `main` lanza `.github/workflows/deploy.yml`, que
+construye los tres clientes **uno detrás de otro** y los sube a la rama
+`gh-pages`. En serie a propósito — en paralelo se pisaban el push y un cliente
+se quedaba atrás en silencio.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+El `sw.js` se sella con el SHA del commit en cada despliegue. Sin eso el
+fichero sería idéntico byte a byte, el navegador no instalaría el service
+worker nuevo y el iPad podría seguir con una versión de hace semanas.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+La versión desplegada se ve **junto al título** en la pantalla de inicio.
 
-## Deploy on Vercel
+## Antes de escribir código
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Lee `AGENTS.md`: esta versión de Next.js no es la que te sabes.
