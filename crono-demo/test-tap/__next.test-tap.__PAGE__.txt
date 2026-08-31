@@ -1,9 +1,9 @@
 1:"$Sreact.fragment"
-2:I[47257,["/pulso/crono-demo/_next/static/chunks/14-dzul958fg9.js","/pulso/crono-demo/_next/static/chunks/0d3shmwh5_nmn.js","/pulso/crono-demo/_next/static/chunks/0ue~b0s_wpe.-.js"],"ClientPageRoot"]
-3:I[36530,["/pulso/crono-demo/_next/static/chunks/14-dzul958fg9.js","/pulso/crono-demo/_next/static/chunks/0d3shmwh5_nmn.js","/pulso/crono-demo/_next/static/chunks/0ue~b0s_wpe.-.js","/pulso/crono-demo/_next/static/chunks/0s4qc2xepn8hp.js"],"default"]
-6:I[97367,["/pulso/crono-demo/_next/static/chunks/14-dzul958fg9.js","/pulso/crono-demo/_next/static/chunks/0d3shmwh5_nmn.js","/pulso/crono-demo/_next/static/chunks/0ue~b0s_wpe.-.js"],"OutletBoundary"]
+2:I[47257,["/pulso/crono-demo/_next/static/chunks/0_xggre.2g1j1.js","/pulso/crono-demo/_next/static/chunks/0d3shmwh5_nmn.js","/pulso/crono-demo/_next/static/chunks/0ue~b0s_wpe.-.js"],"ClientPageRoot"]
+3:I[36530,["/pulso/crono-demo/_next/static/chunks/0_xggre.2g1j1.js","/pulso/crono-demo/_next/static/chunks/0d3shmwh5_nmn.js","/pulso/crono-demo/_next/static/chunks/0ue~b0s_wpe.-.js","/pulso/crono-demo/_next/static/chunks/0s4qc2xepn8hp.js"],"default"]
+6:I[97367,["/pulso/crono-demo/_next/static/chunks/0_xggre.2g1j1.js","/pulso/crono-demo/_next/static/chunks/0d3shmwh5_nmn.js","/pulso/crono-demo/_next/static/chunks/0ue~b0s_wpe.-.js"],"OutletBoundary"]
 7:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/pulso/crono-demo/_next/static/chunks/0s4qc2xepn8hp.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"TxFbgEbwdMsPD8H7jG6K3"}
+0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/pulso/crono-demo/_next/static/chunks/0s4qc2xepn8hp.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"fB9ErqTEH3CQCZx4PoWts"}
 4:{}
 5:"$0:rsc:props:children:0:props:serverProvidedParams:params"
 8:null
