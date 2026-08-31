@@ -1309,12 +1309,35 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
   type Tiro = { equipo: "INTER" | "RIVAL"; parte: ParteId; res: ResD; zonaCampo?: string; zonaPort?: string };
   const tiros: Tiro[] = [];
 
+  // Un gol ES un disparo, y el más importante. Hasta el 31/8/2026 esta pestaña
+  // solo miraba los eventos de tipo "disparo", "penalti" y "diezm", así que los
+  // goles no salían por ninguna parte: en el Manzanares el recuento general
+  // decía 14 disparos y el desglose por partes sumaba 11, que son justo los 3
+  // goles que faltaban. (El general sale de los contadores, que sí los cuentan.)
+  //
+  // Los goles de penalti o de 10 metros YA vienen contados por su evento
+  // enlazado, así que esos se saltan para no contarlos dos veces.
+  const golesYaContados = new Set<string>();
+  for (const ev of partido.eventos) {
+    const gid = (ev as any).golId as string | undefined;
+    if (gid && (ev.tipo === "penalti" || ev.tipo === "diezm" || ev.tipo === "disparo")) {
+      golesYaContados.add(gid);
+    }
+  }
+
   for (const ev of partido.eventos) {
     if (!partesFiltro.includes(ev.parte)) continue;
     const eq = (ev as any).equipo as "INTER" | "RIVAL" | undefined;
     if (!eq) continue;
 
-    if (ev.tipo === "disparo") {
+    if (ev.tipo === "gol") {
+      if (golesYaContados.has(ev.id)) continue;
+      tiros.push({
+        equipo: eq, parte: ev.parte, res: "GOL",
+        zonaCampo: (ev as any).zonaCampo,
+        zonaPort: (ev as any).zonaPorteria,
+      });
+    } else if (ev.tipo === "disparo") {
       // El resultado puede ser PUERTA y haber un golId enlazado → eso es GOL.
       const r = (ev as any).resultado as ResultadoDisparoLocal;
       const golId = (ev as any).golId as string | undefined;
