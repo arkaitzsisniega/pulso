@@ -355,6 +355,42 @@ export function usePartido() {
     };
   }, [partido, cargado]);
 
+  // El guardado espera 300 ms para no escribir en cada pulsación. Pero si en
+  // esa ventana se bloquea el iPad o se cambia de app, iOS congela la página
+  // y la última acción —un gol, un cambio, una falta— se pierde sin que nadie
+  // se entere. Al ocultarse la página se escribe YA.
+  //
+  // Hace falta la referencia porque el listener se registra una sola vez y de
+  // otro modo guardaría el partido que hubiera al registrarlo, no el de ahora.
+  const ultimoPartido = useRef(partido);
+  useEffect(() => {
+    ultimoPartido.current = partido;
+  }, [partido]);
+
+  useEffect(() => {
+    if (!cargado) return;
+    const guardarYa = () => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        saveTimer.current = null;
+      }
+      void db.partidos.put({ ...ultimoPartido.current, actualizado: Date.now() });
+    };
+    const alOcultarse = () => {
+      if (document.visibilityState === "hidden") guardarYa();
+    };
+    document.addEventListener("visibilitychange", alOcultarse);
+    // pagehide cubre lo que visibilitychange no pilla en Safari (cerrar la
+    // pestaña, volver atrás); "freeze" es el aviso de Chrome antes de congelar.
+    window.addEventListener("pagehide", guardarYa);
+    document.addEventListener("freeze", guardarYa);
+    return () => {
+      document.removeEventListener("visibilitychange", alOcultarse);
+      window.removeEventListener("pagehide", guardarYa);
+      document.removeEventListener("freeze", guardarYa);
+    };
+  }, [cargado]);
+
   // ────────────────── selectores en vivo ───────────────────────────────
   const segundosTurnoActual = useCallback(
     (nombre: string): number => {
