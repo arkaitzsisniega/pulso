@@ -52,16 +52,19 @@ export interface ConfigCliente {
   demo: boolean;
 }
 
-// SHA-256 de "inter1977" — contraseña histórica del Inter (se mantiene).
+// Contraseñas: aquí SOLO va el SHA-256. La contraseña en claro NO se escribe,
+// ni siquiera en un comentario — este repositorio es público y hasta el
+// 31/8/2026 las tres estaban aquí escritas, con lo que el trabajo de que el
+// hash de un club no viaje en el paquete de otro no servía de nada.
+//
+// Cada club tiene la suya y son distintas a propósito: con la del filial NO se
+// entra en el del primer equipo, ni al revés.
+//
+// Cambiar una:  printf %s "LA NUEVA" | shasum -a 256   → pegar aquí → desplegar.
 const HASH_INTER =
   "2198c9c222da8099db935f222ae09b1b74ffc1d0ccdbfcc830456ab0c07a013d";
-// SHA-256 de "pulsodemo2026" — contraseña de la demo comercial CD Pulso.
 const HASH_PULSO =
   "e1152d88d11a421c08846c836010ca89d156a9ce9721226ef9784285a5899b32";
-// SHA-256 de "filial2026" — contraseña del crono del FILIAL. Distinta a
-// propósito: con ella NO se entra en el del primer equipo (ni al revés), que es
-// justo lo que pidió Arkaitz. Cambiarla = generar otro hash y volver a
-// desplegar (printf %s "NUEVA" | shasum -a 256).
 const HASH_FILIAL =
   "a26a6aa1dc925ae5430ff1c96ea2297a01c8554d77ee64c2bcbf002b02bfddc4";
 
@@ -110,8 +113,8 @@ const CLIENTES: Record<string, ConfigCliente> = {
  * por un literal en build, el minificador pliega el ternario y los hashes de
  * los OTROS clubes desaparecen del bundle. Metidos dentro de CLIENTES viajaban
  * todos en todos los builds — comprobado el 28/8: el build del filial llevaba
- * dentro el hash del Inter, y "inter1977" se saca de un SHA-256 con un
- * diccionario. Cada club se lleva solo el suyo.
+ * dentro el hash del Inter, y una contraseña corta se saca de un SHA-256 con un
+ * diccionario en un rato. Cada club se lleva solo el suyo.
  */
 const PASS_HASHES: string[] =
   process.env.NEXT_PUBLIC_CLIENTE === "pulso"
