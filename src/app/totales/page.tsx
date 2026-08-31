@@ -22,9 +22,18 @@ import { calcularTotales, formatMinutos, type Totales } from "@/lib/totales";
 export default function TotalesPage() {
   const [tot, setTot] = useState<Totales | null>(null);
   const [aviso, setAviso] = useState("");
+  // Partidos guardados que NO están finalizados: no entran en estos totales
+  // (uno a medias falsearía medias y resultados). El problema es que hasta el
+  // 31/8/2026 desaparecían sin decir nada, y los dos amistosos revisados ese
+  // día estaban así: quien mirara la temporada la vería vacía sin saber por qué.
+  const [sinCerrar, setSinCerrar] = useState(0);
   const fichero = useRef<HTMLInputElement>(null);
 
-  const recargar = async () => setTot(calcularTotales(await listarPartidos()));
+  const recargar = async () => {
+    const todos = await listarPartidos();
+    setTot(calcularTotales(todos));
+    setSinCerrar(todos.filter((p) => p.estado !== "finalizado" && p.config).length);
+  };
   useEffect(() => { void recargar(); }, []);
 
   const guardarCopia = async () => {
@@ -90,6 +99,14 @@ export default function TotalesPage() {
         <h1 className="text-xl font-black">📊 Totales de la temporada</h1>
         <Link href="/" className="rounded-lg bg-zinc-800 px-3 py-2 text-sm">🏠 Inicio</Link>
       </div>
+
+      {sinCerrar > 0 && (
+        <p className="mb-4 rounded-xl border border-amber-700/60 bg-amber-950/40 p-3 text-sm text-amber-200">
+          ⚠️ Hay <b>{sinCerrar} partido{sinCerrar > 1 ? "s" : ""} sin finalizar</b> en
+          este aparato y aquí no cuenta{sinCerrar > 1 ? "n" : ""}. Ábrelo desde el
+          inicio y dale a <b>Finalizar partido</b> para que entre en la temporada.
+        </p>
+      )}
 
       {eq.partidos === 0 ? (
         <p className="text-zinc-400">
