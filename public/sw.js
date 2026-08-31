@@ -30,7 +30,7 @@
 // registra el SW.
 const VERSION = "__VERSION__".startsWith("__") ? "dev" : "__VERSION__";
 const CACHE = `inter-crono-${VERSION}`;
-// Carpeta donde vive la app: "/arkaitz-2526/crono" en producción, "" en local.
+// Carpeta donde vive la app: "/pulso/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 const APP_SHELL = [
   `${BASE}/`,

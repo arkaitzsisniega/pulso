@@ -17,8 +17,8 @@ export default function SWRegister() {
     if (host === "localhost" || host === "127.0.0.1") return; // dev: no SW
 
     // La carpeta donde vive ESTA app, tal cual se usó al construirla. Antes se
-    // adivinaba con `pathname.includes("/arkaitz-2526/crono")`, y ahí estaba el
-    // fallo: "/arkaitz-2526/crono-demo" y "/arkaitz-2526/crono-filial"
+    // adivinaba con `pathname.includes("/pulso/crono")`, y ahí estaba el
+    // fallo: "/pulso/crono-demo" y "/pulso/crono-filial"
     // CONTIENEN esa cadena. La demo y el filial registraban el service worker
     // DEL INTER, con el scope del Inter — que no cubre su ruta — y se quedaban
     // SIN service worker: sin funcionamiento offline, que es justo lo que su

@@ -363,7 +363,7 @@ export interface Partido {
  * Nombre de la base local, POR CLIENTE.
  *
  * IndexedDB se guarda por ORIGEN, no por ruta: el crono del Inter
- * (/arkaitz-2526/crono/) y cualquier otro build (demo, filial) viven todos en
+ * (/pulso/crono/) y cualquier otro build (demo, filial) viven todos en
  * `arkaitzsisniega.github.io`. Con un nombre fijo compartirían la MISMA base:
  * abrir el crono del filial en el mismo navegador enseñaría —y podría pisar—
  * el partido del primer equipo. Por eso cada cliente tiene la suya.

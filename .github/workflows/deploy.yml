@@ -1,0 +1,100 @@
+# Publica los TRES cronos en GitHub Pages, uno detrás de otro.
+#
+# Viene de `arkaitz-2526/.github/workflows/deploy-crono.yml` (mudanza del
+# 31/8/2026). Antes eran tres workflows con el mismo `concurrency.group`: con
+# `cancel-in-progress: false` GitHub deja como mucho UN run en cola por grupo,
+# así que dos pushes seguidos CANCELABAN el que esperaba y un cliente se
+# quedaba un commit atrás en silencio. Pasó el 30/8 con la demo.
+#
+# Cada cliente cambia SOLO en tres cosas: NEXT_PUBLIC_CLIENTE (su plantilla, su
+# contraseña, su marca), CRONO_BASEPATH (su carpeta) y dónde se publica.
+
+name: Deploy crono a GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      # En serie, NO en paralelo: los tres publican en la misma rama y a la vez
+      # se pisarían el push.
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        include:
+          - cliente: inter
+            carpeta: crono
+            basepath: /pulso/crono
+          - cliente: pulso
+            carpeta: crono-demo
+            basepath: /pulso/crono-demo
+          - cliente: filial
+            carpeta: crono-filial
+            basepath: /pulso/crono-filial
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static export (${{ matrix.cliente }})
+        env:
+          NEXT_EXPORT: "1"
+          # Explícito SIEMPRE, también para el Inter: Next solo sustituye
+          # process.env.NEXT_PUBLIC_* por un literal si la variable EXISTE. Sin
+          # ella el ternario de clientes.ts no se puede plegar y el bundle se
+          # lleva dentro los hashes de contraseña de los otros clubes.
+          NEXT_PUBLIC_CLIENTE: ${{ matrix.cliente }}
+          # Se enseña junto al título: sin esto no hay forma de saber qué build
+          # tiene el iPad (30/8/2026).
+          NEXT_PUBLIC_VERSION: ${{ github.sha }}
+          CRONO_BASEPATH: ${{ matrix.basepath }}
+          # La misma ruta, pero visible desde el navegador: SWRegister la
+          # necesita para registrar SU service worker y no el de otro cliente.
+          NEXT_PUBLIC_BASEPATH: ${{ matrix.basepath }}
+        run: npm run build
+
+      # Sella el service worker con el SHA. Sin esto sw.js es idéntico byte a
+      # byte en cada despliegue, el navegador NO instala el SW nuevo y el iPad
+      # puede seguir sirviendo una versión de hace semanas.
+      - name: Sellar el service worker con la versión
+        working-directory: out
+        run: |
+          sed -i "s/__VERSION__/${GITHUB_SHA::12}/g" sw.js
+          grep -m1 "inter-crono-" sw.js
+
+      - name: Add .nojekyll (necesario para GH Pages con _next/)
+        working-directory: out
+        run: touch .nojekyll
+
+      - name: Deploy to gh-pages (${{ matrix.carpeta }})
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: out
+          publish_branch: gh-pages
+          destination_dir: ${{ matrix.carpeta }}
+          keep_files: true
+          enable_jekyll: false
+          commit_message: "deploy ${{ matrix.carpeta }}: ${{ github.event.head_commit.message }}"
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
