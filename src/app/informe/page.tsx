@@ -66,7 +66,7 @@ function Tabla(props: { cols: string[]; alinearDerecha?: number;
               {f.map((v, j) => (
                 <td key={j}
                     className={`py-[3px] ${j >= alinearDerecha ? "text-right tabular-nums" : ""} `
-                      + (j === 0 ? "font-mono font-bold" : "")}
+                      + (j === 0 ? "pr-2 font-mono font-bold" : "")}
                     style={j === 0 ? { color: MARCA_INFORME.color } : undefined}>
                   {v === 0 ? "" : v}
                 </td>
@@ -226,6 +226,8 @@ export default function InformePage() {
   }
 
   const c = inf.cabecera;
+  const totalDivididos = (inf.nosotros.divididosGanados ?? 0)
+    + (inf.nosotros.divididosPerdidos ?? 0);
   const local = c.local;
   const izq = local ? c.nosotros : c.rival;
   const der = local ? c.rival : c.nosotros;
@@ -327,17 +329,21 @@ export default function InformePage() {
           { etiqueta: t("inf_tm"), a: inf.nosotros.tiemposMuerto, b: inf.rival.tiemposMuerto },
         ]} />
         <div className="mt-2 grid grid-cols-4 gap-2 text-[10px]">
-          {[
-            [t("inf_robos"), inf.nosotros.robos],
-            [t("inf_cortes"), inf.nosotros.cortes],
-            [t("inf_perdidas"), inf.nosotros.perdidas],
-            [`${t("inf_divididos")} ${inf.nosotros.divididosGanados}/`
-              + `${(inf.nosotros.divididosGanados ?? 0) + (inf.nosotros.divididosPerdidos ?? 0)}`,
-             null],
-          ].map(([k, v], i) => (
+          {([
+            [t("inf_robos"), String(inf.nosotros.robos ?? 0)],
+            [t("inf_cortes"), String(inf.nosotros.cortes ?? 0)],
+            [t("inf_perdidas"), String(inf.nosotros.perdidas ?? 0)],
+            // Los divididos solo se cuentan revisando el vídeo: si nadie los
+            // contó, la caja no se pinta en vez de enseñar un 0/0 que parece
+            // que se pierden todos.
+            ...(totalDivididos > 0
+              ? [[t("inf_divididos"),
+                  `${inf.nosotros.divididosGanados}/${totalDivididos}`] as [string, string]]
+              : []),
+          ] as [string, string][]).map(([k, v], i) => (
             <div key={i} className="rounded border border-zinc-200 px-2 py-1">
               <div className="text-[8px] uppercase tracking-wide text-zinc-500">{k}</div>
-              {v !== null && <div className="text-sm font-bold tabular-nums">{v}</div>}
+              <div className="text-sm font-bold tabular-nums">{v}</div>
             </div>
           ))}
         </div>
@@ -348,11 +354,14 @@ export default function InformePage() {
         <Tabla
           cols={["Nº", t("inf_jugador"), t("inf_min"), "⚽", t("inf_asist_col"),
                  t("inf_disp"), t("inf_pta"), t("inf_robos"), t("inf_cortes"),
-                 t("inf_perd"), t("inf_bd"), t("inf_faltas"), "±"]}
+                 t("inf_perd"), ...(totalDivididos > 0 ? [t("inf_bd")] : []),
+                 t("inf_faltas"), "±"]}
           filas={inf.jugadores.map((j) => [
             j.dorsal, j.nombre, mmss(j.segundos), j.goles, j.asistencias,
             j.disparos, j.aPuerta, j.robos, j.cortes, j.perdidas,
-            `${j.divididosGanados}/${j.divididosGanados + j.divididosPerdidos}`,
+            ...(totalDivididos > 0
+              ? [`${j.divididosGanados}/${j.divididosGanados + j.divididosPerdidos}`]
+              : []),
             j.faltas,
             j.masMenos > 0 ? `+${j.masMenos}` : j.masMenos,
           ])}
@@ -437,7 +446,9 @@ export default function InformePage() {
               <Tabla
                 cols={["Nº", t("inf_portero"), t("inf_saques"), t("inf_achiques"),
                        t("inf_cob_balon"), t("inf_cob_hombre"), t("inf_pases")]}
-                filas={inf.porteros.map((p) => [
+                filas={inf.porteros
+                  .filter((p) => Object.keys(p.video).length > 0)
+                  .map((p) => [
                   p.dorsal, p.nombre,
                   `${p.video.saqueB ?? 0}/${(p.video.saqueB ?? 0) + (p.video.saqueM ?? 0)}`,
                   p.video.achique ?? 0,
