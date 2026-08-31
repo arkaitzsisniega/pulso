@@ -25,7 +25,7 @@ export default function SelectorIdioma() {
   if (!MOSTRAR_SELECTOR) return null;
 
   return (
-    <div className="fixed bottom-3 right-3 z-[60] flex items-center gap-1 bg-zinc-900/90 border border-zinc-700 rounded-full px-2 py-1 shadow-lg backdrop-blur">
+    <div className="print:hidden fixed bottom-3 right-3 z-[60] flex items-center gap-1 bg-zinc-900/90 border border-zinc-700 rounded-full px-2 py-1 shadow-lg backdrop-blur">
       {IDIOMAS_DISPONIBLES.map((op) => (
         <button
           key={op.codigo}
