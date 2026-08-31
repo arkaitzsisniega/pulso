@@ -90,11 +90,17 @@ export default function TotalesPage() {
     }
   };
 
-  if (!tot) return <main className="p-6 text-zinc-400">Cargando…</main>;
+  if (!tot) return (
+    <div className="min-h-screen bg-zinc-950 p-6 text-zinc-400">Cargando…</div>
+  );
   const { equipo: eq, jugadores, partidos } = tot;
 
   return (
-    <main className="mx-auto max-w-4xl p-4 text-zinc-100">
+    // El fondo oscuro va FUERA del ancho máximo: sin él, esta pantalla salía
+    // con texto casi blanco sobre blanco y la tabla de jugadores no se leía
+    // (31/8/2026). El resto de pantallas ya lo tenían.
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <main className="mx-auto max-w-4xl p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-black">📊 Totales de la temporada</h1>
         <Link href="/" className="rounded-lg bg-zinc-800 px-3 py-2 text-sm">🏠 Inicio</Link>
@@ -262,5 +268,6 @@ export default function TotalesPage() {
         {aviso && <p className="mt-3 text-xs text-amber-300">{aviso}</p>}
       </section>
     </main>
+    </div>
   );
 }
