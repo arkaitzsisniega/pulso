@@ -34,20 +34,20 @@ interface Props {
 }
 
 // Escala
-const M = 20;
-const W = 40 * M;   // 800
-const H = 20 * M;   // 400
+export const M = 20;
+export const W = 40 * M;   // 800
+export const H = 20 * M;   // 400
 
-const POSTE_SUP_Y = H / 2 - 1.5 * M;   // 170
-const POSTE_INF_Y = H / 2 + 1.5 * M;   // 230
-const R_AREA = 6 * M;                  // 120
-const BANDA_SUP_Y = 2.5 * M;           // 50
-const BANDA_INF_Y = H - 2.5 * M;       // 350
-const X_MEDIA = W / 2;                 // 400
-const Y_CENTRO = H / 2;                // 200
+export const POSTE_SUP_Y = H / 2 - 1.5 * M;   // 170
+export const POSTE_INF_Y = H / 2 + 1.5 * M;   // 230
+export const R_AREA = 6 * M;                  // 120
+export const BANDA_SUP_Y = 2.5 * M;           // 50
+export const BANDA_INF_Y = H - 2.5 * M;       // 350
+export const X_MEDIA = W / 2;                 // 400
+export const Y_CENTRO = H / 2;                // 200
 
 /** Geometría de una media pista (der = ataque, izq = defensa). */
-function geoMedia(lado: "der" | "izq") {
+export function geoMedia(lado: "der" | "izq") {
   const der = lado === "der";
   const XP = der ? W : 0;                       // línea de fondo (portería)
   const XAREA = der ? W - R_AREA : R_AREA;      // techo del área (paralelo a portería)

@@ -207,6 +207,14 @@ export interface Informe {
   zonasPorteria: Record<string, number>;
   zonasCampoRival: Record<string, number>;
   zonasPorteriaRival: Record<string, number>;
+  /** Dónde se recupera (robos + cortes), dónde se pierde y dónde se hace falta.
+   *  Solo tienen zona los partidos revisados con vídeo: en directo no da tiempo
+   *  a marcar el sitio y estos mapas salen vacíos, que es lo honesto. */
+  zonasRecuperaciones: Record<string, number>;
+  zonasPerdidas: Record<string, number>;
+  zonasFaltas: Record<string, number>;
+  /** Hacia dónde atacamos en la 1ª parte: los mapas se pintan en ese sentido. */
+  direccion1T: "izq" | "der";
   penaltis: {
     minuto: string; parte: ParteId; nuestro: boolean;
     tipo: string; tirador?: string; resultado: string;
@@ -708,6 +716,27 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
     }
   }
 
+  // ── Dónde se recupera, dónde se pierde y dónde se hace falta ───────────
+  // El crono guarda la zona de cada acción individual cuando el partido se
+  // revisa con vídeo. Es lo que en el panel del club son los mapas de calor.
+  const RECUPERA = new Set(["robos", "cortes", "corteConex", "ultCob"]);
+  const PIERDE = new Set(["pf", "pnf"]);
+  const zonasRecuperaciones: Record<string, number> = {};
+  const zonasPerdidas: Record<string, number> = {};
+  const zonasFaltas: Record<string, number> = {};
+  for (const { ev } of conT) {
+    const e = ev as unknown as Record<string, unknown>;
+    const z = String(e.zonaCampo ?? "");
+    if (!z) continue;
+    if (ev.tipo === "accion_individual") {
+      const acc = String(e.accion ?? "");
+      if (RECUPERA.has(acc)) zonasRecuperaciones[z] = (zonasRecuperaciones[z] ?? 0) + 1;
+      else if (PIERDE.has(acc)) zonasPerdidas[z] = (zonasPerdidas[z] ?? 0) + 1;
+    } else if (ev.tipo === "falta" && String(e.equipo) === "INTER") {
+      zonasFaltas[z] = (zonasFaltas[z] ?? 0) + 1;
+    }
+  }
+
   // ── Penaltis, tiempos muertos y tarjetas ───────────────────────────────
   const penaltis = conT
     .filter(({ ev }) => ev.tipo === "penalti" || ev.tipo === "diezm")
@@ -779,6 +808,8 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
     golesPorTramo,
     tanda,
     zonasCampo, zonasPorteria, zonasCampoRival, zonasPorteriaRival,
+    zonasRecuperaciones, zonasPerdidas, zonasFaltas,
+    direccion1T: (String(cfg.direccionInter1T ?? "der") === "izq" ? "izq" : "der"),
     penaltis, tiemposMuerto, tarjetas,
     hayVideo,
   };

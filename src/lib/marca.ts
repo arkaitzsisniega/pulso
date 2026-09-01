@@ -15,9 +15,13 @@ export interface MarcaInforme {
   nombre: string;
   /** Ruta pública de la imagen, o null para no enseñar ninguna. */
   escudo: string | null;
-  /** Color de acento: títulos, barras y dorsales. En papel, todo lo demás
-   *  va en negro sobre blanco — un informe a todo color se imprime fatal. */
+  /** Color de acento: títulos, barras y dorsales. */
   color: string;
+  /** El del rival: todo lo suyo va de este color, en el informe entero. Que se
+   *  distinga de un vistazo lo nuestro de lo suyo es media lectura. */
+  colorRival: string;
+  /** Acento cálido para lo que hay que mirar (avisos, mejores registros). */
+  colorAcento: string;
   /** Línea del pie. */
   pie: string;
   /** Quién está detrás. El club autorizó (31/8/2026) vender el crono diciendo
@@ -32,6 +36,8 @@ export const MARCA_INFORME: MarcaInforme = {
   nombre: "PULSO",
   escudo: `${BASE}/marca.png`,
   color: "#0d7a4f",
+  colorRival: "#b3261e",
+  colorAcento: "#b8912e",
   // Sin dominio en el pie hasta que exista de verdad: una dirección inventada
   // en un documento que se manda a un club se descubre al primer clic.
   pie: "Generado con PULSO desde el crono del banquillo",
