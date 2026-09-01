@@ -28,6 +28,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { usePartido } from "@/lib/store";
 import { NOMBRE_CORTO_TC, ROSTER } from "@/lib/clientes";
+import { CampoMapa } from "@/components/CampoMapa";
 import { t, useIdioma } from "@/lib/i18n";
 import {
   construirInforme, mmss, type FilaJugador, type Informe,
@@ -50,7 +51,7 @@ function Seccion(props: { titulo: string; children: React.ReactNode; corta?: boo
 }
 
 function Tabla(props: { cols: string[]; alinearDerecha?: number;
-                        filas: (string | number)[][]; nota?: string }) {
+                        filas: React.ReactNode[][]; nota?: string }) {
   const { cols, filas, alinearDerecha = 2 } = props;
   return (
     <>
@@ -97,9 +98,10 @@ function Comparativa(props: { filas: { etiqueta: string; a: number; b: number }[
             <span className="w-7 text-right font-bold tabular-nums">{f.a}</span>
             <div className="flex h-2 flex-1 overflow-hidden rounded-sm bg-zinc-200">
               <div style={{ width: `${pct}%`, backgroundColor: MARCA_INFORME.color }} />
-              <div style={{ width: `${100 - pct}%`, backgroundColor: "#9ca3af" }} />
+              <div style={{ width: `${100 - pct}%`, backgroundColor: MARCA_INFORME.colorRival }} />
             </div>
-            <span className="w-7 tabular-nums text-zinc-600">{f.b}</span>
+            <span className="w-7 tabular-nums font-semibold"
+                  style={{ color: MARCA_INFORME.colorRival }}>{f.b}</span>
             <span className="w-36 text-right text-[9px] uppercase tracking-wide text-zinc-500">
               {f.etiqueta}
             </span>
@@ -111,7 +113,9 @@ function Comparativa(props: { filas: { etiqueta: string; a: number; b: number }[
 }
 
 /** Portería 3×3 (P1..P9, de arriba a abajo y de izquierda a derecha). */
-function Porteria(props: { cuadrantes: Record<string, number>; titulo: string }) {
+function Porteria(props: { cuadrantes: Record<string, number>; titulo: string;
+                          color?: string }) {
+  const color = props.color ?? MARCA_INFORME.color;
   const max = Math.max(1, ...Object.values(props.cuadrantes));
   return (
     <div>
@@ -127,7 +131,7 @@ function Porteria(props: { cuadrantes: Record<string, number>; titulo: string })
               <g key={idx}>
                 <rect x={1 + col * 39.33} y={1 + fila * 27.33}
                       width="39.33" height="27.33"
-                      fill={MARCA_INFORME.color} fillOpacity={alpha}
+                      fill={color} fillOpacity={alpha}
                       stroke="#d4d4d8" strokeWidth="0.5" />
                 <text x={20.6 + col * 39.33} y={19 + fila * 27.33}
                       textAnchor="middle" fontSize="12" fontWeight="700"
@@ -200,6 +204,18 @@ function Cronograma(props: { inf: Informe }) {
   );
 }
 
+/** Un número que se lee por el color: verde si suma, rojo si resta. */
+function Puntos(props: { v: number; fuerte?: boolean }) {
+  const { v, fuerte } = props;
+  return (
+    <span className={fuerte ? "font-bold tabular-nums" : "tabular-nums"}
+          style={{ color: v > 0 ? MARCA_INFORME.color
+                   : v < 0 ? MARCA_INFORME.colorRival : "#71717a" }}>
+      {v.toFixed(1).replace(".", ",")}
+    </span>
+  );
+}
+
 /** Franja de cifras para leer el partido de un vistazo, antes de las tablas. */
 function Kpis(props: { inf: Informe }) {
   const { inf } = props;
@@ -239,7 +255,7 @@ function GolesTramo(props: { tramos: Informe["golesPorTramo"] }) {
                           backgroundColor: MARCA_INFORME.color }} />
             <div className="w-2" title={`${x.rival}`}
                  style={{ height: `${(x.rival / max) * 100}%`,
-                          backgroundColor: "#9ca3af" }} />
+                          backgroundColor: MARCA_INFORME.colorRival }} />
           </div>
           <p className="mt-[2px] text-[7px] text-zinc-500">{x.etiqueta}</p>
         </div>
@@ -426,10 +442,10 @@ export default function InformePage() {
                    t("inf_val_40"), t("inf_val_video")]}
             filas={inf.valoraciones.map((v) => [
               v.dorsal, v.nombre + (v.portero ? " (P)" : ""), mmss(v.segundos),
-              v.puntos.toFixed(1).replace(".", ","),
-              v.por40 === null ? "" : v.por40.toFixed(1).replace(".", ","),
+              <Puntos key="p" v={v.puntos} fuerte />,
+              v.por40 === null ? "" : <Puntos key="r" v={v.por40} />,
               inf.hayVideo && v.puntosVideo
-                ? v.puntosVideo.toFixed(1).replace(".", ",") : "",
+                ? <Puntos key="v" v={v.puntosVideo} /> : "",
             ])}
             nota={inf.hayVideo ? t("inf_nota_val") : t("inf_nota_val_directo")}
           />
@@ -563,15 +579,36 @@ export default function InformePage() {
         || Object.keys(inf.zonasCampo).length > 0) && (
         <Seccion titulo={t("inf_sec_zonas")}>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <Porteria cuadrantes={inf.zonasPorteria} titulo={t("inf_z_porteria_favor")} />
-              <ZonasCampo zonas={inf.zonasCampo} titulo={t("inf_z_campo_favor")} />
-            </div>
-            <div className="space-y-3">
-              <Porteria cuadrantes={inf.zonasPorteriaRival} titulo={t("inf_z_porteria_contra")} />
-              <ZonasCampo zonas={inf.zonasCampoRival} titulo={t("inf_z_campo_contra")} />
-            </div>
+            <CampoMapa zonas={inf.zonasCampo} titulo={t("inf_z_campo_favor")}
+                       color={MARCA_INFORME.color} direccion={inf.direccion1T} />
+            <CampoMapa zonas={inf.zonasCampoRival} titulo={t("inf_z_campo_contra")}
+                       color={MARCA_INFORME.colorRival}
+                       direccion={inf.direccion1T === "der" ? "izq" : "der"} />
           </div>
+          <p className="mt-1 text-[8px] text-zinc-500">{t("inf_nota_campo")}</p>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            <Porteria cuadrantes={inf.zonasPorteria} titulo={t("inf_z_porteria_favor")}
+                      color={MARCA_INFORME.color} />
+            <Porteria cuadrantes={inf.zonasPorteriaRival} titulo={t("inf_z_porteria_contra")}
+                      color={MARCA_INFORME.colorRival} />
+          </div>
+        </Seccion>
+      )}
+
+      {/* ── Dónde se recupera y dónde se pierde ───────────────────────── */}
+      {(Object.keys(inf.zonasRecuperaciones).length > 0
+        || Object.keys(inf.zonasPerdidas).length > 0
+        || Object.keys(inf.zonasFaltas).length > 0) && (
+        <Seccion titulo={t("inf_sec_mapas_juego")}>
+          <div className="grid grid-cols-3 gap-3">
+            <CampoMapa zonas={inf.zonasRecuperaciones} titulo={t("inf_m_recuperaciones")}
+                       color={MARCA_INFORME.color} direccion={inf.direccion1T} />
+            <CampoMapa zonas={inf.zonasPerdidas} titulo={t("inf_m_perdidas")}
+                       color={MARCA_INFORME.colorRival} direccion={inf.direccion1T} />
+            <CampoMapa zonas={inf.zonasFaltas} titulo={t("inf_m_faltas")}
+                       color={MARCA_INFORME.colorAcento} direccion={inf.direccion1T} />
+          </div>
+          <p className="mt-1 text-[8px] text-zinc-500">{t("inf_nota_mapas_juego")}</p>
         </Seccion>
       )}
 
