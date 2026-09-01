@@ -7,7 +7,8 @@
  * partido de mentira donde el resultado se sabe a mano.
  */
 import {
-  construirInforme, tramosDePista, mmss, type ContextoInforme,
+  construirInforme, tramosDePista, mmss, valorar,
+  type ContextoInforme, type FilaJugador,
 } from "./informe.ts";
 import type { Partido } from "./db.ts";
 
@@ -196,7 +197,104 @@ console.log("── Informe de partido ──");
   ok(construirInforme(vacio, CTX) === null, "sin config no hay informe");
 }
 
-// 11 · mmss
+// 11 · Cuartetos: los cuatro de campo, sin el portero
+{
+  const inf = construirInforme(base(), CTX)!;
+  ok(inf.cuartetos.every((c) => !c.jugadores.includes("POR")),
+     "el portero no entra en el cuarteto");
+  ok(inf.cuartetos.every((c) => c.jugadores.length === 4),
+     "un cuarteto son cuatro jugadores");
+  igual(inf.cuartetos.reduce((a, c) => a + c.segundos, 0), 2400,
+        "los minutos de los cuartetos suman el partido entero");
+}
+
+// 12 · Rotaciones: tramos seguidos, no un tramo por cambio del equipo
+{
+  const inf = construirInforme(base(), CTX)!;
+  const a = inf.rotaciones.find((r) => r.nombre === "A")!;
+  igual(a.tramos.length, 1,
+        "quien no sale nunca tiene UN periodo, aunque el equipo haga cambios");
+  igual([a.tramos[0].desde, a.tramos[0].hasta], [0, 2400], "y cubre el partido entero");
+  const d = inf.rotaciones.find((r) => r.nombre === "D")!;
+  igual([d.tramos[0].desde, d.tramos[0].hasta], [0, 600], "D sale en el minuto 10");
+  ok(!inf.rotaciones.some((r) => r.nombre === "E" && r.tramos[0].desde === 0),
+     "E no estaba en pista al empezar");
+}
+
+// 13 · Goles por tramos de cinco minutos
+{
+  const inf = construirInforme(base(), CTX)!;
+  const total = inf.golesPorTramo.reduce((a, x) => a + x.nuestros + x.rival, 0);
+  igual(total, 3, "los goles repartidos por tramo suman los del partido");
+  igual(inf.golesPorTramo[1].nuestros, 1, "el gol del minuto 5 cae en el tramo 5-10");
+}
+
+// 14 · Titulares
+{
+  const inf = construirInforme(base(), CTX)!;
+  igual(inf.titulares.portero, "POR", "portero titular");
+  igual(inf.titulares.campo, ["A", "B", "C", "D"], "los cuatro de campo que empiezan");
+}
+
+// 15 · Tanda: sin tiros NO hay tanda (no una tabla vacía)
+{
+  const inf = construirInforme(base(), CTX)!;
+  ok(inf.tanda === null, "sin tanda tirada no se enseña la sección");
+
+  const conTanda = base() as unknown as Record<string, unknown>;
+  conTanda.tanda = {
+    activa: false, marcador: { inter: 2, rival: 1 },
+    tiros: [
+      { orden: 2, equipo: "RIVAL", resultado: "PARADA", portero: "POR" },
+      { orden: 1, equipo: "INTER", resultado: "GOL", tirador: "A" },
+    ],
+  };
+  const inf2 = construirInforme(conTanda as never, CTX)!;
+  igual(inf2.tanda!.tiros.map((x) => x.orden), [1, 2],
+        "los tiros salen en el orden en que se tiraron");
+  igual(inf2.tanda!.tiros[0].nuestro, true, "el primero es nuestro");
+}
+
+// 16 · Valoración: los pesos, uno a uno
+{
+  const vacio: FilaJugador = {
+    nombre: "X", dorsal: "9", portero: false, segundos: 40 * 60, jugo: true,
+    goles: 0, asistencias: 0, aPuerta: 0, fuera: 0, palo: 0, bloqueados: 0,
+    disparos: 0, robos: 0, cortes: 0, perdidas: 0, perdidasForzadas: 0,
+    perdidasNoForzadas: 0, divididosGanados: 0, divididosPerdidos: 0,
+    amarillas: 0, rojas: 0, faltas: 0, gfPista: 0, gcPista: 0, masMenos: 0,
+    paradas: 0, golesEncajados: 0, pctParada: null, video: {},
+  };
+  igual(valorar(vacio).puntos, 0, "sin hacer nada, cero puntos");
+  igual(valorar({ ...vacio, goles: 2 }).puntos, 6, "dos goles valen 6");
+  igual(valorar({ ...vacio, asistencias: 1, robos: 1 }).puntos, 3,
+        "asistencia + robo");
+  igual(valorar({ ...vacio, perdidasNoForzadas: 2 }).puntos, -3,
+        "las pérdidas no forzadas restan el doble que las forzadas");
+  igual(valorar({ ...vacio, perdidasForzadas: 2 }).puntos, -1.5,
+        "y las forzadas restan menos");
+  igual(valorar({ ...vacio, gfPista: 3, gcPista: 1 }).puntos, 2,
+        "estar en pista cuando se marca suma y cuando se encaja resta");
+
+  const portero = { ...vacio, portero: true, paradas: 5 };
+  igual(valorar(portero).puntos, 6,
+        "portero: 5 paradas (4) + portería a cero jugando 40' (2)");
+  igual(valorar({ ...portero, segundos: 10 * 60 }).puntos, 4,
+        "la portería a cero solo cuenta si defendió al menos 20 minutos");
+  igual(valorar({ ...portero, golesEncajados: 2 }).puntos, 1,
+        "encajar dos goles quita 3 y con ello el bonus");
+
+  const conVideo = valorar({ ...vacio, video: { unoDef_g: 2, unoDef_p: 1 } });
+  igual([conVideo.puntos, conVideo.puntosVideo], [0.5, 0.5],
+        "lo del vídeo se cuenta y además se separa");
+
+  igual(valorar({ ...vacio, goles: 1, segundos: 20 * 60 }).por40, 6,
+        "el ritmo por 40' escala lo que hizo en los minutos que jugó");
+  ok(valorar({ ...vacio, goles: 1, segundos: 30 }).por40 === null,
+     "con 30 segundos jugados NO se publica un ritmo: sería un disparate");
+}
+
+// 17 · mmss
 igual(mmss(0), "0:00", "mmss de cero");
 igual(mmss(125), "2:05", "mmss redondea hacia abajo");
 

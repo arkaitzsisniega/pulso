@@ -195,6 +195,54 @@ function Cronograma(props: { inf: Informe }) {
   );
 }
 
+/** Franja de cifras para leer el partido de un vistazo, antes de las tablas. */
+function Kpis(props: { inf: Informe }) {
+  const { inf } = props;
+  const cajas: [string, string][] = [
+    [t("inf_kpi_disparos"), `${inf.nosotros.disparos} - ${inf.rival.disparos}`],
+    [t("inf_kpi_apuerta"), `${inf.nosotros.aPuerta} - ${inf.rival.aPuerta}`],
+    [t("inf_kpi_faltas"), `${inf.nosotros.faltas} - ${inf.rival.faltas}`],
+    [t("inf_kpi_duracion"), mmss(inf.cabecera.duracionTotal)],
+  ];
+  const efectividad = inf.nosotros.aPuerta
+    ? Math.round((inf.cabecera.gf / inf.nosotros.aPuerta) * 100)
+    : null;
+  if (efectividad !== null) cajas.push([t("inf_kpi_efectividad"), `${efectividad} %`]);
+  return (
+    <div className="mb-4 grid grid-cols-5 gap-[3px]">
+      {cajas.map(([et, v]) => (
+        <div key={et} className="bg-zinc-50 px-2 py-1.5 text-center">
+          <p className="text-[13px] font-black leading-tight tabular-nums"
+             style={{ color: MARCA_INFORME.color }}>{v}</p>
+          <p className="text-[7.5px] uppercase leading-tight tracking-wide text-zinc-500">{et}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Goles repartidos en tramos de cinco minutos: cuándo se decidió el partido. */
+function GolesTramo(props: { tramos: Informe["golesPorTramo"] }) {
+  const max = Math.max(1, ...props.tramos.map((x) => Math.max(x.nuestros, x.rival)));
+  return (
+    <div className="flex items-end gap-[3px]">
+      {props.tramos.map((x) => (
+        <div key={x.etiqueta} className="flex-1 text-center">
+          <div className="flex h-12 items-end justify-center gap-[2px]">
+            <div className="w-2" title={`${x.nuestros}`}
+                 style={{ height: `${(x.nuestros / max) * 100}%`,
+                          backgroundColor: MARCA_INFORME.color }} />
+            <div className="w-2" title={`${x.rival}`}
+                 style={{ height: `${(x.rival / max) * 100}%`,
+                          backgroundColor: "#9ca3af" }} />
+          </div>
+          <p className="mt-[2px] text-[7px] text-zinc-500">{x.etiqueta}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 export default function InformePage() {
   const { partido, cargado } = usePartido();
@@ -277,6 +325,18 @@ export default function InformePage() {
         </div>
       </header>
 
+      <Kpis inf={inf} />
+
+      {/* Quinteto inicial: lo primero que mira cualquiera que no vio el partido */}
+      {inf.titulares.portero && (
+        <p className="mb-4 text-[10px] text-zinc-600">
+          <span className="font-bold uppercase tracking-wide text-zinc-500">
+            {t("inf_titulares")}:
+          </span>{" "}
+          {[inf.titulares.portero, ...inf.titulares.campo].join(" · ")}
+        </p>
+      )}
+
       {/* ── 1 · Goles ─────────────────────────────────────────────────── */}
       <Seccion titulo={t("inf_sec_goles")}>
         {inf.goles.length === 0
@@ -349,6 +409,25 @@ export default function InformePage() {
         </div>
       </Seccion>
 
+      {/* ── Valoración del partido ────────────────────────────────────── */}
+      {inf.valoraciones.length > 0 && (
+        <Seccion titulo={t("inf_sec_valoracion")}>
+          <Tabla
+            alinearDerecha={2}
+            cols={["", t("inf_jugador"), t("inf_min"), t("inf_val"),
+                   t("inf_val_40"), t("inf_val_video")]}
+            filas={inf.valoraciones.map((v) => [
+              v.dorsal, v.nombre + (v.portero ? " (P)" : ""), mmss(v.segundos),
+              v.puntos.toFixed(1).replace(".", ","),
+              v.por40 === null ? "" : v.por40.toFixed(1).replace(".", ","),
+              inf.hayVideo && v.puntosVideo
+                ? v.puntosVideo.toFixed(1).replace(".", ",") : "",
+            ])}
+            nota={inf.hayVideo ? t("inf_nota_val") : t("inf_nota_val_directo")}
+          />
+        </Seccion>
+      )}
+
       {/* ── 3 · Jugadores de campo ────────────────────────────────────── */}
       <Seccion titulo={`${t("inf_sec_jugadores")} (${c.partesJugadas.join(" · ")})`}>
         <Tabla
@@ -391,6 +470,22 @@ export default function InformePage() {
         </Seccion>
       )}
 
+      {/* ── Rotaciones individuales: cuándo entró y salió cada uno ────── */}
+      {inf.rotaciones.some((r) => r.tramos.length > 1) && (
+        <Seccion titulo={t("inf_sec_rotaciones")}>
+          <Tabla
+            alinearDerecha={3}
+            cols={["", t("inf_jugador"), t("inf_periodos"), t("inf_veces"), t("inf_min")]}
+            filas={inf.rotaciones.map((r) => [
+              r.dorsal, r.nombre,
+              r.tramos.map((x) => `${mmss(x.desde)}–${mmss(x.hasta)}`).join("  "),
+              r.tramos.length, mmss(r.segundos),
+            ])}
+            nota={t("inf_nota_rotaciones")}
+          />
+        </Seccion>
+      )}
+
       {/* ── 6 · Quintetos ─────────────────────────────────────────────── */}
       {inf.quintetos.length > 0 && (
         <Seccion titulo={t("inf_sec_quintetos")}>
@@ -406,6 +501,21 @@ export default function InformePage() {
         </Seccion>
       )}
 
+      {/* ── Cuartetos: los cuatro de campo, sin el portero ────────────── */}
+      {inf.cuartetos.length > 1 && (
+        <Seccion titulo={t("inf_sec_cuartetos")}>
+          <Tabla
+            alinearDerecha={1}
+            cols={[t("inf_cuarteto"), t("inf_min"), t("inf_gf"), t("inf_gc"), "±"]}
+            filas={inf.cuartetos.slice(0, 10).map((q) => [
+              q.jugadores.join(" · "), mmss(q.segundos), q.gf, q.gc,
+              q.masMenos > 0 ? `+${q.masMenos}` : q.masMenos,
+            ])}
+            nota={t("inf_nota_cuartetos")}
+          />
+        </Seccion>
+      )}
+
       {/* ── 7 · Goles por tipo de jugada ──────────────────────────────── */}
       {inf.golesPorJugada.length > 0 && (
         <Seccion titulo={t("inf_sec_jugadas")} corta>
@@ -413,6 +523,29 @@ export default function InformePage() {
             alinearDerecha={1}
             cols={[t("inf_jugada"), c.nosotros, c.rival]}
             filas={inf.golesPorJugada.map((g) => [g.jugada, g.nuestros, g.rival])}
+          />
+        </Seccion>
+      )}
+
+      {/* ── Cuándo se marcaron los goles ──────────────────────────────── */}
+      {inf.goles.length > 0 && (
+        <Seccion titulo={t("inf_sec_tramos")} corta>
+          <GolesTramo tramos={inf.golesPorTramo} />
+          <p className="mt-1 text-[8px] text-zinc-500">{t("inf_nota_tramos")}</p>
+        </Seccion>
+      )}
+
+      {/* ── Tanda de penaltis, solo si se llegó a tirar ────────────────── */}
+      {inf.tanda && (
+        <Seccion titulo={`${t("inf_sec_tanda")} · ${inf.tanda.marcador.inter} - ${inf.tanda.marcador.rival}`}>
+          <Tabla
+            alinearDerecha={4}
+            cols={["#", t("inf_equipo"), t("inf_tirador"), t("inf_portero"),
+                   t("inf_resultado")]}
+            filas={inf.tanda.tiros.map((x) => [
+              String(x.orden), x.nuestro ? c.nosotros : c.rival,
+              x.tirador ?? "", x.portero ?? "", x.resultado,
+            ])}
           />
         </Seccion>
       )}
@@ -504,8 +637,9 @@ export default function InformePage() {
         </Seccion>
       )}
 
-      <footer className="mt-6 border-t border-zinc-200 pt-2 text-[8px] text-zinc-500">
-        {MARCA_INFORME.pie}
+      <footer className="mt-6 flex items-baseline justify-between gap-3 border-t border-zinc-200 pt-2 text-[8px] text-zinc-500">
+        <span>{MARCA_INFORME.pie}</span>
+        <span>{MARCA_INFORME.origen}</span>
       </footer>
     </main>
   );
