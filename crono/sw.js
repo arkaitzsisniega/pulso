@@ -16,7 +16,7 @@
  * app router + output:export, y para una app estática esto es más robusto.
  */
 // El nombre de la caché lleva la VERSIÓN DEL DESPLIEGUE, que el workflow
-// sustituye por el SHA del commit al publicar (`b323a9c03f1f`).
+// sustituye por el SHA del commit al publicar (`3724ad592513`).
 //
 // POR QUÉ (30/8/2026): el navegador solo instala un service worker nuevo si
 // `sw.js` cambia byte a byte. Como este fichero es fijo y las peticiones de
@@ -28,7 +28,7 @@
 //
 // En local (sin sustituir) queda "dev", que no estorba: en localhost no se
 // registra el SW.
-const VERSION = "b323a9c03f1f".startsWith("__") ? "dev" : "b323a9c03f1f";
+const VERSION = "3724ad592513".startsWith("__") ? "dev" : "3724ad592513";
 const CACHE = `inter-crono-${VERSION}`;
 // Carpeta donde vive la app: "/pulso/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
