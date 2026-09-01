@@ -581,11 +581,13 @@ export default function InformePage() {
           <div className="grid grid-cols-2 gap-4">
             <CampoMapa zonas={inf.zonasCampo} titulo={t("inf_z_campo_favor")}
                        color={MARCA_INFORME.color} direccion={inf.direccion1T} />
-            {/* MISMO sentido que el mapa de al lado. Espejar el del rival
-                obliga a girar la cabeza para comparar dos campos que son el
-                mismo campo. */}
+            {/* ESPEJADO, y no por gusto: el crono guarda la zona del disparo
+                del rival desde SU ataque (zonas A). Pintado en nuestro sentido,
+                sus tiros salían pegados a la portería contraria — los números
+                eran correctos y el mapa, mentira. */}
             <CampoMapa zonas={inf.zonasCampoRival} titulo={t("inf_z_campo_contra")}
-                       color={MARCA_INFORME.colorRival} direccion={inf.direccion1T} />
+                       color={MARCA_INFORME.colorRival}
+                       direccion={inf.direccion1T === "der" ? "izq" : "der"} />
           </div>
           <p className="mt-1 text-[8px] text-zinc-500">{t("inf_nota_campo")}</p>
           <div className="mt-3 grid grid-cols-2 gap-4">

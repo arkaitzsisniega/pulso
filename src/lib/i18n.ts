@@ -262,9 +262,9 @@ export const CATALOGO: Record<string, Entrada> = {
   inf_tirador: { es: "Tirador", en: "Taker", it: "Tiratore" },
   inf_resultado: { es: "Resultado", en: "Result", it: "Esito" },
   inf_nota_campo: {
-    es: "Cada zona lleva el número de disparos que salieron de ahí; cuanto más intenso, más se tiró. Los dos campos miran en el mismo sentido —el de nuestro ataque en la primera parte— para poder compararlos de un vistazo.",
-    en: "Each zone shows how many shots came from there; the darker, the more shots. The pitch is drawn in the direction we attacked in the first half.",
-    it: "Ogni zona riporta quanti tiri sono partiti da lì; più è intensa, più si è tirato. Il campo è disegnato nel senso in cui si attaccava nel primo tempo.",
+    es: "Cada zona lleva el número de disparos que salieron de ahí; cuanto más intenso, más se tiró. Cada equipo ataca hacia la portería que tiene enfrente: los nuestros hacia la derecha y los suyos hacia la izquierda.",
+    en: "Each zone shows how many shots came from there; the darker, the more shots. Each side attacks the goal in front of it: ours to the right, theirs to the left.",
+    it: "Ogni zona riporta quanti tiri sono partiti da lì; più è intensa, più si è tirato. Ogni squadra attacca la porta che ha davanti: noi verso destra, loro verso sinistra.",
   },
   inf_sec_mapas_juego: { es: "Dónde se recupera y dónde se pierde", en: "Where the ball is won and lost", it: "Dove si recupera e dove si perde" },
   inf_m_recuperaciones: { es: "Recuperaciones", en: "Ball recoveries", it: "Recuperi" },
