@@ -8,12 +8,17 @@
  * "Informe PDF", sale el diálogo de imprimir del iPad y lo guardan o lo
  * comparten desde ahí. Sin servidor, sin cuenta y sin pedirle nada a nadie.
  *
- * Reescrito el 31/8/2026. La primera versión tenía cinco bloques y Arkaitz la
- * describió como *"sencilla y hasta cutre"* comparada con el informe del
- * sistema del club, que tiene dieciséis secciones. Tenía razón, y no era un
- * límite del crono: los datos estaban en el aparato sin que nadie los sacara.
- * Ahora salen trece — todas las del informe del club menos las tres que
- * necesitan el Sheet (GPS, clips de vídeo y valoración del partido).
+ * Reescrito el 31/8/2026 y completado el 1/9. La primera versión tenía cinco
+ * bloques y Arkaitz la describió como *"sencilla y hasta cutre"* comparada con
+ * el informe del sistema del club. Tenía razón, y no era un límite del crono:
+ * los datos estaban en el aparato sin que nadie los sacara.
+ *
+ * Hoy lleva TODO lo que lleva el informe del club salvo lo que necesita el
+ * GPS, que no está en la tablet: cifras de cabecera, quinteto inicial, goles,
+ * estadísticas comparadas, valoración del partido, jugadores, porteros,
+ * cronograma, rotaciones individuales, quintetos, cuartetos, goles por tipo de
+ * jugada, cuándo se marcaron, mapas de zona, duelos de vídeo, tanda de
+ * penaltis y tarjetas.
  *
  * Está pensado para IMPRIMIR: fondo blanco, color solo de acento y todo
  * seguido, en una sola pasada. Es una página aparte y no una pestaña del
@@ -283,7 +288,10 @@ export default function InformePage() {
   const golDer = local ? c.gc : c.gf;
 
   return (
-    <main className="mx-auto max-w-[820px] bg-white p-5 text-zinc-900 print:p-0">
+    // La clase `informe` es la que engancha el CSS de impresión de globals.css.
+    // Sin ella, el ancho de lectura de pantalla (820px) se llevaba las tablas
+    // anchas fuera del papel: la última columna salía cortada.
+    <main className="informe mx-auto max-w-[820px] bg-white p-5 text-zinc-900 print:p-0">
       {/* Botonera: fuera del papel */}
       <div className="mb-4 flex gap-2 print:hidden">
         <Link href="/resumen" className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-white">
