@@ -20,6 +20,10 @@ export interface MarcaInforme {
   color: string;
   /** Línea del pie. */
   pie: string;
+  /** Quién está detrás. El club autorizó (31/8/2026) vender el crono diciendo
+   *  que se diseñó y se usa en el Inter: es el aval que distingue esto de una
+   *  app hecha por alguien que nunca se ha sentado en un banquillo. */
+  origen: string;
 }
 
 const BASE = process.env.NEXT_PUBLIC_BASEPATH || "";
@@ -28,5 +32,8 @@ export const MARCA_INFORME: MarcaInforme = {
   nombre: "PULSO",
   escudo: `${BASE}/marca.png`,
   color: "#0d7a4f",
-  pie: "Generado con PULSO desde el crono del banquillo · pulso.futsal",
+  // Sin dominio en el pie hasta que exista de verdad: una dirección inventada
+  // en un documento que se manda a un club se descubre al primer clic.
+  pie: "Generado con PULSO desde el crono del banquillo",
+  origen: "Diseñado y utilizado por Inter JP Financial",
 };

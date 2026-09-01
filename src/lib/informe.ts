@@ -78,6 +78,8 @@ export interface FilaJugador {
   robos: number;
   cortes: number;
   perdidas: number;
+  perdidasForzadas: number;
+  perdidasNoForzadas: number;
   divididosGanados: number;
   divididosPerdidos: number;
   amarillas: number;
@@ -108,6 +110,41 @@ export interface FilaQuinteto {
   gc: number;
   masMenos: number;
   veces: number;             // cuántas veces salió ese quinteto
+}
+
+/** Un cuarteto = los cuatro de campo, sin el portero. El club los mira aparte
+ *  del quinteto porque el portero cambia por motivos que no son de juego. */
+export interface FilaCuarteto {
+  jugadores: string[];
+  segundos: number;
+  gf: number;
+  gc: number;
+  masMenos: number;
+  veces: number;
+}
+
+/** Valoración del partido: suma de puntos por acción, SIN techo (como en
+ *  baloncesto). Mismos pesos que el informe del club. */
+export interface FilaValoracion {
+  nombre: string;
+  dorsal: string;
+  portero: boolean;
+  segundos: number;
+  puntos: number;
+  /** La parte de la nota que sale de revisar el vídeo. */
+  puntosVideo: number;
+  /** Ritmo por 40 minutos, para comparar a quien juega 12 con quien juega 40.
+   *  `null` si jugó tan poco que el ritmo sería un disparate. */
+  por40: number | null;
+}
+
+/** Los minutos de un jugador partidos en tramos, tal cual entró y salió. */
+export interface RotacionJugador {
+  nombre: string;
+  dorsal: string;
+  portero: boolean;
+  tramos: { desde: number; hasta: number }[];
+  segundos: number;
 }
 
 export interface EquipoStats {
@@ -153,6 +190,19 @@ export interface Informe {
   porteros: FilaJugador[];
   tramos: TramoPista[];
   quintetos: FilaQuinteto[];
+  cuartetos: FilaCuarteto[];
+  valoraciones: FilaValoracion[];
+  rotaciones: RotacionJugador[];
+  /** Quinteto que empezó el partido. */
+  titulares: { portero: string; campo: string[] };
+  /** Goles repartidos en tramos de cinco minutos, para ver cuándo se decidió. */
+  golesPorTramo: { etiqueta: string; nuestros: number; rival: number }[];
+  /** Tanda de penaltis, solo si se llegó a tirar. */
+  tanda: {
+    marcador: { inter: number; rival: number };
+    tiros: { orden: number; nuestro: boolean; tirador?: string;
+             portero?: string; resultado: string }[];
+  } | null;
   zonasCampo: Record<string, number>;
   zonasPorteria: Record<string, number>;
   zonasCampoRival: Record<string, number>;
@@ -276,6 +326,67 @@ function enPistaEn(tramos: TramoPista[], t: number): string[] {
 // ──────────────────────────────────────────────────────────────────────────
 // El informe entero
 // ──────────────────────────────────────────────────────────────────────────
+/**
+ * Valoración de un jugador en un partido.
+ *
+ * Mismos pesos que el informe del club (16-22/8/2026): es la SUMA de puntos por
+ * acción, sin techo, como en baloncesto — un partidazo puede ser 20 y un mal
+ * partido, negativo. No se comprime a una nota sobre 10 a propósito: la escala
+ * 1-10 aplastaba las diferencias entre un partido bueno y uno excepcional.
+ *
+ * Lo que solo se coge revisando el vídeo va aparte (`puntosVideo`): en un
+ * partido apuntado en directo esa parte vale cero porque nadie lo contó, no
+ * porque el jugador no lo hiciera.
+ */
+const PESOS_CAMPO: [keyof FilaJugador, number][] = [
+  ["goles", 3], ["asistencias", 2],
+  ["robos", 1], ["cortes", 0.75],
+  ["divididosGanados", 0.5], ["divididosPerdidos", -0.25],
+  ["aPuerta", 0.4], ["palo", 0.3], ["bloqueados", 0.1], ["fuera", 0.05],
+  ["perdidasForzadas", -0.75], ["perdidasNoForzadas", -1.5],
+  ["gfPista", 1], ["gcPista", -1],
+  ["faltas", -0.25], ["amarillas", -0.5], ["rojas", -2],
+];
+const PESOS_PORTERO: [keyof FilaJugador, number][] = [
+  ["paradas", 0.8], ["golesEncajados", -1.5],
+];
+/** Asimetría a propósito en saques y pases: hacerlos bien es lo que se espera;
+ *  hacerlos mal es un regalo al rival. */
+const PESOS_VIDEO: Record<string, number> = {
+  unoDef_g: 0.5, unoDef_p: -0.5,
+  unoAtq_g: 0.5, unoAtq_p: -0.25,
+  duelC_g: 0.5, duelC_p: -0.4,
+  duelP_g: 0.5, duelP_p: -0.4,
+  ultCob: 0.6, corteConex: 0.5, conexPivot: 0.25, recibePivot: 0.15,
+  achique: 0.4,
+  cobBR: 0.5, cobBN: 0.25, cobMR: -0.1, cobMN: -0.4,
+  saqueB: 0.2, saqueM: -0.4, paseB: 0.15, paseM: -0.4,
+};
+const BONUS_PORTERIA_CERO = 2;
+const MIN_PARA_RITMO = 120;      // menos de 2' jugados: el ritmo/40' es un disparate
+
+export function valorar(f: FilaJugador): FilaValoracion {
+  let puntos = 0;
+  for (const [clave, peso] of PESOS_CAMPO) puntos += (f[clave] as number) * peso;
+  if (f.portero) {
+    for (const [clave, peso] of PESOS_PORTERO) puntos += (f[clave] as number) * peso;
+    // Portería a cero, pero solo si de verdad la defendió: 20 minutos.
+    if (f.golesEncajados === 0 && f.segundos >= 20 * 60) puntos += BONUS_PORTERIA_CERO;
+  }
+  let puntosVideo = 0;
+  for (const [clave, peso] of Object.entries(PESOS_VIDEO)) {
+    puntosVideo += n((f.video as Record<string, number>)[clave]) * peso;
+  }
+  puntos += puntosVideo;
+  const red = (x: number) => Math.round(x * 10) / 10;
+  return {
+    nombre: f.nombre, dorsal: f.dorsal, portero: f.portero, segundos: f.segundos,
+    puntos: red(puntos),
+    puntosVideo: red(puntosVideo),
+    por40: f.segundos >= MIN_PARA_RITMO ? red(puntos * (40 * 60) / f.segundos) : null,
+  };
+}
+
 export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | null {
   const cfg = p.config;
   if (!cfg) return null;
@@ -404,6 +515,7 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
       disparos: n(c.dpp) + n(c.dpf) + n(c.dpa) + n(c.dpb),
       robos: n(c.robos), cortes: n(c.cortes),
       perdidas: n(c.pf) + n(c.pnf),
+      perdidasForzadas: n(c.pf), perdidasNoForzadas: n(c.pnf),
       divididosGanados: n(c.bdg), divididosPerdidos: n(c.bdp),
       amarillas: tj.a, rojas: tj.r,
       faltas: faltasPorJugador.get(nombre) ?? 0,
@@ -478,6 +590,101 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
   const quintetos = [...porQuinteto.values()]
     .map((q) => ({ ...q, masMenos: q.gf - q.gc }))
     .sort((a, b) => b.segundos - a.segundos);
+
+  // ── Cuartetos (los cuatro de campo; el portero cambia por otros motivos) ─
+  const porCuarteto = new Map<string, FilaCuarteto>();
+  for (const tr of tramos) {
+    const jug = [...tr.enPista].filter((x) => !esPortero.has(x)).sort();
+    if (jug.length === 0) continue;
+    const clave = jug.join("|");
+    const c = porCuarteto.get(clave)
+      ?? { jugadores: jug, segundos: 0, gf: 0, gc: 0, masMenos: 0, veces: 0 };
+    c.segundos += Math.max(0, tr.hasta - tr.desde);
+    c.veces += 1;
+    porCuarteto.set(clave, c);
+  }
+  for (const { ev, t } of conT) {
+    if (ev.tipo !== "gol") continue;
+    const clave = [...enPistaEn(tramos, t)].filter((x) => !esPortero.has(x))
+      .sort().join("|");
+    const c = porCuarteto.get(clave);
+    if (!c) continue;
+    if (String((ev as unknown as Record<string, unknown>).equipo) === "INTER") c.gf += 1;
+    else c.gc += 1;
+  }
+  const cuartetos = [...porCuarteto.values()]
+    .map((c) => ({ ...c, masMenos: c.gf - c.gc }))
+    .sort((a2, b2) => b2.segundos - a2.segundos);
+
+  // ── Rotaciones: los minutos de cada uno, tramo a tramo ──────────────────
+  const rotaciones: RotacionJugador[] = filas
+    .filter((f) => f.jugo)
+    .map((f) => {
+      const suyos: { desde: number; hasta: number }[] = [];
+      for (const tr of tramos) {
+        if (!tr.enPista.includes(f.nombre)) continue;
+        const ult = suyos[suyos.length - 1];
+        // Dos tramos seguidos con él dentro son UN periodo en pista: si no se
+        // pegan, la tabla enseña cambios que nunca ocurrieron.
+        if (ult && Math.abs(ult.hasta - tr.desde) < 1) ult.hasta = tr.hasta;
+        else suyos.push({ desde: tr.desde, hasta: tr.hasta });
+      }
+      return {
+        nombre: f.nombre, dorsal: f.dorsal, portero: f.portero,
+        tramos: suyos, segundos: f.segundos,
+      };
+    })
+    .sort((a2, b2) => b2.segundos - a2.segundos);
+
+  // ── Goles en tramos de cinco minutos ────────────────────────────────────
+  const TRAMO = 300;
+  const nTramos = Math.max(1, Math.ceil(duracionTotal(p) / TRAMO));
+  const golesPorTramo = Array.from({ length: nTramos }, (_, i) => ({
+    etiqueta: `${i * 5}-${(i + 1) * 5}'`,
+    nuestros: 0, rival: 0,
+  }));
+  for (const { ev, t } of conT) {
+    if (ev.tipo !== "gol") continue;
+    const i = Math.min(nTramos - 1, Math.max(0, Math.floor(t / TRAMO)));
+    if (String((ev as unknown as Record<string, unknown>).equipo) === "INTER") {
+      golesPorTramo[i].nuestros += 1;
+    } else golesPorTramo[i].rival += 1;
+  }
+
+  // ── Valoración del partido ──────────────────────────────────────────────
+  const valoraciones = filas
+    .filter((f) => f.jugo)
+    .map((f) => valorar(f))
+    .sort((a2, b2) => b2.puntos - a2.puntos);
+
+  // ── Tanda de penaltis (solo si se llegó a tirar) ────────────────────────
+  const tandaCruda = (p as unknown as Record<string, unknown>).tanda as
+    | { marcador?: { inter?: number; rival?: number };
+        tiros?: Record<string, unknown>[] } | undefined;
+  const tirosTanda = Array.isArray(tandaCruda?.tiros) ? tandaCruda!.tiros! : [];
+  const tanda = tirosTanda.length === 0 ? null : {
+    marcador: {
+      inter: n(tandaCruda?.marcador?.inter),
+      rival: n(tandaCruda?.marcador?.rival),
+    },
+    tiros: tirosTanda
+      .map((x) => ({
+        orden: n(x.orden),
+        nuestro: String(x.equipo) === "INTER",
+        tirador: String(x.tirador ?? "").trim() || undefined,
+        portero: String(x.portero ?? "").trim() || undefined,
+        resultado: String(x.resultado ?? ""),
+      }))
+      .sort((a2, b2) => a2.orden - b2.orden),
+  };
+
+  // ── Titulares ───────────────────────────────────────────────────────────
+  const pi = (cfg.pista_inicial ?? {}) as Record<string, unknown>;
+  const titulares = {
+    portero: String(pi.portero ?? ""),
+    campo: (["pista1", "pista2", "pista3", "pista4"] as const)
+      .map((k) => String(pi[k] ?? "")).filter(Boolean),
+  };
 
   // ── Zonas ──────────────────────────────────────────────────────────────
   const zonasCampo: Record<string, number> = {};
@@ -565,6 +772,12 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
     porteros: filas.filter((f) => f.portero),
     tramos,
     quintetos,
+    cuartetos,
+    valoraciones,
+    rotaciones,
+    titulares,
+    golesPorTramo,
+    tanda,
     zonasCampo, zonasPorteria, zonasCampoRival, zonasPorteriaRival,
     penaltis, tiemposMuerto, tarjetas,
     hayVideo,
