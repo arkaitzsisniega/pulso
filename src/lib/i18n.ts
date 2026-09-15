@@ -1139,9 +1139,9 @@ export const CATALOGO: Record<string, Entrada> = {
   },
   resd_mapa_campo: { es: "📍 Mapa del campo — desde dónde tira", en: "📍 Pitch map — where shots are taken from", it: "📍 Mappa del campo — da dove si tira" },
   resd_mapa_campo_nota: {
-    es: "Intensidad del verde = nº de disparos en esa zona. Cada zona muestra el total y desglose: Goles · Paradas · Palo · Bloqueados · Fuera. La dirección de ataque coincide con la configurada para la 1ª parte.",
-    en: "Green intensity = number of shots in that zone. Each zone shows the total and breakdown: Goals · Saves · Post · Blocked · Wide. The attack direction matches the one set for the 1st period.",
-    it: "Intensità del verde = nº di tiri in quella zona. Ogni zona mostra il totale e il dettaglio: Gol · Parate · Palo · Murati · Fuori. La direzione d'attacco coincide con quella impostata per il 1º tempo.",
+    es: "Intensidad del verde = nº de disparos en esa zona. Cada zona muestra el total y desglose: Goles · Paradas · Palo · Bloqueados · Fuera. La dirección de ataque coincide con la configurada para la 1ª parte. Los tiros desde la propia mitad cuentan todos en la zona grande.",
+    en: "Green intensity = number of shots in that zone. Each zone shows the total and breakdown: Goals · Saves · Post · Blocked · Wide. The attack direction matches the one set for the 1st period. Shots from a team's own half all count in the big zone.",
+    it: "Intensità del verde = nº di tiri in quella zona. Ogni zona mostra il totale e il dettaglio: Gol · Parate · Palo · Murati · Fuori. La direzione d'attacco coincide con quella impostata per il 1º tempo. I tiri dalla propria metà campo contano tutti nella zona grande.",
   },
   resd_sin_zona_campo: {
     es: "{n} disparos sin zona del campo apuntada (no se eligió zona al registrarlos).",
