@@ -1321,6 +1321,7 @@ function describirEvento(ev: Evento | undefined, rival: string): string {
         pf: "pérdida forzada", pnf: "pérdida no forzada", robos: "robo",
         cortes: "corte", bdg: "balón dividido ganado",
         bdp: "balón dividido perdido",
+        antB: "anticipación buena", antM: "anticipación mala",
       };
       const nombre = acc[e.accion] ?? e.accion;
       return e.jugador === JUGADOR_EQUIPO
@@ -2415,6 +2416,7 @@ function ModalAccionIndividual(props: {
     saqueB: `${t("vid_saque")} ✅`, saqueM: `${t("vid_saque")} ❌`, achique: t("vid_achique"),
     cobBR: `${t("vid_cob")} B+R`, cobBN: `${t("vid_cob")} B`, cobMR: `${t("vid_cob")} M+R`, cobMN: `${t("vid_cob")} M`,
     paseB: `${t("vid_pase")} ✅`, paseM: `${t("vid_pase")} ❌`,
+    antB: `${t("vid_anticipacion")} ✅`, antM: `${t("vid_anticipacion")} ❌`,
   };
 
   // Grupos de stat de vídeo con "resultado" (2 o 4 opciones) → subtipo final.
@@ -2423,6 +2425,7 @@ function ModalAccionIndividual(props: {
     duelP: { label: t("vid_duelP"), ops: [["duelP_g", t("vid_ganado")], ["duelP_p", t("vid_perdido")]] },
     unoAtq: { label: t("vid_unoAtq"), ops: [["unoAtq_g", t("vid_ganado")], ["unoAtq_p", t("vid_perdido")]] },
     unoDef: { label: t("vid_unoDef"), ops: [["unoDef_g", t("vid_ganado")], ["unoDef_p", t("vid_perdido")]] },
+    anticipacion: { label: t("vid_anticipacion"), ops: [["antB", t("vid_buena")], ["antM", t("vid_mala")]] },
     saque: { label: t("vid_saque"), ops: [["saqueB", t("vid_bueno")], ["saqueM", t("vid_malo")]] },
     pase: { label: t("vid_pase"), ops: [["paseB", t("vid_bueno")], ["paseM", t("vid_malo")]] },
     cob: { label: t("vid_cob"), ops: [["cobBR", t("vid_cob_br")], ["cobBN", t("vid_cob_bn")], ["cobMR", t("vid_cob_mr")], ["cobMN", t("vid_cob_mn")]] },
@@ -2625,6 +2628,9 @@ function ModalAccionIndividual(props: {
           <BotonGrande label={t("vid_conexPivot")} color="bg-emerald-800" onClick={() => setPaso("videoConexion")} />
           <BotonGrande label={t("vid_corteConex")} onClick={() => irAZona("corteConex")} />
           <BotonGrande label={t("vid_ultCob")} onClick={() => irAZona("ultCob")} />
+          {/* Anticipación (15/9/2026): fuera del bloque de portero a propósito,
+              porque los porteros también la pueden tener. */}
+          <BotonGrande label={GRUPOS.anticipacion.label} onClick={() => { setVideoGrupo("anticipacion"); setPaso("videoResultado"); }} />
           <BotonGrande label={t("mai_btn_bdg")} subtitle={t("mai_btn_bdg_sub")} onClick={() => irAZona("bdg")} />
           <BotonGrande label={t("mai_btn_bdp")} subtitle={t("mai_btn_bdp_sub")} onClick={() => irAZona("bdp")} />
         </div>
