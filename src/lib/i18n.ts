@@ -999,6 +999,7 @@ export const CATALOGO: Record<string, Entrada> = {
   ed_sale: { es: "Sale", en: "Out", it: "Esce" },
   ed_entra: { es: "Entra", en: "In", it: "Entra" },
   ed_accion_tipo: { es: "Acción", en: "Action", it: "Azione" },
+  ed_acc_basicas: { es: "Acciones básicas", en: "Basic actions", it: "Azioni di base" },
   ed_zona_campo: { es: "Zona del campo", en: "Pitch zone", it: "Zona del campo" },
   ed_zona_porteria: { es: "Zona portería", en: "Goal zone", it: "Zona porta" },
   ed_cambiar: { es: "Cambiar", en: "Change", it: "Cambia" },
