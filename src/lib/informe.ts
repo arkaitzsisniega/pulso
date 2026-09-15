@@ -363,6 +363,9 @@ const PESOS_PORTERO: [keyof FilaJugador, number][] = [
 const PESOS_VIDEO: Record<string, number> = {
   unoDef_g: 0.5, unoDef_p: -0.5,
   unoAtq_g: 0.5, unoAtq_p: -0.25,
+  // Anticipación (15/9/2026): +0,5 la buena y −0,25 la mala, lo que eligió
+  // Arkaitz. La valoración del club tiene que llevar los mismos.
+  antB: 0.5, antM: -0.25,
   duelC_g: 0.5, duelC_p: -0.4,
   duelP_g: 0.5, duelP_p: -0.4,
   ultCob: 0.6, corteConex: 0.5, conexPivot: 0.25, recibePivot: 0.15,
@@ -498,7 +501,7 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
     "duelC_g", "duelC_p", "duelP_g", "duelP_p", "unoAtq_g", "unoAtq_p",
     "unoDef_g", "unoDef_p", "ultCob", "corteConex", "conexPivot", "recibePivot",
     "saqueB", "saqueM", "achique", "cobBR", "cobBN", "cobMR", "cobMN",
-    "paseB", "paseM",
+    "paseB", "paseM", "antB", "antM",
   ];
 
   const filas: FilaJugador[] = convocados.map((nombre) => {

@@ -67,10 +67,10 @@ function base(): Partido {
       porJugador: {
         A: { pf: 1, pnf: 1, robos: 3, cortes: 2, bdg: 2, bdp: 1,
              dpp: 2, dpf: 1, dpa: 0, dpb: 1, golesEncajados: 0, paradas: 0,
-             unoAtq_g: 2, unoAtq_p: 1 },
+             unoAtq_g: 2, unoAtq_p: 1, antB: 3, antM: 1 },
         POR: { pf: 0, pnf: 0, robos: 0, cortes: 0, bdg: 0, bdp: 0,
                dpp: 0, dpf: 0, dpa: 0, dpb: 0, golesEncajados: 1, paradas: 4,
-               saqueB: 5, saqueM: 1 },
+               saqueB: 5, saqueM: 1, antB: 1, antM: 1 },
       },
     },
     eventos: [
@@ -305,6 +305,13 @@ console.log("── Informe de partido ──");
   igual([conVideo.puntos, conVideo.puntosVideo], [0.5, 0.5],
         "lo del vídeo se cuenta y además se separa");
 
+  // Pesos de la anticipación: los eligió Arkaitz el 15/9/2026.
+  const conAnt = valorar({ ...vacio, video: { antB: 3, antM: 2 } });
+  igual([conAnt.puntos, conAnt.puntosVideo], [1, 1],
+        "anticipación: 3 buenas (+1,5) y 2 malas (−0,5) dan 1 punto");
+  igual(valorar({ ...vacio, portero: true, segundos: 10 * 60, video: { antB: 1 } }).puntos, 0.5,
+        "al portero también le cuenta la anticipación");
+
   igual(valorar({ ...vacio, goles: 1, segundos: 20 * 60 }).por40, 6,
         "el ritmo por 40' escala lo que hizo en los minutos que jugó");
   ok(valorar({ ...vacio, goles: 1, segundos: 30 }).por40 === null,
@@ -314,6 +321,25 @@ console.log("── Informe de partido ──");
 // 17 · mmss
 igual(mmss(0), "0:00", "mmss de cero");
 igual(mmss(125), "2:05", "mmss redondea hacia abajo");
+
+// 18 · Anticipación (15/9/2026): buena o mala, de campo y de portero
+{
+  const inf = construirInforme(base(), CTX)!;
+  const a = inf.jugadores.find((j) => j.nombre === "A")!;
+  igual([a.video.antB, a.video.antM], [3, 1], "las anticipaciones llegan a la fila del jugador");
+  igual([inf.porteros[0].video.antB, inf.porteros[0].video.antM], [1, 1],
+        "y también a la del portero");
+  const b = inf.jugadores.find((j) => j.nombre === "B")!;
+  ok(!("antB" in b.video), "quien no anticipó no lleva un cero que nadie contó");
+
+  const soloAnticipacion = base();
+  soloAnticipacion.acciones = { porJugador: {
+    C: { pf: 0, pnf: 0, robos: 0, cortes: 0, bdg: 0, bdp: 0, dpp: 0, dpf: 0,
+         dpa: 0, dpb: 0, golesEncajados: 0, paradas: 0, antM: 2 },
+  } } as never;
+  ok(construirInforme(soloAnticipacion, CTX)!.hayVideo,
+     "con solo anticipaciones apuntadas, la sección de vídeo se enseña igual");
+}
 
 console.log(fallos ? `\n❌ Informe: ${fallos} fallo(s)` : "\n✅ Informe OK (0 fallos)");
 process.exit(fallos ? 1 : 0);

@@ -162,7 +162,8 @@ export type AccionIndTipo =
   | "ultCob" | "corteConex" | "conexPivot"
   | "saqueB" | "saqueM" | "achique"
   | "cobBR" | "cobBN" | "cobMR" | "cobMN"
-  | "paseB" | "paseM";
+  | "paseB" | "paseM"
+  | "antB" | "antM";
 
 export interface EventoBase {
   id: string;
@@ -277,6 +278,10 @@ export interface ContadoresJugador {
   cobMN?: number;           // Cobertura mala + NO recupera
   paseB?: number;           // Pase con el pie bueno
   paseM?: number;           // Pase con el pie malo
+  // Todos, porteros incluidos (Arkaitz, 15/9/2026). La importación del club
+  // (STATS_VIDEO_CAMPOS) las busca con estos nombres: no cambiarlos.
+  antB?: number;            // Anticipación buena
+  antM?: number;            // Anticipación mala
 }
 
 export interface AccionesIndividuales {

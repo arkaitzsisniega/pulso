@@ -60,6 +60,8 @@ const eventos: Evento[] = [
   ev({ id: "g6", tipo: "gol", parte: "1T", segundosParte: 360, equipo: "INTER", goleador: "A", accion: "Penalti", cuarteto: [], penaltiId: "p6" } as any),
   ev({ id: "p6", tipo: "penalti", parte: "1T", segundosParte: 360, equipo: "INTER", tirador: "A", portero: "GK_RIVAL", resultado: "GOL", golId: "g6" } as any),
   ev({ tipo: "accion_individual", parte: "2T", segundosParte: 50, jugador: "C", accion: "robos" } as any),
+  ev({ tipo: "accion_individual", parte: "2T", segundosParte: 55, jugador: "C", accion: "antM" } as any),
+  ev({ tipo: "accion_individual", parte: "2T", segundosParte: 70, jugador: "HERRERO", accion: "antB" } as any),
   ev({ tipo: "cambio", parte: "2T", segundosParte: 100, sale: "A", entra: "E" } as any),
   ev({ tipo: "amarilla", parte: "2T", segundosParte: 150, equipo: "INTER", jugador: "B" } as any),
 ];
@@ -80,6 +82,8 @@ check("amarillas 2T", r.stats.amarillas["2T"], { inter: 1, rival: 0 });
 check("A.dpp (gol + penalti, sin doble conteo)", r.acciones.porJugador["A"]?.dpp, 2);
 check("B.dpf", r.acciones.porJugador["B"]?.dpf, 1);
 check("C.robos", r.acciones.porJugador["C"]?.robos, 1);
+check("C.antM (anticipación mala)", r.acciones.porJugador["C"]?.antM, 1);
+check("HERRERO.antB (el portero también)", r.acciones.porJugador["HERRERO"]?.antB, 1);
 check("HERRERO.golesEncajados", r.acciones.porJugador["HERRERO"]?.golesEncajados, 1);
 check("HERRERO.paradas", r.acciones.porJugador["HERRERO"]?.paradas, 1);
 check("disparosRival.puerta", r.disparosRival.puerta, 2);
@@ -107,5 +111,5 @@ check("A en 2T = 0", tm["A"]?.porParte["2T"], 0);
 check("E en 1T = 600", tm["E"]?.porParte["1T"], 600);
 check("E en 2T = 1200", tm["E"]?.porParte["2T"], 1200);
 
-if (fallos === 0) { console.log("\n✅ TODO OK (19 checks)"); }
+if (fallos === 0) { console.log("\n✅ TODO OK (21 checks)"); }
 else { console.error(`\n❌ ${fallos} fallo(s)`); process.exit(1); }

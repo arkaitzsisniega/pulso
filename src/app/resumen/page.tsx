@@ -511,14 +511,18 @@ export default function ResumenPage() {
 
           {/* ESTADÍSTICAS DE VÍDEO — solo si hay datos capturados en modo vídeo. */}
           {(() => {
+            // La anticipación la tienen todos, porteros incluidos: la del
+            // portero va en SU tabla y no también en esta.
             const conDatosCampo = filasIndiv.filter((f) => f.c && (
               (f.c.duelC_g||0)+(f.c.duelC_p||0)+(f.c.duelP_g||0)+(f.c.duelP_p||0)+
               (f.c.unoAtq_g||0)+(f.c.unoAtq_p||0)+(f.c.unoDef_g||0)+(f.c.unoDef_p||0)+
               (f.c.conexPivot||0)+(f.c.recibePivot||0)+(f.c.corteConex||0)+(f.c.ultCob||0) > 0
+              || (!f.esPortero && (f.c.antB||0)+(f.c.antM||0) > 0)
             ));
             const conDatosPort = filasIndiv.filter((f) => f.c && (
               (f.c.saqueB||0)+(f.c.saqueM||0)+(f.c.paseB||0)+(f.c.paseM||0)+(f.c.achique||0)+
               (f.c.cobBR||0)+(f.c.cobBN||0)+(f.c.cobMR||0)+(f.c.cobMN||0) > 0
+              || (f.esPortero && (f.c.antB||0)+(f.c.antM||0) > 0)
             ));
             if (conDatosCampo.length === 0 && conDatosPort.length === 0) return null;
             const gp = (g?: number, p?: number) => `${g||0}-${p||0}`;
@@ -536,6 +540,7 @@ export default function ResumenPage() {
                           <th className="px-2">{t("vid_duelP")}</th>
                           <th className="px-2">{t("vid_unoAtq")}</th>
                           <th className="px-2">{t("vid_unoDef")}</th>
+                          <th className="px-2">{t("vid_anticipacion")}</th>
                           <th className="px-2">{t("res_video_conex")}</th>
                           <th className="px-2">✂️</th>
                           <th className="px-2">🛡️</th>
@@ -549,6 +554,7 @@ export default function ResumenPage() {
                             <td className="px-2 font-mono">{gp(f.c?.duelP_g, f.c?.duelP_p)}</td>
                             <td className="px-2 font-mono">{gp(f.c?.unoAtq_g, f.c?.unoAtq_p)}</td>
                             <td className="px-2 font-mono">{gp(f.c?.unoDef_g, f.c?.unoDef_p)}</td>
+                            <td className="px-2 font-mono">{f.esPortero ? "—" : gp(f.c?.antB, f.c?.antM)}</td>
                             <td className="px-2 font-mono">{(f.c?.conexPivot||0)}/{(f.c?.recibePivot||0)}</td>
                             <td className="px-2 font-mono">{f.c?.corteConex||0}</td>
                             <td className="px-2 font-mono">{f.c?.ultCob||0}</td>
@@ -569,6 +575,7 @@ export default function ResumenPage() {
                           <th className="px-2">{t("vid_pase")}</th>
                           <th className="px-2">{t("vid_achique")}</th>
                           <th className="px-2">{t("vid_cob")} (BR/BN/MR/MN)</th>
+                          <th className="px-2">{t("vid_anticipacion")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -579,6 +586,7 @@ export default function ResumenPage() {
                             <td className="px-2 font-mono">{gp(f.c?.paseB, f.c?.paseM)}</td>
                             <td className="px-2 font-mono">{f.c?.achique||0}</td>
                             <td className="px-2 font-mono">{(f.c?.cobBR||0)}/{(f.c?.cobBN||0)}/{(f.c?.cobMR||0)}/{(f.c?.cobMN||0)}</td>
+                            <td className="px-2 font-mono">{gp(f.c?.antB, f.c?.antM)}</td>
                           </tr>
                         ))}
                       </tbody>
