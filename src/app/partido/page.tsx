@@ -11,6 +11,7 @@ import { Porteria } from "@/components/Porteria";
 import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo, Evento } from "@/lib/db";
 import { direccionAtaque, sacaEn, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelResultadoDisparo, labelAccionGol } from "@/lib/i18n";
+import { etiquetaAccionInd } from "@/lib/acciones";
 
 export default function PartidoPage() {
   useIdioma();
@@ -1321,9 +1322,10 @@ function describirEvento(ev: Evento | undefined, rival: string): string {
         pf: "pérdida forzada", pnf: "pérdida no forzada", robos: "robo",
         cortes: "corte", bdg: "balón dividido ganado",
         bdp: "balón dividido perdido",
-        antB: "anticipación buena", antM: "anticipación mala",
       };
-      const nombre = acc[e.accion] ?? e.accion;
+      // Las de vídeo, con el nombre del editor («Saque · ✅ Bueno»): antes
+      // salía el código tal cual («saqueB de REYES», 15/9/2026).
+      const nombre = acc[e.accion] ?? etiquetaAccionInd(e.accion, t);
       return e.jugador === JUGADOR_EQUIPO
         ? `${nombre} de equipo` : `${nombre}${quien(e.jugador)}`;
     }

@@ -19,6 +19,7 @@ import type { Partido, Evento, ParteId } from "@/lib/db";
 import { ROSTER, PORTEROS, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
 import { t, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
+import { etiquetaAccionInd, gruposAccionInd } from "@/lib/acciones";
 import { Campo } from "@/components/Campo";
 import { Porteria } from "@/components/Porteria";
 
@@ -34,7 +35,6 @@ const ACCIONES_GOL = [
 ];
 const RES_DISPARO = ["PUERTA", "PALO", "FUERA", "BLOQUEADO"];
 const RES_PENALTI = ["GOL", "PARADA", "POSTE", "FUERA"];
-const ACCIONES_IND = ["pf", "pnf", "robos", "cortes", "bdg", "bdp"];
 
 const NOMBRES = ROSTER.map((j) => j.nombre);
 const NOMBRES_PORTERO = PORTEROS.map((j) => j.nombre);
@@ -55,6 +55,57 @@ function mmssASeg(s: string): number {
 }
 
 type Draft = Record<string, any>;
+type Opcion = { v: string; lbl: string };
+
+// ── helpers de UI ────────────────────────────────────────────────────────
+// Fuera de EditorEventos a propósito. El resumen se redibuja cada 250 ms (el
+// tick del reloj) y un componente declarado DENTRO es otro distinto en cada
+// vuelta: React tiraba el desplegable y ponía uno nuevo. Lo que se eligiera
+// pasado ese cuarto de segundo iba al que ya no estaba y se perdía, y el
+// botón de zona podía no enterarse del toque (comprobado el 15/9/2026).
+const lblCls = "block text-xs text-zinc-400 mb-1";
+const inputCls = "w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-base";
+
+function Campo2<T extends string>(p: {
+  label: string; value: string | undefined; onChange: (v: string) => void;
+  opciones?: Opcion[];
+  /** Opciones por bloques, cada uno con su título (<optgroup>). */
+  grupos?: { titulo: string; opciones: Opcion[] }[];
+}) {
+  const valor = p.value ?? "";
+  // Lo guardado se ve siempre. Un select cuyo valor no está entre las
+  // opciones pinta la primera como si fuera la guardada (así salía «PF» al
+  // abrir un saque, 15/9/2026). Si vuelve a pasar —una acción que la lista
+  // no conozca, el jugador de equipo…—, se añade arriba tal cual.
+  const todas = (p.opciones ?? []).concat(...(p.grupos ?? []).map((g) => g.opciones));
+  const falta = valor !== "" && !todas.some((o) => o.v === valor);
+  return (
+    <label className="block">
+      <span className={lblCls}>{p.label}</span>
+      <select className={inputCls} value={valor} onChange={(e) => p.onChange(e.target.value)}>
+        {falta && <option value={valor}>{valor}</option>}
+        {p.opciones?.map((o) => <option key={o.v} value={o.v}>{o.lbl}</option>)}
+        {p.grupos?.map((g) => (
+          <optgroup key={g.titulo} label={g.titulo}>
+            {g.opciones.map((o) => <option key={o.v} value={o.v}>{o.lbl}</option>)}
+          </optgroup>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ZonaBtn(p: { label: string; valor?: string; onClick: () => void }) {
+  return (
+    <div>
+      <span className={lblCls}>{p.label}</span>
+      <button onClick={p.onClick}
+        className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg px-3 py-2 text-base text-left">
+        {p.valor || <span className="text-zinc-500">{t("ed_sin_zona")}</span>} <span className="text-emerald-400 text-sm">· {t("ed_cambiar")}</span>
+      </button>
+    </div>
+  );
+}
 
 export function EditorEventos(props: {
   partido: Partido;
@@ -97,7 +148,7 @@ export function EditorEventos(props: {
       case "disparo": return `${equipoTxt(e)}${ev.jugador ? " · " + ev.jugador : ""} · ${labelResultadoDisparo(ev.resultado)}`;
       case "penalti":
       case "diezm": return `${equipoTxt(e)}${ev.tirador ? " · " + ev.tirador : ""} · ${ev.resultado}`;
-      case "accion_individual": return `${ev.jugador} · ${ev.accion.toUpperCase()}`;
+      case "accion_individual": return `${ev.jugador} · ${etiquetaAccionInd(ev.accion, t)}${ev.accion === "conexPivot" && ev.receptor ? ` → ${ev.receptor}` : ""}`;
       default: return "";
     }
   }
@@ -131,6 +182,12 @@ export function EditorEventos(props: {
     if (!draft) return;
     const seg = mmssASeg(minStr);
     const datos: Draft = { ...draft, segundosParte: seg };
+    // El receptor es solo de la conexión con pívot: si la acción pasó a ser
+    // otra, no se queda colgado en ella. (Mientras se edita sí se conserva,
+    // por si se vuelve a la conexión.)
+    if (datos.tipo === "accion_individual" && datos.accion !== "conexPivot" && "receptor" in datos) {
+      datos.receptor = undefined;
+    }
     if (esNuevo) {
       props.anadirEvento(datos as any);
     } else {
@@ -140,37 +197,10 @@ export function EditorEventos(props: {
     setDraft(null);
   }
 
-  // ── helpers de UI ────────────────────────────────────────────────────────
-  const lblCls = "block text-xs text-zinc-400 mb-1";
-  const inputCls = "w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-base";
-
-  function Campo2<T extends string>(p: { label: string; value: string | undefined; onChange: (v: string) => void; opciones: { v: string; lbl: string }[] }) {
-    return (
-      <label className="block">
-        <span className={lblCls}>{p.label}</span>
-        <select className={inputCls} value={p.value ?? ""} onChange={(e) => p.onChange(e.target.value)}>
-          {p.opciones.map((o) => <option key={o.v} value={o.v}>{o.lbl}</option>)}
-        </select>
-      </label>
-    );
-  }
-
   const optEquipo = [{ v: "INTER", lbl: NOMBRE_CORTO_TC }, { v: "RIVAL", lbl: rival }];
   const optJugador = (conVacio: boolean) =>
     (conVacio ? [{ v: "", lbl: t("sin_asignar_min") }] : []).concat(NOMBRES.map((n) => ({ v: n, lbl: n })));
   const optPortero = [{ v: "", lbl: t("sin_asignar_min") }].concat(NOMBRES_PORTERO.map((n) => ({ v: n, lbl: n })));
-
-  function ZonaBtn(p: { label: string; valor?: string; onClick: () => void }) {
-    return (
-      <div>
-        <span className={lblCls}>{p.label}</span>
-        <button onClick={p.onClick}
-          className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg px-3 py-2 text-base text-left">
-          {p.valor || <span className="text-zinc-500">{t("ed_sin_zona")}</span>} <span className="text-emerald-400 text-sm">· {t("ed_cambiar")}</span>
-        </button>
-      </div>
-    );
-  }
 
   const set = (k: string, v: any) => setDraft((d) => (d ? { ...d, [k]: v } : d));
 
@@ -312,7 +342,11 @@ export function EditorEventos(props: {
                 <>
                   <Campo2 label={t("ed_jugador")} value={draft.jugador} onChange={(v) => set("jugador", v)} opciones={optJugador(false)} />
                   <Campo2 label={t("ed_accion_tipo")} value={draft.accion} onChange={(v) => set("accion", v)}
-                    opciones={ACCIONES_IND.map((a) => ({ v: a, lbl: a.toUpperCase() }))} />
+                    grupos={gruposAccionInd(t)} />
+                  {draft.accion === "conexPivot" && (
+                    <Campo2 label={t("vid_conex_receptor")} value={draft.receptor}
+                      onChange={(v) => set("receptor", v || undefined)} opciones={optJugador(true)} />
+                  )}
                   <ZonaBtn label={t("ed_zona_campo")} valor={draft.zonaCampo} onClick={() => setZonaPicker("campo")} />
                 </>
               )}
