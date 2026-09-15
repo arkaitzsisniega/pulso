@@ -11,6 +11,7 @@ import { EditorEventos } from "@/components/EditorEventos";
 import type { Evento, ParteId, Partido } from "@/lib/db";
 import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
+import { contarPorZona } from "@/lib/zonas";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 
@@ -1286,8 +1287,6 @@ function labelRes(r: ResD): string {
 // Orden estable de columnas.
 const ORDEN_RES: ResD[] = ["GOL", "PUERTA", "PALO", "BLOQUEADO", "FUERA"];
 
-// Zonas del campo (tal cual están en Campo.tsx — A1 a A11).
-const ZONAS_CAMPO: string[] = ["A1","A2","A3","A4","A5","A6","A7","A8","A9","A10","A11"];
 // Zonas portería 3x3 (de arriba a abajo, de izda a dcha — vista atacante).
 const ZONAS_PORT: string[][] = [
   ["P1","P2","P3"],
@@ -1372,17 +1371,11 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
   for (const t of tirosEq) totalesRes[t.res]++;
   const totalTiros = tirosEq.length;
 
-  // Conteo por zona campo × resultado.
+  // Conteo por zona campo × resultado. Los tiros desde la propia mitad (D1..D10)
+  // cuentan en la A11 y los que no tienen zona que pintar van a la nota de
+  // debajo del mapa: ninguno se cae (ver lib/zonas.ts).
   type ContZona = Record<ResD, number> & { total: number };
-  const contCampo: Record<string, ContZona> = {};
-  for (const z of ZONAS_CAMPO) {
-    contCampo[z] = { GOL: 0, PUERTA: 0, PALO: 0, BLOQUEADO: 0, FUERA: 0, total: 0 };
-  }
-  for (const t of tirosEq) {
-    if (!t.zonaCampo || !contCampo[t.zonaCampo]) continue;
-    contCampo[t.zonaCampo][t.res]++;
-    contCampo[t.zonaCampo].total++;
-  }
+  const { conteos: contCampo, sinZona: sinZonaCampo } = contarPorZona(tirosEq);
   // Conteo por zona portería × resultado (solo eventos que apuntan a puerta tienen zonaPort).
   const contPort: Record<string, ContZona> = {};
   for (const fila of ZONAS_PORT) for (const z of fila) {
@@ -1395,8 +1388,7 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
   }
   const maxPort = Math.max(1, ...Object.values(contPort).map((c) => c.total));
 
-  // Disparos sin zona campo (no se localizaron al apuntar).
-  const sinZonaCampo = tirosEq.filter((t) => !t.zonaCampo).length;
+  // Disparos sin zona de portería (no se localizaron al apuntar).
   const sinZonaPort = tirosEq.filter((t) => !t.zonaPort).length;
 
   // Filas: una por parte, columnas = resultados.

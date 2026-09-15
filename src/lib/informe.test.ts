@@ -184,6 +184,23 @@ console.log("── Informe de partido ──");
   igual(inf.zonasCampo, { A5: 2 }, "zonas de disparo a favor");
 }
 
+// 8b · Zonas desde nuestra propia mitad (15/9/2026)
+{
+  // Los dos últimos goles del Cartagena fueron a puerta vacía desde D8 y D3. El
+  // resumen los perdía; el informe cuenta cualquier zona y su campo dibuja las
+  // dos mitades, así que aquí tienen que salir tal cual, cada uno en su sitio.
+  const p = base();
+  const gol = (id: string, seg: number, zonaCampo: string) => ({
+    id, tipo: "gol", equipo: "INTER", parte: "2T", segundosParte: seg,
+    segundosPartido: seg, timestampReal: seg, marcador: { inter: 0, rival: 0 },
+    goleador: "B", cuarteto: [], zonaCampo,
+  }) as never;
+  p.eventos.push(gol("g4", 1100, "D8"), gol("g5", 1150, "D3"));
+  const inf = construirInforme(p, CTX)!;
+  igual(inf.zonasCampo, { A5: 2, D8: 1, D3: 1 },
+        "los goles desde nuestra mitad cuentan en su zona");
+}
+
 // 9 · Goles por tipo de jugada
 {
   const inf = construirInforme(base(), CTX)!;
