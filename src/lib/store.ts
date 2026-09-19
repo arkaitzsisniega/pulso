@@ -40,6 +40,7 @@ import {
   type ContadoresJugador,
   type ResultadoDisparo,
   type TiroTanda,
+  type Flecha,
 } from "./db";
 import { uid } from "./utils";
 import { ROSTER } from "./clientes";
@@ -1072,6 +1073,9 @@ export function usePartido() {
     accion: AccionIndTipo,
     zonaCampo?: string,
     receptor?: string,   // solo para "conexPivot": el pívot que recibe
+    // Solo para "paseGol" (18/9/2026): la flecha del pase y la zona a la que
+    // llega (`zonaCampo` es la de salida). El contador sube igual que el resto.
+    extra?: { flecha?: Flecha; zonaDestino?: string },
   ) {
     setPartido((prev) => {
       const ahora = Date.now();
@@ -1094,6 +1098,8 @@ export function usePartido() {
         accion,
         ...(receptor ? { receptor } : {}),
         zonaCampo,
+        ...(extra?.flecha ? { flecha: { ...extra.flecha } } : {}),
+        ...(extra?.zonaDestino ? { zonaDestino: extra.zonaDestino } : {}),
       };
       let acciones = bumpContador(prev.acciones, jugador, accion, 1);
       // Conexión con pívot: además del pasador (conexPivot), el receptor suma
@@ -1102,6 +1108,28 @@ export function usePartido() {
         acciones = bumpContador(acciones, receptor, "recibePivot", 1);
       }
       return { ...prev, acciones, eventos: [...prev.eventos, evento] };
+    });
+  }
+
+  /**
+   * Quita UNA acción individual concreta en pleno partido (18/9/2026: el pase
+   * de gol que sobra porque la jugada acabó en gol) y baja su contador.
+   *
+   * No se usa borrarEvento a propósito: ese recalcula todo y deja la lista
+   * ORDENADA POR MINUTO, bien para el editor pero no en directo, porque
+   * «Deshacer» quita el último de la lista. Si se había movido el reloj hacia
+   * atrás, después de un borrarEvento «Deshacer» quitaría otra cosa distinta
+   * de lo último que se apuntó. Aquí la lista queda como estaba, sin ese.
+   */
+  function quitarAccionIndividual(id: string) {
+    setPartido((prev) => {
+      const ev = prev.eventos.find((e) => e.id === id);
+      if (!ev || ev.tipo !== "accion_individual") return prev;
+      let acciones = bumpContador(prev.acciones, ev.jugador, ev.accion, -1);
+      if (ev.accion === "conexPivot" && ev.receptor) {
+        acciones = bumpContador(acciones, ev.receptor, "recibePivot", -1);
+      }
+      return { ...prev, acciones, eventos: prev.eventos.filter((e) => e.id !== id) };
     });
   }
 
@@ -1401,6 +1429,7 @@ export function usePartido() {
     segundosEnParte, segundosRestantesParte, duracionParteActual,
     iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual, reset,
+    quitarAccionIndividual,
     editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte, setModo,

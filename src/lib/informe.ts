@@ -366,6 +366,11 @@ const PESOS_VIDEO: Record<string, number> = {
   // Anticipación (15/9/2026): +0,5 la buena y −0,25 la mala, lo que eligió
   // Arkaitz. La valoración del club tiene que llevar los mismos.
   antB: 0.5, antM: -0.25,
+  // Pase de gol (18/9/2026): +2, lo mismo que una asistencia. Es el pase de
+  // una ocasión clara que NO acabó en gol (si acaba en gol, cuenta la
+  // asistencia y esto no). Cuenta a todos, porteros incluidos. Número a secas:
+  // el test del club lo lee de aquí con una expresión regular.
+  paseGol: 2,
   duelC_g: 0.5, duelC_p: -0.4,
   duelP_g: 0.5, duelP_p: -0.4,
   ultCob: 0.6, corteConex: 0.5, conexPivot: 0.25, recibePivot: 0.15,
@@ -501,7 +506,7 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
     "duelC_g", "duelC_p", "duelP_g", "duelP_p", "unoAtq_g", "unoAtq_p",
     "unoDef_g", "unoDef_p", "ultCob", "corteConex", "conexPivot", "recibePivot",
     "saqueB", "saqueM", "achique", "cobBR", "cobBN", "cobMR", "cobMN",
-    "paseB", "paseM", "antB", "antM",
+    "paseB", "paseM", "antB", "antM", "paseGol",
   ];
 
   const filas: FilaJugador[] = convocados.map((nombre) => {

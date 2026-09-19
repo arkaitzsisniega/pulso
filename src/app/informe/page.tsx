@@ -628,7 +628,7 @@ export default function InformePage() {
               <Tabla
                 cols={["Nº", t("inf_portero"), t("inf_saques"), t("inf_achiques"),
                        t("inf_cob_balon"), t("inf_cob_hombre"), t("inf_pases"),
-                       t("inf_anticipacion")]}
+                       t("inf_anticipacion"), t("inf_pase_gol")]}
                 filas={inf.porteros
                   .filter((p) => Object.keys(p.video).length > 0)
                   .map((p) => [
@@ -639,6 +639,7 @@ export default function InformePage() {
                   `${p.video.cobMR ?? 0}+${p.video.cobMN ?? 0}`,
                   `${p.video.paseB ?? 0}/${(p.video.paseB ?? 0) + (p.video.paseM ?? 0)}`,
                   `${p.video.antB ?? 0}/${(p.video.antB ?? 0) + (p.video.antM ?? 0)}`,
+                  p.video.paseGol ?? 0,
                 ])}
               />
             </div>
@@ -709,8 +710,8 @@ function TablaVideo(props: { jugadores: FilaJugador[] }) {
   return (
     <Tabla
       cols={["Nº", t("inf_jugador"), t("inf_duelo_c"), t("inf_duelo_p"),
-             t("inf_1x1_atq"), t("inf_1x1_def"), t("inf_anticipacion"), t("inf_ult_cob"),
-             t("inf_corte_conex"), t("inf_conex_pivot"), t("inf_recibe_pivot")]}
+             t("inf_1x1_atq"), t("inf_1x1_def"), t("inf_anticipacion"), t("inf_pase_gol"),
+             t("inf_ult_cob"), t("inf_corte_conex"), t("inf_conex_pivot"), t("inf_recibe_pivot")]}
       filas={con.map((j) => [
         j.dorsal, j.nombre,
         par(j.video.duelC_g, j.video.duelC_p),
@@ -718,6 +719,7 @@ function TablaVideo(props: { jugadores: FilaJugador[] }) {
         par(j.video.unoAtq_g, j.video.unoAtq_p),
         par(j.video.unoDef_g, j.video.unoDef_p),
         par(j.video.antB, j.video.antM),
+        j.video.paseGol ?? 0,
         j.video.ultCob ?? 0, j.video.corteConex ?? 0,
         j.video.conexPivot ?? 0, j.video.recibePivot ?? 0,
       ])}
