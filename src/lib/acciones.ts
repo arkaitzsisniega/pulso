@@ -46,6 +46,9 @@ const ACCIONES: Record<AccionIndTipo, [Bloque, string, string?]> = {
   // Con las de campo y no en el bloque de portero: la tienen todos.
   antB: ["video", "vid_anticipacion", "vid_buena"],
   antM: ["video", "vid_anticipacion", "vid_mala"],
+  // Pase de gol (18/9/2026): de campo y de portero, como la anticipación. Se
+  // apunta con una flecha; en el editor, «Zona» pasa a ser «Flecha».
+  paseGol: ["video", "vid_pase_gol"],
 
   saqueB: ["portero", "vid_saque", "vid_bueno"],
   saqueM: ["portero", "vid_saque", "vid_malo"],

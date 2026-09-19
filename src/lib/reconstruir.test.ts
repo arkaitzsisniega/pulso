@@ -62,6 +62,9 @@ const eventos: Evento[] = [
   ev({ tipo: "accion_individual", parte: "2T", segundosParte: 50, jugador: "C", accion: "robos" } as any),
   ev({ tipo: "accion_individual", parte: "2T", segundosParte: 55, jugador: "C", accion: "antM" } as any),
   ev({ tipo: "accion_individual", parte: "2T", segundosParte: 70, jugador: "HERRERO", accion: "antB" } as any),
+  // Pase de gol (18/9/2026): con su flecha, que tiene que sobrevivir al recálculo.
+  ev({ id: "pg1", tipo: "accion_individual", parte: "2T", segundosParte: 80, jugador: "C", accion: "paseGol",
+       zonaCampo: "A8", zonaDestino: "A1", flecha: { x0: 0.62, y0: 0.3, x1: 0.93, y1: 0.46 } } as any),
   ev({ tipo: "cambio", parte: "2T", segundosParte: 100, sale: "A", entra: "E" } as any),
   ev({ tipo: "amarilla", parte: "2T", segundosParte: 150, equipo: "INTER", jugador: "B" } as any),
 ];
@@ -84,6 +87,12 @@ check("B.dpf", r.acciones.porJugador["B"]?.dpf, 1);
 check("C.robos", r.acciones.porJugador["C"]?.robos, 1);
 check("C.antM (anticipación mala)", r.acciones.porJugador["C"]?.antM, 1);
 check("HERRERO.antB (el portero también)", r.acciones.porJugador["HERRERO"]?.antB, 1);
+check("C.paseGol (pase de gol)", r.acciones.porJugador["C"]?.paseGol, 1);
+{
+  const pg = r.eventos.find((e) => e.id === "pg1") as any;
+  check("la flecha del pase de gol sobrevive al recálculo", pg?.flecha, { x0: 0.62, y0: 0.3, x1: 0.93, y1: 0.46 });
+  check("y su zona de destino", pg?.zonaDestino, "A1");
+}
 check("HERRERO.golesEncajados", r.acciones.porJugador["HERRERO"]?.golesEncajados, 1);
 check("HERRERO.paradas", r.acciones.porJugador["HERRERO"]?.paradas, 1);
 check("disparosRival.puerta", r.disparosRival.puerta, 2);
@@ -111,5 +120,5 @@ check("A en 2T = 0", tm["A"]?.porParte["2T"], 0);
 check("E en 1T = 600", tm["E"]?.porParte["1T"], 600);
 check("E en 2T = 1200", tm["E"]?.porParte["2T"], 1200);
 
-if (fallos === 0) { console.log("\n✅ TODO OK (21 checks)"); }
+if (fallos === 0) { console.log("\n✅ TODO OK (24 checks)"); }
 else { console.error(`\n❌ ${fallos} fallo(s)`); process.exit(1); }

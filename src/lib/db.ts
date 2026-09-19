@@ -163,7 +163,29 @@ export type AccionIndTipo =
   | "saqueB" | "saqueM" | "achique"
   | "cobBR" | "cobBN" | "cobMR" | "cobMN"
   | "paseB" | "paseM"
-  | "antB" | "antM";
+  | "antB" | "antM"
+  | "paseGol";
+
+/**
+ * Una flecha sobre el campo: de dónde sale un pase y a dónde llega. La usa el
+ * pase de gol (18/9/2026), que se apunta dibujándola.
+ *
+ * Sistema de coordenadas — el dato de verdad; las zonas se calculan de él
+ * (`lib/geometriaCampo.ts`) y así se podrá pintar un mapa sin rehacer nada:
+ *   · Números de 0 a 1 con 3 decimales (1 milésima = 4 cm a lo largo).
+ *   · El campo visto SIEMPRE con NUESTRO ataque hacia la derecha, se jugara
+ *     hacia donde se jugara esa parte:
+ *       x: 0 = nuestra línea de fondo, 1 = la suya.
+ *       y: 0 = la banda izquierda según atacamos, 1 = la derecha (la de arriba
+ *          y la de abajo del dibujo cuando atacamos hacia la derecha).
+ *   · Si en esa parte atacamos hacia la izquierda, el campo se ve girado 180°
+ *     y el toque se deshace del giro (x → 1−x, y → 1−y), igual que ya hace
+ *     `Campo` con las zonas.
+ */
+export interface Flecha {
+  x0: number; y0: number;   // de dónde sale
+  x1: number; y1: number;   // a dónde llega
+}
 
 export interface EventoBase {
   id: string;
@@ -197,7 +219,12 @@ export type Evento =
       accion: AccionIndTipo;
       /** Solo para "conexPivot": jugador que RECIBE el pase (el pívot). */
       receptor?: string;
-      zonaCampo?: string })
+      /** Zona de la acción. En el pase de gol, la zona de donde SALE el pase. */
+      zonaCampo?: string;
+      /** Solo para "paseGol": la flecha del pase (ver `Flecha`) y la zona a la
+       *  que llega. Los partidos anteriores no la llevan y siguen valiendo. */
+      flecha?: Flecha;
+      zonaDestino?: string })
   /** El portero rival sube a jugar de cinco. `conDisparo` dice si esa
    *  incorporación acabó en disparo; el disparo en sí se guarda aparte, con su
    *  propio evento, para no duplicar los contadores de tiro. */
@@ -282,6 +309,11 @@ export interface ContadoresJugador {
   // (STATS_VIDEO_CAMPOS) las busca con estos nombres: no cambiarlos.
   antB?: number;            // Anticipación buena
   antM?: number;            // Anticipación mala
+  // Pase de gol (Arkaitz, 18/9/2026): el pase que deja a un compañero en
+  // ocasión CLARA y la ocasión NO acaba en gol (si acaba en gol es una
+  // asistencia, nunca las dos cosas). De campo y porteros; solo en vídeo. La
+  // importación del club lo busca con este nombre: no cambiarlo.
+  paseGol?: number;
 }
 
 export interface AccionesIndividuales {

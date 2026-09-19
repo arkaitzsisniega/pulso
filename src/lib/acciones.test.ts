@@ -48,6 +48,8 @@ console.log("── Acciones individuales ──");
         "las básicas, en el orden de sus botones");
   ok(grupos[1].opciones.some((o) => o.v === "antB") && !grupos[2].opciones.some((o) => o.v === "antB"),
      "la anticipación va con las de campo: también la tienen los porteros, pero no es solo suya");
+  ok(grupos[1].opciones.some((o) => o.v === "paseGol") && !grupos[2].opciones.some((o) => o.v === "paseGol"),
+     "el pase de gol también: lo pueden dar los de campo y los porteros");
 }
 
 // 2 · Los nombres son los del modal y dicen cómo acabó
@@ -57,6 +59,7 @@ console.log("── Acciones individuales ──");
   igual(etiquetaAccionInd("antM", es), "Anticipación · ❌ Mala", "la anticipación, en femenino");
   igual(etiquetaAccionInd("cobMR", es), "Cobertura · Mala + recupera", "la cobertura, con las dos cosas");
   igual(etiquetaAccionInd("conexPivot", es), "🎯 Conexión con pívot", "la que no tiene resultado, solo el nombre");
+  igual(etiquetaAccionInd("paseGol", es), "Pase de gol", "el pase de gol, con su nombre y sin «bueno/malo»");
   igual(etiquetaAccionInd("inventada", es), "inventada",
         "un código que no se conoce sale tal cual, nunca con el nombre de otra acción");
 }

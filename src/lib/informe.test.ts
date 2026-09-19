@@ -312,6 +312,17 @@ console.log("── Informe de partido ──");
   igual(valorar({ ...vacio, portero: true, segundos: 10 * 60, video: { antB: 1 } }).puntos, 0.5,
         "al portero también le cuenta la anticipación");
 
+  // Pase de gol (Arkaitz, 18/9/2026): vale lo mismo que una asistencia y va
+  // entero a la parte «De vídeo».
+  igual(valorar({ ...vacio, video: { paseGol: 1 } }).puntos,
+        valorar({ ...vacio, asistencias: 1 }).puntos,
+        "un pase de gol vale lo mismo que una asistencia (+2)");
+  const conPase = valorar({ ...vacio, video: { paseGol: 2 } });
+  igual([conPase.puntos, conPase.puntosVideo], [4, 4],
+        "dos pases de gol: +4, y todo en «De vídeo»");
+  igual(valorar({ ...vacio, portero: true, segundos: 10 * 60, video: { paseGol: 1 } }).puntosVideo, 2,
+        "al portero también le cuenta el pase de gol");
+
   igual(valorar({ ...vacio, goles: 1, segundos: 20 * 60 }).por40, 6,
         "el ritmo por 40' escala lo que hizo en los minutos que jugó");
   ok(valorar({ ...vacio, goles: 1, segundos: 30 }).por40 === null,
@@ -321,6 +332,26 @@ console.log("── Informe de partido ──");
 // 17 · mmss
 igual(mmss(0), "0:00", "mmss de cero");
 igual(mmss(125), "2:05", "mmss redondea hacia abajo");
+
+// 19 · Pase de gol (18/9/2026): llega a la fila del jugador y del portero
+{
+  const conPases = base();
+  (conPases.acciones.porJugador as Record<string, Record<string, number>>).A.paseGol = 2;
+  (conPases.acciones.porJugador as Record<string, Record<string, number>>).POR.paseGol = 1;
+  const inf = construirInforme(conPases, CTX)!;
+  igual(inf.jugadores.find((j) => j.nombre === "A")!.video.paseGol, 2,
+        "los pases de gol llegan a la fila del jugador");
+  igual(inf.porteros[0].video.paseGol, 1, "y a la del portero");
+  const soloPases = base();
+  soloPases.acciones = { porJugador: {
+    C: { pf: 0, pnf: 0, robos: 0, cortes: 0, bdg: 0, bdp: 0, dpp: 0, dpf: 0,
+         dpa: 0, dpb: 0, golesEncajados: 0, paradas: 0, paseGol: 1 },
+  } } as never;
+  ok(construirInforme(soloPases, CTX)!.hayVideo,
+     "con solo pases de gol apuntados, la sección de vídeo se enseña igual");
+  const b = construirInforme(base(), CTX)!.jugadores.find((j) => j.nombre === "B")!;
+  ok(!("paseGol" in b.video), "un partido sin pases de gol no se inventa un cero");
+}
 
 // 18 · Anticipación (15/9/2026): buena o mala, de campo y de portero
 {

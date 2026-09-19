@@ -15,13 +15,17 @@
  * por jugador; se avisa en la UI. Esa pieza llega aparte.
  */
 import { useState } from "react";
-import type { Partido, Evento, ParteId } from "@/lib/db";
+import type { Partido, Evento, ParteId, Flecha } from "@/lib/db";
+import { direccionAtaque } from "@/lib/db";
 import { ROSTER, PORTEROS, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
 import { t, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
 import { etiquetaAccionInd, gruposAccionInd } from "@/lib/acciones";
 import { Campo } from "@/components/Campo";
+import { CampoFlecha } from "@/components/CampoFlecha";
 import { Porteria } from "@/components/Porteria";
+import { flechaSuficiente, zonasDeFlecha } from "@/lib/geometriaCampo";
+import { golNuestroCerca } from "@/lib/paseGol";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 const TIPOS: Evento["tipo"][] = [
@@ -107,6 +111,23 @@ function ZonaBtn(p: { label: string; valor?: string; onClick: () => void }) {
   );
 }
 
+/** «Flecha del pase» del pase de gol: ocupa el sitio de la zona. Se marca en
+ *  rojo si falta, porque sin flecha no se guarda. */
+function FlechaBtn(p: { flecha?: Flecha; falta: boolean; onClick: () => void }) {
+  const z = p.flecha && flechaSuficiente(p.flecha) ? zonasDeFlecha(p.flecha) : null;
+  return (
+    <div>
+      <span className={lblCls}>{t("ed_flecha")}</span>
+      <button onClick={p.onClick}
+        className={`w-full bg-zinc-800 hover:bg-zinc-700 border rounded-lg px-3 py-2 text-base text-left ${
+          p.falta ? "border-red-500" : "border-zinc-700"}`}>
+        {z ? `${z.origen} → ${z.destino}` : <span className="text-zinc-500">{t("ed_sin_flecha")}</span>}
+        {" "}<span className="text-emerald-400 text-sm">· {t("ed_cambiar")}</span>
+      </button>
+    </div>
+  );
+}
+
 export function EditorEventos(props: {
   partido: Partido;
   partesJugadas: ParteId[];
@@ -126,7 +147,11 @@ export function EditorEventos(props: {
   const [esNuevo, setEsNuevo] = useState(false);
   const [minStr, setMinStr] = useState("00:00");
   const [confirmarBorrar, setConfirmarBorrar] = useState<string | null>(null);
-  const [zonaPicker, setZonaPicker] = useState<null | "campo" | "porteria">(null);
+  const [zonaPicker, setZonaPicker] = useState<null | "campo" | "porteria" | "flecha">(null);
+  // La flecha mientras se dibuja: no pasa al borrador hasta darle a «Guardar»
+  // en el campo, así que cancelar deja la que había.
+  const [flechaTmp, setFlechaTmp] = useState<Flecha | null>(null);
+  const [errorGuardar, setErrorGuardar] = useState("");
 
   const eventos = [...partido.eventos].sort((a, b) => {
     const dp = PARTES.indexOf(a.parte) - PARTES.indexOf(b.parte);
@@ -148,18 +173,25 @@ export function EditorEventos(props: {
       case "disparo": return `${equipoTxt(e)}${ev.jugador ? " · " + ev.jugador : ""} · ${labelResultadoDisparo(ev.resultado)}`;
       case "penalti":
       case "diezm": return `${equipoTxt(e)}${ev.tirador ? " · " + ev.tirador : ""} · ${ev.resultado}`;
-      case "accion_individual": return `${ev.jugador} · ${etiquetaAccionInd(ev.accion, t)}${ev.accion === "conexPivot" && ev.receptor ? ` → ${ev.receptor}` : ""}`;
+      case "accion_individual": {
+        const extra = ev.accion === "conexPivot" && ev.receptor ? ` → ${ev.receptor}`
+          : ev.accion === "paseGol" && ev.flecha && flechaSuficiente(ev.flecha)
+            ? ` · ${zonasDeFlecha(ev.flecha).origen} → ${zonasDeFlecha(ev.flecha).destino}` : "";
+        return `${ev.jugador} · ${etiquetaAccionInd(ev.accion, t)}${extra}`;
+      }
       default: return "";
     }
   }
 
   function abrirEditar(ev: Evento) {
+    setErrorGuardar("");
     setEsNuevo(false);
     setDraft({ ...ev });
     setMinStr(formatMMSS(ev.segundosParte || 0));
   }
 
   function abrirNuevo() {
+    setErrorGuardar("");
     setEsNuevo(true);
     setDraft(nuevoDraft("gol", partes[0]));
     setMinStr("00:00");
@@ -188,6 +220,19 @@ export function EditorEventos(props: {
     if (datos.tipo === "accion_individual" && datos.accion !== "conexPivot" && "receptor" in datos) {
       datos.receptor = undefined;
     }
+    // Pase de gol (18/9/2026): no se guarda sin su flecha, y las zonas salen
+    // de ella (la flecha es el dato; las zonas, su resumen). Si deja de ser
+    // pase de gol, la flecha y la zona de destino se van con él.
+    if (datos.tipo === "accion_individual" && datos.accion === "paseGol") {
+      if (!flechaSuficiente(datos.flecha)) { setErrorGuardar(t("ed_falta_flecha")); return; }
+      const z = zonasDeFlecha(datos.flecha);
+      datos.zonaCampo = z.origen;
+      datos.zonaDestino = z.destino;
+    } else if (datos.tipo === "accion_individual" && ("flecha" in datos || "zonaDestino" in datos)) {
+      datos.flecha = undefined;
+      datos.zonaDestino = undefined;
+    }
+    setErrorGuardar("");
     if (esNuevo) {
       props.anadirEvento(datos as any);
     } else {
@@ -203,6 +248,19 @@ export function EditorEventos(props: {
   const optPortero = [{ v: "", lbl: t("sin_asignar_min") }].concat(NOMBRES_PORTERO.map((n) => ({ v: n, lbl: n })));
 
   const set = (k: string, v: any) => setDraft((d) => (d ? { ...d, [k]: v } : d));
+
+  // Pase de gol pegado a un gol nuestro (±20 s, misma parte): con gol solo
+  // cuenta la asistencia. Se avisa; la decisión es de quien edita.
+  const golCerca = draft?.tipo === "accion_individual" && draft.accion === "paseGol"
+    ? golNuestroCerca(partido.eventos, draft.parte as ParteId, mmssASeg(minStr)) : null;
+  const golCercaTxt = golCerca
+    ? t("ed_pg_gol_cerca", {
+        minuto: formatMMSS(golCerca.segundosParte || 0),
+        quien: (golCerca as { enPropia?: boolean }).enPropia ? t("pg_en_propia")
+          : ((golCerca as { goleador?: string; tirador?: string }).goleador
+             || (golCerca as { tirador?: string }).tirador || "—"),
+      })
+    : "";
 
   return (
     <div className="space-y-3">
@@ -347,9 +405,18 @@ export function EditorEventos(props: {
                     <Campo2 label={t("vid_conex_receptor")} value={draft.receptor}
                       onChange={(v) => set("receptor", v || undefined)} opciones={optJugador(true)} />
                   )}
-                  <ZonaBtn label={t("ed_zona_campo")} valor={draft.zonaCampo} onClick={() => setZonaPicker("campo")} />
+                  {draft.accion === "paseGol" ? (
+                    <FlechaBtn flecha={draft.flecha} falta={!!errorGuardar && !flechaSuficiente(draft.flecha)}
+                      onClick={() => { setFlechaTmp(draft.flecha ?? null); setZonaPicker("flecha"); }} />
+                  ) : (
+                    <ZonaBtn label={t("ed_zona_campo")} valor={draft.zonaCampo} onClick={() => setZonaPicker("campo")} />
+                  )}
+                  {draft.accion === "paseGol" && golCercaTxt && (
+                    <p className="text-sm text-amber-300">{golCercaTxt}</p>
+                  )}
                 </>
               )}
+              {errorGuardar && <p className="text-sm font-semibold text-red-400">{errorGuardar}</p>}
             </div>
 
             <div className="flex gap-2 mt-5">
@@ -360,8 +427,44 @@ export function EditorEventos(props: {
             </div>
           </div>
 
+          {/* SUB-MODAL: la flecha del pase de gol. El mismo campo que al
+              apuntarlo, girado según la parte, con el mismo aviso y, si hay un
+              gol nuestro cerca, la advertencia. */}
+          {zonaPicker === "flecha" && (
+            <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+              onClick={(e) => { e.stopPropagation(); setZonaPicker(null); }}>
+              <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-4xl max-h-[95vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}>
+                <h4 className="text-lg font-bold mb-3 text-center">
+                  {t("pg_titulo", { jugador: draft.jugador || "?" })} · {draft.parte} {minStr}
+                </h4>
+                <CampoFlecha flecha={flechaTmp} onChange={setFlechaTmp}
+                  direccion={props.partido.config
+                    ? direccionAtaque(draft.parte as ParteId, "INTER", props.partido.config) : "der"}
+                  nombreAtacante={NOMBRE_CORTO_TC}
+                  avisoArriba={t("pg_aviso")} />
+                {golCercaTxt && <p className="mt-2 text-base text-amber-300">{golCercaTxt}</p>}
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => setZonaPicker(null)}
+                    className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{t("ed_cancelar")}</button>
+                  <button disabled={!flechaTmp}
+                    onClick={() => {
+                      if (!flechaTmp) return;
+                      const z = zonasDeFlecha(flechaTmp);
+                      setDraft((d) => (d ? { ...d, flecha: flechaTmp, zonaCampo: z.origen, zonaDestino: z.destino } : d));
+                      setErrorGuardar("");
+                      setZonaPicker(null);
+                    }}
+                    className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg font-bold disabled:bg-zinc-800 disabled:text-zinc-500">
+                    {t("ed_guardar")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* SUB-MODAL: picker de zona (campo o portería) */}
-          {zonaPicker && (
+          {(zonaPicker === "campo" || zonaPicker === "porteria") && (
             <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
               onClick={(e) => { e.stopPropagation(); setZonaPicker(null); }}>
               <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>

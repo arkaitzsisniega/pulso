@@ -7,11 +7,14 @@ import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
 import { formatMMSS, colorTiempoPista, colorTiempoBanquillo } from "@/lib/utils";
 import { segundosVivos, formatCuentaAtras, msHastaSiguienteCambio } from "@/lib/reloj";
 import { Campo } from "@/components/Campo";
+import { CampoFlecha } from "@/components/CampoFlecha";
 import { Porteria } from "@/components/Porteria";
-import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo, Evento } from "@/lib/db";
+import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo, Evento, Flecha } from "@/lib/db";
 import { direccionAtaque, sacaEn, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelResultadoDisparo, labelAccionGol } from "@/lib/i18n";
 import { etiquetaAccionInd } from "@/lib/acciones";
+import { zonasDeFlecha } from "@/lib/geometriaCampo";
+import { golNuestroCerca, pasesGolCerca } from "@/lib/paseGol";
 
 export default function PartidoPage() {
   useIdioma();
@@ -23,6 +26,7 @@ export default function PartidoPage() {
     segundosRestantesParte, duracionParteActual,
     play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
     registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual,
+    quitarAccionIndividual,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte, setModo,
     setDireccionAtaque, setSaqueInicial } = usePartido();
@@ -42,6 +46,15 @@ export default function PartidoPage() {
   //    falta de equipo? (no toda tarjeta al banquillo conlleva falta).
   const [confirmExpulRival, setConfirmExpulRival] = useState<{ dorsal: string } | null>(null);
   const [confirmFaltaCT, setConfirmFaltaCT] = useState<{ equipo: "INTER" | "RIVAL" } | null>(null);
+  // Pase de gol (18/9/2026): con gol solo cuenta la asistencia, nunca las dos
+  // cosas. Si un gol nuestro y un pase de gol caen muy juntos se pregunta
+  // (aviso, no candado: puede ser otra jugada). Mismo patrón que confirmFaltaCT.
+  //  · confirmPaseGol: se va a guardar un pase de gol con un gol nuestro a ±20 s.
+  //  · confirmGolConPase: se acaba de guardar un gol con pases de gol en los
+  //    20 s anteriores → ¿sobran?
+  const [confirmPaseGol, setConfirmPaseGol] = useState<
+    { jugador: string; flecha: Flecha; gol: Evento } | null>(null);
+  const [confirmGolConPase, setConfirmGolConPase] = useState<Evento[] | null>(null);
   const [modalTM, setModalTM] = useState(false);
   const [modalPen, setModalPen] = useState(false);
   const [modalTanda, setModalTanda] = useState(false);
@@ -247,6 +260,21 @@ export default function PartidoPage() {
     if (yaTenia + 1 >= 2) {
       expulsarJugadorInter(jugador);
     }
+  };
+
+  // Guarda el pase de gol con su flecha (la zona de salida y la de llegada
+  // salen de ella) y lo dice: «Pase de gol de RAUL (A8 → A2)». «Deshacer» lo
+  // quita como a cualquier otra acción.
+  const guardarPaseGol = (jugador: string, flecha: Flecha) => {
+    const { origen, destino } = zonasDeFlecha(flecha);
+    registrarAccionIndividual(jugador, "paseGol", origen, undefined,
+                              { flecha, zonaDestino: destino });
+    mostrarAviso(t("aviso_pase_gol", { jugador, origen, destino }));
+  };
+  // Quién metió un gol, para las preguntas del pase de gol.
+  const quienMarco = (ev: Evento): string => {
+    const e = ev as { goleador?: string; tirador?: string; enPropia?: boolean };
+    return e.enPropia ? t("pg_en_propia") : (e.goleador || e.tirador || "—");
   };
 
   if (!cargado) {
@@ -911,6 +939,15 @@ export default function PartidoPage() {
             registrarAccionIndividual(modalAccionInd.jugador, tipo, zona, receptor);
             setModalAccionInd(null);
           }}
+          onPaseGol={(flecha) => {
+            const jugador = modalAccionInd.jugador;
+            setModalAccionInd(null);
+            // ¿Hay un gol nuestro a ±20 s? Entonces es probable que sea la
+            // jugada del gol, y ahí solo cuenta la asistencia: se pregunta.
+            const gol = golNuestroCerca(partido.eventos, p, segundosParte());
+            if (gol) { setConfirmPaseGol({ jugador, flecha, gol }); return; }
+            guardarPaseGol(jugador, flecha);
+          }}
           onDisparo={(detalles) => {
             // Registrar como evento "disparo" (no es gol, si fuera gol se usaría GOL).
             registrarEvento({
@@ -953,6 +990,13 @@ export default function PartidoPage() {
           onConfirmar={(ev, penaltiExtra) => {
             registrarEvento(ev as any, penaltiExtra);
             setModalGol(false);
+            // Pase de gol en los 20 s anteriores a un gol NUESTRO: si es la
+            // misma jugada, sobra (con gol solo cuenta la asistencia). En un
+            // partido sin pases de gol —todos los de directo— no sale nada.
+            if (ev?.equipo === "INTER") {
+              const pases = pasesGolCerca(partido.eventos, p, segundosParte());
+              if (pases.length) setConfirmGolConPase(pases);
+            }
           }}
         />
       )}
@@ -1070,6 +1114,69 @@ export default function PartidoPage() {
               {t("conf_no")}
             </button>
           </div>
+        </ModalShell>
+      )}
+
+      {/* Pase de gol con un gol nuestro a ±20 s: ¿es otra jugada? */}
+      {confirmPaseGol && (
+        <ModalShell titulo={t("pg_conf_titulo")} onCerrar={() => setConfirmPaseGol(null)} maxW="max-w-md">
+          <p className="text-zinc-300 text-base mb-4">
+            {t("pg_conf_pase_texto", {
+              minuto: formatMMSS(confirmPaseGol.gol.segundosParte || 0),
+              quien: quienMarco(confirmPaseGol.gol),
+            })}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                guardarPaseGol(confirmPaseGol.jugador, confirmPaseGol.flecha);
+                setConfirmPaseGol(null);
+              }}
+              className="py-5 bg-sky-700 hover:bg-sky-600 rounded text-lg font-bold">
+              {t("pg_otra_jugada")}
+            </button>
+            <button
+              onClick={() => setConfirmPaseGol(null)}
+              className="py-5 bg-zinc-700 hover:bg-zinc-600 rounded text-lg font-bold">
+              {t("ed_cancelar")}
+            </button>
+          </div>
+        </ModalShell>
+      )}
+
+      {/* Gol nuestro recién guardado con pases de gol en los 20 s anteriores:
+          si son la misma jugada, sobran. Se quitan sin reordenar la lista
+          (quitarAccionIndividual), para que «Deshacer» siga quitando lo último
+          que se apuntó. */}
+      {confirmGolConPase && confirmGolConPase.length > 0 && (
+        <ModalShell titulo={t("pg_conf_titulo")} onCerrar={() => setConfirmGolConPase(null)} maxW="max-w-md">
+          <div className="space-y-4 mb-4">
+            {confirmGolConPase.map((pase) => {
+              const jugador = (pase as { jugador?: string }).jugador ?? "";
+              return (
+                <div key={pase.id}>
+                  <p className="text-zinc-300 text-base mb-2">
+                    {t("pg_conf_gol_texto", { jugador, minuto: formatMMSS(pase.segundosParte || 0) })}
+                  </p>
+                  <button
+                    onClick={() => {
+                      quitarAccionIndividual(pase.id);
+                      mostrarAviso(t("aviso_pase_gol_quitado", { jugador }));
+                      const quedan = confirmGolConPase.filter((x) => x.id !== pase.id);
+                      setConfirmGolConPase(quedan.length ? quedan : null);
+                    }}
+                    className="w-full py-4 bg-red-800 hover:bg-red-700 rounded text-lg font-bold">
+                    {t("pg_quitar")}{confirmGolConPase.length > 1 ? ` (${jugador})` : ""}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <button
+            onClick={() => setConfirmGolConPase(null)}
+            className="w-full py-4 bg-zinc-700 hover:bg-zinc-600 rounded text-lg font-bold">
+            {t("pg_distintas")}
+          </button>
         </ModalShell>
       )}
 
@@ -1322,6 +1429,7 @@ function describirEvento(ev: Evento | undefined, rival: string): string {
         pf: "pérdida forzada", pnf: "pérdida no forzada", robos: "robo",
         cortes: "corte", bdg: "balón dividido ganado",
         bdp: "balón dividido perdido",
+        paseGol: "pase de gol",
       };
       // Las de vídeo, con el nombre del editor («Saque · ✅ Bueno»): antes
       // salía el código tal cual («saqueB de REYES», 15/9/2026).
@@ -2396,8 +2504,20 @@ function ModalAccionIndividual(props: {
   onAccionConZona: (tipo: AccionIndTipo, zonaCampo?: string, receptor?: string) => void;
   onContador: (tipo: keyof ContadoresJugador) => void;
   onDisparo: (detalles: { resultado: ResultadoDisparo; zonaCampo: string; zonaPorteria: string }) => void;
+  /** Pase de gol (solo vídeo): la flecha ya dibujada. Quien lo recibe mira si
+   *  hay un gol nuestro cerca antes de guardarlo. */
+  onPaseGol: (flecha: Flecha) => void;
 }) {
-  const [paso, setPaso] = useState<"menu" | "accionZona" | "disparoTipo" | "disparoCampo" | "disparoPorteria" | "videoMenu" | "videoResultado" | "videoConexion">("menu");
+  const [paso, setPaso] = useState<"menu" | "accionZona" | "disparoTipo" | "disparoCampo" | "disparoPorteria" | "videoMenu" | "videoResultado" | "videoConexion" | "paseGol">("menu");
+  // Pase de gol: la flecha que se está dibujando y a qué pantalla vuelve «Atrás»
+  // (se llega desde el menú del jugador y desde el de stats de vídeo).
+  const [flechaPase, setFlechaPase] = useState<Flecha | null>(null);
+  const [vueltaPaseGol, setVueltaPaseGol] = useState<"menu" | "videoMenu">("menu");
+  const irAPaseGol = (desde: "menu" | "videoMenu") => {
+    setFlechaPase(null);
+    setVueltaPaseGol(desde);
+    setPaso("paseGol");
+  };
   const [disparoRes, setDisparoRes] = useState<ResultadoDisparo>("PUERTA");
   const [zonaCampo, setZonaCampo] = useState("");
   const [accionPendiente, setAccionPendiente] = useState<AccionIndTipo | null>(null);
@@ -2475,8 +2595,14 @@ function ModalAccionIndividual(props: {
             <BotonGrande label={t("mai_btn_bdp")} subtitle={t("mai_btn_bdp_sub")} color="bg-purple-950" onClick={() => irAAccionZona("bdp")} />
           </div>
         )}
-        <div className="grid grid-cols-1 gap-2 mb-2">
+        {/* DISPARO. En VÍDEO comparte fila con el PASE DE GOL (18/9/2026); en
+            directo sigue solo y a lo ancho, como siempre. */}
+        <div className={`grid ${props.directo ? "grid-cols-1" : "grid-cols-2"} gap-2 mb-2`}>
           <BotonGrande label={t("mai_disparo")} color="bg-blue-600" onClick={() => setPaso("disparoTipo")} />
+          {!props.directo && (
+            <BotonGrande label={t("mai_btn_pase_gol")} subtitle={t("mai_btn_pase_gol_sub")}
+              color="bg-amber-700" onClick={() => irAPaseGol("menu")} />
+          )}
         </div>
 
         {/* Stats de VÍDEO — solo en modo vídeo (duelos, 1x1, coberturas...). */}
@@ -2633,6 +2759,10 @@ function ModalAccionIndividual(props: {
           {/* Anticipación (15/9/2026): fuera del bloque de portero a propósito,
               porque los porteros también la pueden tener. */}
           <BotonGrande label={GRUPOS.anticipacion.label} onClick={() => { setVideoGrupo("anticipacion"); setPaso("videoResultado"); }} />
+          {/* Pase de gol (18/9/2026): también aquí, como los divididos, y
+              también para los porteros. */}
+          <BotonGrande label={t("mai_btn_pase_gol")} subtitle={t("mai_btn_pase_gol_sub")}
+            color="bg-amber-700" onClick={() => irAPaseGol("videoMenu")} />
           <BotonGrande label={t("mai_btn_bdg")} subtitle={t("mai_btn_bdg_sub")} onClick={() => irAZona("bdg")} />
           <BotonGrande label={t("mai_btn_bdp")} subtitle={t("mai_btn_bdp_sub")} onClick={() => irAZona("bdp")} />
         </div>
@@ -2665,6 +2795,30 @@ function ModalAccionIndividual(props: {
           </div>
         </Paso>
         <button onClick={() => setPaso("videoMenu")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+      </ModalShell>
+    );
+  }
+
+  // ── PASE DE GOL (solo vídeo): la flecha de dónde sale a dónde llega ──
+  if (paso === "paseGol") {
+    return (
+      <ModalShell titulo={t("pg_titulo", { jugador: props.jugador })} onCerrar={props.onCerrar}>
+        <CampoFlecha
+          flecha={flechaPase}
+          onChange={setFlechaPase}
+          direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
+          nombreAtacante={NOMBRE_CORTO_TC}
+          avisoArriba={t("pg_aviso")} />
+        <div className="mt-3 flex justify-between gap-3">
+          <button onClick={() => { setFlechaPase(null); setPaso(vueltaPaseGol); }}
+            className="px-4 py-3 bg-zinc-700 rounded-lg">{t("atras")}</button>
+          <button disabled={!flechaPase}
+            onClick={() => { if (flechaPase) props.onPaseGol(flechaPase); }}
+            className="px-6 py-3 rounded-lg text-lg font-bold bg-emerald-700 hover:bg-emerald-600
+                       disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed">
+            {t("pg_guardar")}
+          </button>
+        </div>
       </ModalShell>
     );
   }

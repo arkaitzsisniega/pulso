@@ -70,6 +70,51 @@ export function geoMedia(lado: "der" | "izq") {
   return { pre, XP, XAREA, X10, b1x, b1w, b2x, b2w, p1, p2, p4, p5, pArea };
 }
 
+/** Césped y borde del campo. Lo comparten el selector de zonas y el de la
+ *  flecha del pase de gol (18/9/2026) para que los dos pinten el mismo campo:
+ *  son las mismas piezas de antes, solo que con nombre. */
+export function FondoCampo() {
+  return (
+    <>
+      {/* Césped */}
+      <rect x="0" y="0" width={W} height={H} fill="#1b5e20" rx="8" />
+      {/* Borde exterior */}
+      <rect x="2" y="2" width={W - 4} height={H - 4} fill="none" stroke="#ffffff" strokeWidth="3" rx="6" />
+    </>
+  );
+}
+
+/** Las líneas del campo, encima de todo y sin recibir toques. */
+export function LineasCampo() {
+  const gDer = geoMedia("der");
+  const gIzq = geoMedia("izq");
+  return (
+    <g style={{ pointerEvents: "none" }} fill="none" stroke="#ffffff" strokeWidth="2.5">
+      {/* Línea media + círculo central */}
+      <line x1={X_MEDIA} y1="0" x2={X_MEDIA} y2={H} strokeWidth="3" />
+      <circle cx={X_MEDIA} cy={Y_CENTRO} r={3 * M} strokeWidth="2" />
+      <circle cx={X_MEDIA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+      {/* Áreas (ambas) */}
+      <path d={gDer.pArea} />
+      <path d={gIzq.pArea} />
+      {/* Línea central de 4m que separa 4/5 en cada mitad */}
+      <line x1={gDer.X10} y1={Y_CENTRO} x2={gDer.XAREA} y2={Y_CENTRO} strokeDasharray="4 4" opacity="0.55" />
+      <line x1={gIzq.X10} y1={Y_CENTRO} x2={gIzq.XAREA} y2={Y_CENTRO} strokeDasharray="4 4" opacity="0.55" />
+      {/* Líneas de 10m (ambas) */}
+      <line x1={gDer.X10} y1={BANDA_SUP_Y} x2={gDer.X10} y2={BANDA_INF_Y} strokeDasharray="4 4" opacity="0.4" />
+      <line x1={gIzq.X10} y1={BANDA_SUP_Y} x2={gIzq.X10} y2={BANDA_INF_Y} strokeDasharray="4 4" opacity="0.4" />
+      {/* Puntos de penalti (6m) y doble penalti (10m) en ambas mitades */}
+      <circle cx={gDer.XAREA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+      <circle cx={gDer.X10} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+      <circle cx={gIzq.XAREA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+      <circle cx={gIzq.X10} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
+      {/* Porterías: derecha (rival) e izquierda (propia) */}
+      <rect x={W - 4} y={POSTE_SUP_Y} width="4" height={POSTE_INF_Y - POSTE_SUP_Y} fill="#ffffff" />
+      <rect x="0" y={POSTE_SUP_Y} width="4" height={POSTE_INF_Y - POSTE_SUP_Y} fill="#ffffff" />
+    </g>
+  );
+}
+
 export function Campo({ seleccionada, onSelect, nombreAtacante, direccion = "der" }: Props) {
   const sel = (z: string) => seleccionada === z;
   const colorZona = (z: string) => (sel(z) ? "#1d4ed8" : "#ffffff");
@@ -114,46 +159,18 @@ export function Campo({ seleccionada, onSelect, nombreAtacante, direccion = "der
     ];
   };
 
-  const gDer = geoMedia("der");
-  const gIzq = geoMedia("izq");
-
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto select-none"
       style={{ maxHeight: "60vh" }}>
       <g transform={gTransform}>
-        {/* Césped */}
-        <rect x="0" y="0" width={W} height={H} fill="#1b5e20" rx="8" />
-        {/* Borde exterior */}
-        <rect x="2" y="2" width={W - 4} height={H - 4} fill="none" stroke="#ffffff" strokeWidth="3" rx="6" />
+        <FondoCampo />
 
         {/* ── ZONAS: media pista de DEFENSA (izq) y de ATAQUE (der) ── */}
         {zonasMedia("izq")}
         {zonasMedia("der")}
 
         {/* ── LÍNEAS DEL CAMPO (encima, sin pointerEvents) ── */}
-        <g style={{ pointerEvents: "none" }} fill="none" stroke="#ffffff" strokeWidth="2.5">
-          {/* Línea media + círculo central */}
-          <line x1={X_MEDIA} y1="0" x2={X_MEDIA} y2={H} strokeWidth="3" />
-          <circle cx={X_MEDIA} cy={Y_CENTRO} r={3 * M} strokeWidth="2" />
-          <circle cx={X_MEDIA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
-          {/* Áreas (ambas) */}
-          <path d={gDer.pArea} />
-          <path d={gIzq.pArea} />
-          {/* Línea central de 4m que separa 4/5 en cada mitad */}
-          <line x1={gDer.X10} y1={Y_CENTRO} x2={gDer.XAREA} y2={Y_CENTRO} strokeDasharray="4 4" opacity="0.55" />
-          <line x1={gIzq.X10} y1={Y_CENTRO} x2={gIzq.XAREA} y2={Y_CENTRO} strokeDasharray="4 4" opacity="0.55" />
-          {/* Líneas de 10m (ambas) */}
-          <line x1={gDer.X10} y1={BANDA_SUP_Y} x2={gDer.X10} y2={BANDA_INF_Y} strokeDasharray="4 4" opacity="0.4" />
-          <line x1={gIzq.X10} y1={BANDA_SUP_Y} x2={gIzq.X10} y2={BANDA_INF_Y} strokeDasharray="4 4" opacity="0.4" />
-          {/* Puntos de penalti (6m) y doble penalti (10m) en ambas mitades */}
-          <circle cx={gDer.XAREA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
-          <circle cx={gDer.X10} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
-          <circle cx={gIzq.XAREA} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
-          <circle cx={gIzq.X10} cy={Y_CENTRO} r="3" fill="#ffffff" stroke="none" />
-          {/* Porterías: derecha (rival) e izquierda (propia) */}
-          <rect x={W - 4} y={POSTE_SUP_Y} width="4" height={POSTE_INF_Y - POSTE_SUP_Y} fill="#ffffff" />
-          <rect x="0" y={POSTE_SUP_Y} width="4" height={POSTE_INF_Y - POSTE_SUP_Y} fill="#ffffff" />
-        </g>
+        <LineasCampo />
       </g>{/* fin del grupo rotable */}
 
       {/* Etiqueta del atacante FUERA del grupo rotado: siempre legible. */}
