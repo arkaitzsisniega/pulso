@@ -735,7 +735,16 @@ export const CATALOGO: Record<string, Entrada> = {
 
   mg_accion_gol: { es: "Acción del gol", en: "Goal action", it: "Azione del gol" },
   mg_zona_tira: { es: "Zona desde donde se REMATÓ", en: "Zone the goal was SHOT from", it: "Zona da cui si è TIRATO" },
-  mg_zona_asistencia: { es: "Zona desde donde se dio la ASISTENCIA (el pase)", en: "Zone the ASSIST (pass) was given from", it: "Zona da cui è stato dato l'ASSIST (il passaggio)" },
+  // Flecha de la asistencia (22/9/2026, solo vídeo): sustituye a la zona de la
+  // asistencia. De dónde sale el pase del gol y a dónde llega.
+  mg_flecha_asistencia: {
+    es: "Flecha de la ASISTENCIA ({asistente} → {goleador}): de dónde sale el pase y a dónde llega",
+    en: "ASSIST arrow ({asistente} → {goleador}): where the pass starts and where it arrives",
+    it: "Freccia dell'ASSIST ({asistente} → {goleador}): da dove parte il passaggio e dove arriva",
+  },
+  mg_sin_flecha: { es: "Sin flecha", en: "No arrow", it: "Senza freccia" },
+  mg_asist_resumen: { es: "Asistencia {origen} → {destino}", en: "Assist {origen} → {destino}", it: "Assist {origen} → {destino}" },
+  mg_asist_sin_flecha: { es: "Asistencia sin flecha", en: "Assist without arrow", it: "Assist senza freccia" },
   mg_porteria_entra_accion: {
     es: "Portería: ¿dónde entra el {accion}? (tap = guardar)",
     en: "Goal: where does the {accion} go in? (tap = save)",
@@ -1035,6 +1044,16 @@ export const CATALOGO: Record<string, Entrada> = {
   ed_flecha: { es: "Flecha del pase", en: "Pass arrow", it: "Freccia del passaggio" },
   ed_sin_flecha: { es: "(sin flecha)", en: "(no arrow)", it: "(senza freccia)" },
   ed_falta_flecha: { es: "Un pase de gol se guarda con su flecha: dibújala antes de guardar.", en: "A key pass is saved with its arrow: draw it before saving.", it: "Un passaggio chiave si salva con la sua freccia: disegnala prima di salvare." },
+  // Flecha de la asistencia en el editor (22/9/2026): para dibujar las de los
+  // partidos ya revisados con vídeo.
+  ed_flecha_asist: { es: "Flecha de la asistencia", en: "Assist arrow", it: "Freccia dell'assist" },
+  ed_asist_titulo: { es: "Asistencia de {asistente} a {goleador}", en: "Assist from {asistente} to {goleador}", it: "Assist di {asistente} per {goleador}" },
+  ed_asist_sin_flecha: { es: "asist. sin flecha", en: "assist, no arrow", it: "assist senza freccia" },
+  ed_asist_faltan: { es: "Asistencias sin flecha: {n} de {total}", en: "Assists without an arrow: {n} of {total}", it: "Assist senza freccia: {n} su {total}" },
+  ed_asist_todas: { es: "Todas las asistencias tienen su flecha ({total})", en: "Every assist has its arrow ({total})", it: "Tutti gli assist hanno la loro freccia ({total})" },
+  ed_ver_solo_faltan: { es: "Ver solo esas", en: "Show only those", it: "Mostra solo quelli" },
+  ed_ver_todas: { es: "Ver todas las acciones", en: "Show all events", it: "Mostra tutte le azioni" },
+  ed_quitar_flecha: { es: "Quitar flecha", en: "Remove arrow", it: "Togli freccia" },
   ed_pg_gol_cerca: { es: "Ojo: hay un gol nuestro a las {minuto} ({quien}). Si este pase acabó en ese gol, no es pase de gol: con gol solo cuenta la asistencia.", en: "Careful: there is a goal of ours at {minuto} ({quien}). If this pass ended in that goal, it is not a key pass: with a goal only the assist counts.", it: "Attenzione: c'è un nostro gol al {minuto} ({quien}). Se questo passaggio è finito in quel gol, non è un passaggio chiave: con il gol conta solo l'assist." },
   ed_t_gol: { es: "Gol", en: "Goal", it: "Gol" },
   ed_t_falta: { es: "Falta", en: "Foul", it: "Fallo" },

@@ -167,8 +167,9 @@ export type AccionIndTipo =
   | "paseGol";
 
 /**
- * Una flecha sobre el campo: de dónde sale un pase y a dónde llega. La usa el
- * pase de gol (18/9/2026), que se apunta dibujándola.
+ * Una flecha sobre el campo: de dónde sale un pase y a dónde llega. La usan el
+ * pase de gol (18/9/2026) y la asistencia de un gol nuestro (22/9/2026), que
+ * se apuntan dibujándola.
  *
  * Sistema de coordenadas — el dato de verdad; las zonas se calculan de él
  * (`lib/geometriaCampo.ts`) y así se podrá pintar un mapa sin rehacer nada:
@@ -201,9 +202,20 @@ export type Evento =
   | (EventoBase & { tipo: "gol"; equipo: "INTER" | "RIVAL"; goleador: string;
       asistente?: string; cuarteto: string[]; portero?: string;
       accion?: string; zonaCampo?: string; zonaPorteria?: string;
-      /** Zona del campo desde donde se dio la ASISTENCIA (pase de gol). El
-       *  remate va en zonaCampo. Solo se pide en modo vídeo y si hay asistente. */
+      /** Gol a favor que el rival se mete en su propia puerta: sin goleador
+       *  ni asistente nuestros (22/8/2026). */
+      enPropia?: boolean;
+      /** La ASISTENCIA dibujada como flecha (22/9/2026): de dónde sale el pase
+       *  y a dónde llega, en el mismo sistema que `Flecha`. `zonaAsistencia` es
+       *  la zona de SALIDA y `zonaAsistenciaDestino` la de LLEGADA, las dos
+       *  calculadas de la flecha. Solo en vídeo, en un gol NUESTRO con
+       *  asistente, que no sea en propia ni de penalti o 10 m; sin flecha no va
+       *  ninguno de los tres. Reglas en `lib/asistencia.ts`. El remate va en
+       *  zonaCampo. Los goles de vídeo anteriores pueden traer `zonaAsistencia`
+       *  sola: la zona que se tocaba antes de las flechas. */
+      flechaAsistencia?: Flecha;
       zonaAsistencia?: string;
+      zonaAsistenciaDestino?: string;
       descripcion?: string;
       /** Si este gol vino de un penalti/10m, id del evento penalti enlazado. */
       penaltiId?: string })

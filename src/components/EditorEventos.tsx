@@ -14,7 +14,7 @@
  * Nota minutos (opción D): editar sustituciones aún no recalcula los minutos
  * por jugador; se avisa en la UI. Esa pieza llega aparte.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Partido, Evento, ParteId, Flecha } from "@/lib/db";
 import { direccionAtaque } from "@/lib/db";
 import { ROSTER, PORTEROS, NOMBRE_CORTO_TC } from "@/lib/clientes";
@@ -26,6 +26,11 @@ import { CampoFlecha } from "@/components/CampoFlecha";
 import { Porteria } from "@/components/Porteria";
 import { flechaSuficiente, zonasDeFlecha } from "@/lib/geometriaCampo";
 import { golNuestroCerca } from "@/lib/paseGol";
+import {
+  asistenciaAlGuardar, camposFlechaAsistencia, camposSinFlecha, conFlechaAsistencia,
+  faltaFlechaAsistencia, flechaAsistenciaDe, pideFlechaAsistencia, recuentoFlechasAsistencia,
+  sinFlechaAsistencia,
+} from "@/lib/asistencia";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 const TIPOS: Evento["tipo"][] = [
@@ -111,19 +116,64 @@ function ZonaBtn(p: { label: string; valor?: string; onClick: () => void }) {
   );
 }
 
-/** «Flecha del pase» del pase de gol: ocupa el sitio de la zona. Se marca en
- *  rojo si falta, porque sin flecha no se guarda. */
-function FlechaBtn(p: { flecha?: Flecha; falta: boolean; onClick: () => void }) {
+/** El botón de una flecha: «Flecha del pase» en el pase de gol (ocupa el sitio
+ *  de la zona) y «Flecha de la asistencia» en el gol (22/9/2026). Se marca en
+ *  rojo si falta y sin ella no se puede guardar (el pase de gol). */
+function FlechaBtn(p: { etiqueta: string; flecha?: Flecha; falta: boolean; onClick: () => void }) {
   const z = p.flecha && flechaSuficiente(p.flecha) ? zonasDeFlecha(p.flecha) : null;
   return (
     <div>
-      <span className={lblCls}>{t("ed_flecha")}</span>
+      <span className={lblCls}>{p.etiqueta}</span>
       <button onClick={p.onClick}
         className={`w-full bg-zinc-800 hover:bg-zinc-700 border rounded-lg px-3 py-2 text-base text-left ${
           p.falta ? "border-red-500" : "border-zinc-700"}`}>
         {z ? `${z.origen} → ${z.destino}` : <span className="text-zinc-500">{t("ed_sin_flecha")}</span>}
         {" "}<span className="text-emerald-400 text-sm">· {t("ed_cambiar")}</span>
       </button>
+    </div>
+  );
+}
+
+/**
+ * El campo para dibujar la flecha de la ASISTENCIA de un gol (22/9/2026): el
+ * mismo que al apuntarlo, girado según la parte. Lo usan el botón del gol en
+ * el formulario y el acceso directo de la lista («asist. sin flecha»), que es
+ * por donde se dibujan de un tirón las de los partidos ya revisados.
+ *
+ * Fuera de EditorEventos por lo mismo que los de arriba: el resumen se
+ * redibuja cada 250 ms y, declarado dentro, perdería lo que se va dibujando.
+ */
+function ModalFlechaAsistencia(p: {
+  titulo: string;
+  flechaInicial: Flecha | null;
+  direccion: "izq" | "der";
+  onCancelar: () => void;
+  onGuardar: (f: Flecha) => void;
+  /** Solo si ya tenía flecha: quitarla. */
+  onQuitar?: () => void;
+}) {
+  const [flecha, setFlecha] = useState<Flecha | null>(p.flechaInicial);
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+      onClick={(e) => { e.stopPropagation(); p.onCancelar(); }}>
+      <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-4xl max-h-[95vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}>
+        <h4 className="text-lg font-bold mb-3 text-center">{p.titulo}</h4>
+        <CampoFlecha flecha={flecha} onChange={setFlecha} direccion={p.direccion}
+          nombreAtacante={NOMBRE_CORTO_TC} />
+        <div className="flex gap-2 mt-3">
+          <button onClick={p.onCancelar}
+            className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{t("ed_cancelar")}</button>
+          {p.onQuitar && (
+            <button onClick={p.onQuitar}
+              className="flex-1 py-3 bg-red-900/70 hover:bg-red-800 rounded-lg font-semibold">{t("ed_quitar_flecha")}</button>
+          )}
+          <button disabled={!flecha} onClick={() => { if (flecha) p.onGuardar(flecha); }}
+            className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg font-bold disabled:bg-zinc-800 disabled:text-zinc-500">
+            {t("ed_guardar")}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -147,24 +197,41 @@ export function EditorEventos(props: {
   const [esNuevo, setEsNuevo] = useState(false);
   const [minStr, setMinStr] = useState("00:00");
   const [confirmarBorrar, setConfirmarBorrar] = useState<string | null>(null);
-  const [zonaPicker, setZonaPicker] = useState<null | "campo" | "porteria" | "flecha">(null);
+  const [zonaPicker, setZonaPicker] = useState<null | "campo" | "porteria" | "flecha" | "flechaAsist">(null);
   // La flecha mientras se dibuja: no pasa al borrador hasta darle a «Guardar»
   // en el campo, así que cancelar deja la que había.
   const [flechaTmp, setFlechaTmp] = useState<Flecha | null>(null);
   const [errorGuardar, setErrorGuardar] = useState("");
+  // Flecha de la asistencia (22/9/2026, partidos de vídeo): el gol que se está
+  // dibujando desde el acceso directo de la lista, y si la lista enseña solo
+  // las asistencias que aún no la tienen.
+  const [flechaDirectaId, setFlechaDirectaId] = useState<string | null>(null);
+  const [soloSinFlecha, setSoloSinFlecha] = useState(false);
 
   const eventos = [...partido.eventos].sort((a, b) => {
     const dp = PARTES.indexOf(a.parte) - PARTES.indexOf(b.parte);
     if (dp !== 0) return dp;
     return (a.segundosParte || 0) - (b.segundosParte || 0);
   });
+  const recuentoAsist = recuentoFlechasAsistencia(partido.eventos, partido.modo);
+  // Con la última dibujada, el filtro se apaga: si no, al quitar luego una
+  // flecha la lista volvería a filtrarse sola sin haberlo pedido.
+  useEffect(() => { if (recuentoAsist.faltan === 0) setSoloSinFlecha(false); }, [recuentoAsist.faltan]);
+  const filtrandoAsist = soloSinFlecha && recuentoAsist.faltan > 0;
+  const eventosVisibles = filtrandoAsist
+    ? eventos.filter((ev) => faltaFlechaAsistencia(ev, partido.modo)) : eventos;
+  const golDirecto = flechaDirectaId
+    ? partido.eventos.find((e) => e.id === flechaDirectaId && e.tipo === "gol") as (Evento & { tipo: "gol" }) | undefined
+    : undefined;
+  const dirInter = (parte: ParteId) => (partido.config
+    ? direccionAtaque(parte, "INTER", partido.config) : "der");
 
   const equipoTxt = (e?: string) => (e === "INTER" ? NOMBRE_CORTO_TC : rival);
 
   function descripcion(ev: Evento): string {
     const e = (ev as any).equipo as string | undefined;
     switch (ev.tipo) {
-      case "gol": return `${equipoTxt(e)} · ${ev.goleador || "?"}${ev.accion ? ` (${labelAccionGol(ev.accion)})` : ""}`;
+      case "gol": return `${equipoTxt(e)} · ${ev.goleador || "?"}${ev.accion ? ` (${labelAccionGol(ev.accion)})` : ""}${ev.asistente ? ` · ${t("res_asist")} ${ev.asistente}` : ""}`;
       case "falta": return `${equipoTxt(e)}${ev.jugador ? " · " + ev.jugador : ""}`;
       case "amarilla":
       case "roja": return `${equipoTxt(e)}${ev.jugador ? " · " + ev.jugador : ""}`;
@@ -213,7 +280,7 @@ export function EditorEventos(props: {
   function guardar() {
     if (!draft) return;
     const seg = mmssASeg(minStr);
-    const datos: Draft = { ...draft, segundosParte: seg };
+    let datos: Draft = { ...draft, segundosParte: seg };
     // El receptor es solo de la conexión con pívot: si la acción pasó a ser
     // otra, no se queda colgado en ella. (Mientras se edita sí se conserva,
     // por si se vuelve a la conexión.)
@@ -232,6 +299,10 @@ export function EditorEventos(props: {
       datos.flecha = undefined;
       datos.zonaDestino = undefined;
     }
+    // Flecha de la asistencia (22/9/2026): si el gol deja de ser nuestro, se
+    // queda sin asistente o pasa a penalti/10 m, se van los tres campos; si la
+    // tiene, sus zonas se vuelven a sacar de ella (lib/asistencia.ts).
+    if (datos.tipo === "gol") datos = asistenciaAlGuardar(datos);
     setErrorGuardar("");
     if (esNuevo) {
       props.anadirEvento(datos as any);
@@ -271,6 +342,26 @@ export function EditorEventos(props: {
           className="mt-3 px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg font-semibold">
           {t("ed_anadir")}
         </button>
+        {/* Asistencias sin flecha (solo en vídeo): cuántas quedan y, de un
+            toque, la lista con solo esas. */}
+        {recuentoAsist.total > 0 && (
+          <div className={`mt-3 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-base ${
+            recuentoAsist.faltan
+              ? "border-amber-700/60 bg-amber-950/40 text-amber-200"
+              : "border-emerald-800/60 bg-emerald-950/40 text-emerald-300"}`}>
+            <span className="flex-1" data-asist-recuento>
+              {recuentoAsist.faltan
+                ? `➡️ ${t("ed_asist_faltan", { n: recuentoAsist.faltan, total: recuentoAsist.total })}`
+                : `✅ ${t("ed_asist_todas", { total: recuentoAsist.total })}`}
+            </span>
+            {recuentoAsist.faltan > 0 && (
+              <button onClick={() => setSoloSinFlecha((v) => !v)}
+                className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-semibold text-zinc-100">
+                {filtrandoAsist ? t("ed_ver_todas") : t("ed_ver_solo_faltan")}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {eventos.length === 0 && (
@@ -278,13 +369,27 @@ export function EditorEventos(props: {
       )}
 
       <div className="space-y-1.5">
-        {eventos.map((ev) => (
+        {eventosVisibles.map((ev) => (
           <div key={ev.id} className="bg-zinc-900 rounded-lg px-3 py-2 flex items-center gap-2">
             <span className="text-xl shrink-0">{emoji(ev.tipo)}</span>
             <div className="w-20 shrink-0 text-xs text-zinc-500 tabular-nums">
               {ev.parte} · {formatMMSS(ev.segundosParte || 0)}
             </div>
             <div className="flex-1 text-sm truncate">{descripcion(ev)}</div>
+            {/* La flecha de la asistencia, a un toque: dibujarla (o cambiarla)
+                sin pasar por el formulario entero. Solo en vídeo. */}
+            {pideFlechaAsistencia(ev, partido.modo) && (() => {
+              const f = flechaAsistenciaDe(ev);
+              const z = f ? zonasDeFlecha(f) : null;
+              return (
+                <button onClick={() => setFlechaDirectaId(ev.id)} data-asist-flecha={z ? "si" : "no"}
+                  className={`shrink-0 px-3 py-1.5 rounded text-sm font-semibold ${
+                    z ? "bg-zinc-800 hover:bg-zinc-700 text-yellow-300"
+                      : "bg-amber-700 hover:bg-amber-600 text-white"}`}>
+                  ➡️ {z ? `${z.origen} → ${z.destino}` : t("ed_asist_sin_flecha")}
+                </button>
+              );
+            })()}
             <button onClick={() => abrirEditar(ev)}
               className="shrink-0 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-sm">✏️</button>
             <button onClick={() => setConfirmarBorrar(ev.id)}
@@ -352,6 +457,12 @@ export function EditorEventos(props: {
                   <Campo2 label={t("ed_asistente")} value={draft.asistente} onChange={(v) => set("asistente", v)} opciones={optJugador(true)} />
                   <Campo2 label={t("ed_tipo_gol")} value={draft.accion} onChange={(v) => set("accion", v)}
                     opciones={[{ v: "", lbl: "—" }].concat(ACCIONES_GOL.map((a) => ({ v: a, lbl: labelAccionGol(a) })))} />
+                  {/* Flecha de la asistencia (22/9/2026): solo en vídeo y si el gol
+                      es nuestro, con asistente y no de penalti/10 m. */}
+                  {pideFlechaAsistencia(draft, partido.modo) && (
+                    <FlechaBtn etiqueta={t("ed_flecha_asist")} flecha={flechaAsistenciaDe(draft) ?? undefined}
+                      falta={false} onClick={() => setZonaPicker("flechaAsist")} />
+                  )}
                   <ZonaBtn label={t("ed_zona_campo")} valor={draft.zonaCampo} onClick={() => setZonaPicker("campo")} />
                   <ZonaBtn label={t("ed_zona_porteria")} valor={draft.zonaPorteria} onClick={() => setZonaPicker("porteria")} />
                 </>
@@ -406,7 +517,7 @@ export function EditorEventos(props: {
                       onChange={(v) => set("receptor", v || undefined)} opciones={optJugador(true)} />
                   )}
                   {draft.accion === "paseGol" ? (
-                    <FlechaBtn flecha={draft.flecha} falta={!!errorGuardar && !flechaSuficiente(draft.flecha)}
+                    <FlechaBtn etiqueta={t("ed_flecha")} flecha={draft.flecha} falta={!!errorGuardar && !flechaSuficiente(draft.flecha)}
                       onClick={() => { setFlechaTmp(draft.flecha ?? null); setZonaPicker("flecha"); }} />
                   ) : (
                     <ZonaBtn label={t("ed_zona_campo")} valor={draft.zonaCampo} onClick={() => setZonaPicker("campo")} />
@@ -463,6 +574,20 @@ export function EditorEventos(props: {
             </div>
           )}
 
+          {/* SUB-MODAL: la flecha de la asistencia del gol del formulario. Va al
+              borrador: se guarda con el resto al darle a «Guardar». */}
+          {zonaPicker === "flechaAsist" && draft.tipo === "gol" && (
+            <ModalFlechaAsistencia
+              titulo={`${t("ed_asist_titulo", { asistente: draft.asistente || "?", goleador: draft.goleador || "?" })} · ${draft.parte} ${minStr}`}
+              flechaInicial={flechaAsistenciaDe(draft)}
+              direccion={dirInter(draft.parte as ParteId)}
+              onCancelar={() => setZonaPicker(null)}
+              onGuardar={(f) => { setDraft((d) => (d ? conFlechaAsistencia(d, f) : d)); setZonaPicker(null); }}
+              onQuitar={flechaAsistenciaDe(draft)
+                ? () => { setDraft((d) => (d ? sinFlechaAsistencia(d) : d)); setZonaPicker(null); }
+                : undefined} />
+          )}
+
           {/* SUB-MODAL: picker de zona (campo o portería) */}
           {(zonaPicker === "campo" || zonaPicker === "porteria") && (
             <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
@@ -480,6 +605,23 @@ export function EditorEventos(props: {
             </div>
           )}
         </div>
+      )}
+
+      {/* FLECHA DE LA ASISTENCIA desde la lista: se guarda en el gol al darle a
+          «Guardar», sin abrir el formulario. */}
+      {golDirecto && (
+        <ModalFlechaAsistencia
+          titulo={`${t("ed_asist_titulo", { asistente: golDirecto.asistente || "?", goleador: golDirecto.goleador || "?" })} · ${golDirecto.parte} ${formatMMSS(golDirecto.segundosParte || 0)}`}
+          flechaInicial={flechaAsistenciaDe(golDirecto)}
+          direccion={dirInter(golDirecto.parte)}
+          onCancelar={() => setFlechaDirectaId(null)}
+          onGuardar={(f) => {
+            props.editarEvento(golDirecto.id, camposFlechaAsistencia(f) as Partial<Evento>);
+            setFlechaDirectaId(null);
+          }}
+          onQuitar={flechaAsistenciaDe(golDirecto)
+            ? () => { props.editarEvento(golDirecto.id, camposSinFlecha() as Partial<Evento>); setFlechaDirectaId(null); }
+            : undefined} />
       )}
 
       {/* CONFIRMAR BORRADO */}
