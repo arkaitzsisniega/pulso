@@ -15,6 +15,7 @@ import { t, useIdioma, labelResultadoDisparo, labelAccionGol } from "@/lib/i18n"
 import { etiquetaAccionInd } from "@/lib/acciones";
 import { zonasDeFlecha } from "@/lib/geometriaCampo";
 import { golNuestroCerca, pasesGolCerca } from "@/lib/paseGol";
+import { camposFlechaAsistencia, pideFlechaAsistencia } from "@/lib/asistencia";
 
 export default function PartidoPage() {
   useIdioma();
@@ -2034,10 +2035,29 @@ function ModalGol(props: {
   const [accion, setAccion] = useState("");
   const [zonaCampo, setZonaCampo] = useState("");
   const [zonaPorteria, setZonaPorteria] = useState("");
-  const [zonaAsistencia, setZonaAsistencia] = useState("");
+  // Flecha de la ASISTENCIA (22/9/2026, solo vídeo): de dónde sale el pase del
+  // gol y a dónde llega. `null` = aún sin dibujar; `asistSinFlecha` = se ha
+  // decidido no dibujarla (no es obligatoria). Sustituye a la zona de la
+  // asistencia, que se tocaba en un campo y se guardaba "__skip__" al saltarla.
+  const [flechaAsist, setFlechaAsist] = useState<Flecha | null>(null);
+  const [asistSinFlecha, setAsistSinFlecha] = useState(false);
   const [porteroRival, setPorteroRival] = useState("");
 
   const esPenaltiOAccion = accion === "Penalti" || accion === "10m";
+  // ¿Lleva flecha este gol? Vídeo, nuestro, con asistente, ni en propia ni de
+  // penalti/10 m (lib/asistencia.ts). El paso sale cuando ya hay acción: hasta
+  // entonces no se sabe si es un penalti.
+  const pideFlecha = pideFlechaAsistencia(
+    { equipo: equipo ?? undefined, asistente: asistente === "OMIT" ? "" : asistente, enPropia, accion },
+    props.directo ? "directo" : "video");
+  const flechaResuelta = !pideFlecha || !!flechaAsist || asistSinFlecha;
+  // Al aparecer el campo de la flecha se trae a la vista: sale debajo de las
+  // acciones del gol y, con el dedo encima, el campo no deja hacer scroll.
+  const pasoFlechaRef = useRef<HTMLDivElement>(null);
+  const campoFlechaVisible = pideFlecha && !!accion && !flechaAsist && !asistSinFlecha;
+  useEffect(() => {
+    if (campoFlechaVisible) pasoFlechaRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [campoFlechaVisible]);
 
   const aplicar = (zp: string) => {
     const ev: any = { tipo: "gol", equipo };
@@ -2057,7 +2077,9 @@ function ModalGol(props: {
       ev.cuarteto = [...props.enPista];
     }
     if (accion) ev.accion = accion;
-    if (zonaAsistencia) ev.zonaAsistencia = zonaAsistencia;
+    // La asistencia: con flecha van la flecha y sus dos zonas; sin ella,
+    // ninguno de los tres (nunca el "__skip__" de antes).
+    if (pideFlecha && flechaAsist) Object.assign(ev, camposFlechaAsistencia(flechaAsist));
     if (zonaCampo) ev.zonaCampo = zonaCampo;
     if (zp) ev.zonaPorteria = zp;
     if (porteroRival && equipo === "INTER") ev.portero = porteroRival;
@@ -2162,23 +2184,47 @@ function ModalGol(props: {
         </Paso>
       )}
 
-      {/* Zona de la ASISTENCIA (desde dónde el pase de gol) — solo gol INTER con
-          asistente, antes del remate. NUNCA en directo (cero zonas). */}
-      {!props.directo && accion && !esPenaltiOAccion && equipo === "INTER" && asistente && asistente !== "OMIT" && !zonaAsistencia && (
-        <Paso n={5} titulo={t("mg_zona_asistencia")} activo>
-          <Campo seleccionada={zonaAsistencia} onSelect={setZonaAsistencia}
-            direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
-            nombreAtacante={NOMBRE_CORTO_TC} />
-          <div className="mt-1 text-right">
-            <button onClick={() => setZonaAsistencia("__skip__")}
-              className="px-3 py-1 bg-zinc-700 rounded text-xs">{t("saltar_zona_campo_corto")}</button>
-          </div>
-        </Paso>
+      {/* Flecha de la ASISTENCIA (22/9/2026): de dónde sale el pase del gol y a
+          dónde llega, como la del pase de gol y en el campo girado según la
+          parte. Solo gol nuestro con asistente y que no sea penalti/10 m, antes
+          del remate. NUNCA en directo (cero zonas). Al acabar de dibujarla se
+          pasa solo al remate y queda la línea de resumen para cambiarla. */}
+      {pideFlecha && accion && (
+        <div ref={pasoFlechaRef}>
+          <Paso n={5} titulo={t("mg_flecha_asistencia", { asistente, goleador })} activo={campoFlechaVisible}>
+            {campoFlechaVisible ? (
+              <>
+                <CampoFlecha flecha={null} onChange={(f) => { if (f) setFlechaAsist(f); }}
+                  direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
+                  nombreAtacante={NOMBRE_CORTO_TC} />
+                <div className="mt-1 text-right">
+                  <button onClick={() => setAsistSinFlecha(true)}
+                    className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-sm font-semibold">
+                    {t("mg_sin_flecha")}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-between gap-3 rounded-lg bg-zinc-800 px-3 py-2">
+                {flechaAsist ? (
+                  <span className="text-xl font-bold tabular-nums text-yellow-300" data-asistencia-flecha>
+                    {t("mg_asist_resumen", zonasDeFlecha(flechaAsist))}
+                  </span>
+                ) : (
+                  <span className="text-base text-zinc-300">{t("mg_asist_sin_flecha")}</span>
+                )}
+                <button onClick={() => { setFlechaAsist(null); setAsistSinFlecha(false); }}
+                  className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-sm font-semibold">
+                  {t("ed_cambiar")}
+                </button>
+              </div>
+            )}
+          </Paso>
+        </div>
       )}
-      {/* Zona del REMATE (desde dónde se remató). Tras la asistencia, o directo
-          si no hay asistente / es gol del rival. */}
-      {!props.directo && accion && !esPenaltiOAccion
-        && (!(equipo === "INTER" && asistente && asistente !== "OMIT") || zonaAsistencia) && (
+      {/* Zona del REMATE (desde dónde se remató). Tras la flecha de la
+          asistencia, o directo si no la lleva (sin asistente, gol del rival…). */}
+      {!props.directo && accion && !esPenaltiOAccion && flechaResuelta && (
         <Paso n={6} titulo={t("mg_zona_tira")} activo={!zonaCampo}>
           <Campo seleccionada={zonaCampo} onSelect={setZonaCampo}
             direccion={equipo ? direccionAtaque(props.parteActual, equipo, props.cfg) : "der"}

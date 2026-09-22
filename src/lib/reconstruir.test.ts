@@ -52,7 +52,10 @@ function ev(parcial: Partial<Evento> & { tipo: Evento["tipo"]; parte: ParteId; s
 // Escenario (a propósito DESORDENADO para probar también el orden):
 const eventos: Evento[] = [
   ev({ tipo: "roja", parte: "2T", segundosParte: 200, equipo: "INTER", jugador: "D" } as any),
-  ev({ tipo: "gol", parte: "1T", segundosParte: 60, equipo: "INTER", goleador: "A", cuarteto: [] } as any),
+  // Con la flecha de la asistencia (22/9/2026), que tiene que sobrevivir al recálculo.
+  ev({ id: "g1", tipo: "gol", parte: "1T", segundosParte: 60, equipo: "INTER", goleador: "A", asistente: "B",
+       cuarteto: [], flechaAsistencia: { x0: 0.62, y0: 0.3, x1: 0.93, y1: 0.46 },
+       zonaAsistencia: "A8", zonaAsistenciaDestino: "A1" } as any),
   ev({ tipo: "falta", parte: "1T", segundosParte: 120, equipo: "INTER", jugador: "B" } as any),
   ev({ tipo: "gol", parte: "1T", segundosParte: 200, equipo: "RIVAL", goleador: "", cuarteto: [] } as any),
   ev({ tipo: "disparo", parte: "1T", segundosParte: 250, equipo: "INTER", jugador: "B", resultado: "FUERA" } as any),
@@ -93,6 +96,11 @@ check("C.paseGol (pase de gol)", r.acciones.porJugador["C"]?.paseGol, 1);
   check("la flecha del pase de gol sobrevive al recálculo", pg?.flecha, { x0: 0.62, y0: 0.3, x1: 0.93, y1: 0.46 });
   check("y su zona de destino", pg?.zonaDestino, "A1");
 }
+{
+  const g1 = r.eventos.find((e) => e.id === "g1") as any;
+  check("la flecha de la asistencia sobrevive al recálculo", g1?.flechaAsistencia, { x0: 0.62, y0: 0.3, x1: 0.93, y1: 0.46 });
+  check("y sus dos zonas", [g1?.zonaAsistencia, g1?.zonaAsistenciaDestino], ["A8", "A1"]);
+}
 check("HERRERO.golesEncajados", r.acciones.porJugador["HERRERO"]?.golesEncajados, 1);
 check("HERRERO.paradas", r.acciones.porJugador["HERRERO"]?.paradas, 1);
 check("disparosRival.puerta", r.disparosRival.puerta, 2);
@@ -120,5 +128,5 @@ check("A en 2T = 0", tm["A"]?.porParte["2T"], 0);
 check("E en 1T = 600", tm["E"]?.porParte["1T"], 600);
 check("E en 2T = 1200", tm["E"]?.porParte["2T"], 1200);
 
-if (fallos === 0) { console.log("\n✅ TODO OK (24 checks)"); }
+if (fallos === 0) { console.log("\n✅ TODO OK (26 checks)"); }
 else { console.error(`\n❌ ${fallos} fallo(s)`); process.exit(1); }
