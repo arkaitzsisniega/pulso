@@ -4,6 +4,17 @@
  * (Jugador), JUGADOR, JUGADOR (Jugador), JUGADOR; bajas JUGADOR, JUGADOR,
  * JUGADOR, JUGADOR, JUGADOR, JUGADOR, JUGADOR.
  *
+ * 25/9/2026 — alta de JUGADOR (Jugador Jugador), PORTERO del primer equipo con el
+ * dorsal 15. Ese 15 lo llevaba JUGADOR, que está en stand by y en el Sheet se ha
+ * quedado SIN dorsal: se saca de aquí, porque este roster se indexa por dorsal.
+ * De paso entra JUGADOR (34), que estaba en el roster del FILIAL pero no en el
+ * del primer equipo: si subía a jugar con los mayores, no se le podía elegir.
+ * ⚠️ Hay TRES Raúles y «Jugador» a secas es el 6: Jugador Gómez = JUGADOR · Jugador
+ * = JUGADOR · Jugador Jugador = JUGADOR.
+ *
+ * ROSTER_DEMO va EN PARALELO: mismos dorsales y posiciones, nombres falsos
+ * (JUGADOR→ROMAN, JUGADOR→SALAS). Si se añade a uno, se añade al otro.
+ *
  * Aquí solo viven los DATOS crudos (ROSTER_REAL y ROSTER_DEMO). Qué roster usa
  * cada build lo decide `clientes.ts` según NEXT_PUBLIC_CLIENTE: "inter" → reales,
  * "pulso" → ROSTER_DEMO (nombres FALSOS, mismo mapeo que el dashboard MODO_DEMO
@@ -25,6 +36,7 @@ export const ROSTER_REAL: Jugador[] = [
   // Porteros primer equipo
   { dorsal: "1", nombre: "JUGADOR", posicion: "PORTERO", equipo: "PRIMER" },
   { dorsal: "27", nombre: "JUGADOR", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "15", nombre: "JUGADOR", posicion: "PORTERO", equipo: "PRIMER" },
   // Campo primer equipo
   { dorsal: "2", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "5", nombre: "JUGADOR", posicion: "CAMPO", equipo: "PRIMER" },
@@ -44,10 +56,10 @@ export const ROSTER_REAL: Jugador[] = [
   { dorsal: "28", nombre: "JUGADOR", posicion: "PORTERO", equipo: "FILIAL" },
   { dorsal: "29", nombre: "JUGADOR", posicion: "PORTERO", equipo: "FILIAL" },
   // Campo filial
-  { dorsal: "15", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "32", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "31", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "33", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "34", nombre: "JUGADOR", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
 // Roster DEMO — nombres FALSOS (mismo mapeo que dashboard/bot: JUGADOR→REYES,
@@ -56,6 +68,7 @@ export const ROSTER_DEMO: Jugador[] = [
   // Porteros primer equipo
   { dorsal: "1", nombre: "REYES", posicion: "PORTERO", equipo: "PRIMER" },
   { dorsal: "27", nombre: "SERRANO", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "15", nombre: "ROMAN", posicion: "PORTERO", equipo: "PRIMER" },
   // Campo primer equipo
   { dorsal: "2", nombre: "PRIETO", posicion: "CAMPO", equipo: "PRIMER" },
   { dorsal: "5", nombre: "IBAÑEZ", posicion: "CAMPO", equipo: "PRIMER" },
@@ -75,10 +88,10 @@ export const ROSTER_DEMO: Jugador[] = [
   { dorsal: "28", nombre: "PASTOR", posicion: "PORTERO", equipo: "FILIAL" },
   { dorsal: "29", nombre: "MENDEZ", posicion: "PORTERO", equipo: "FILIAL" },
   // Campo filial
-  { dorsal: "15", nombre: "LOZANO", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "32", nombre: "MOLINA", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "31", nombre: "TORRES", posicion: "CAMPO", equipo: "FILIAL" },
   { dorsal: "33", nombre: "VEGA", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "34", nombre: "SALAS", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
 /**
