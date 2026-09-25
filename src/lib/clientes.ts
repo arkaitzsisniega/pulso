@@ -41,8 +41,6 @@ export interface ConfigCliente {
   marcaTitulo: string;
   /** Título de pestaña / PWA (metadata). P.ej. "Inter Crono", "Crono CD Pulso". */
   appTitulo: string;
-  /** Roster de jugadores de este cliente. */
-  roster: Jugador[];
   /**
    * Idioma fijo del cliente. Si se define, el crono va siempre en ese idioma y
    * NO se muestra el selector. Si es null, se muestra el selector (caso demo).
@@ -75,7 +73,6 @@ const CLIENTES: Record<string, ConfigCliente> = {
     nombreLargo: "Inter JP Financial",
     marcaTitulo: "Inter FS",
     appTitulo: "Inter Crono",
-    roster: ROSTER_REAL,
     idiomaFijo: "es", // el Inter va siempre en español, sin selector
     demo: false,
   },
@@ -89,7 +86,6 @@ const CLIENTES: Record<string, ConfigCliente> = {
     nombreLargo: "Inter JP Financial B",
     marcaTitulo: "Inter FS · Filial",
     appTitulo: "Crono Filial",
-    roster: ROSTER_FILIAL,
     idiomaFijo: "es",
     demo: false,
   },
@@ -99,11 +95,32 @@ const CLIENTES: Record<string, ConfigCliente> = {
     nombreLargo: "CD Pulso",
     marcaTitulo: "CD Pulso",
     appTitulo: "Crono CD Pulso",
-    roster: ROSTER_DEMO,
     idiomaFijo: null, // la demo muestra el selector de idioma (es/en/it)
     demo: true,
   },
 };
+
+/**
+ * Roster del cliente ACTIVO.
+ *
+ * Con ternarios sobre `process.env.NEXT_PUBLIC_CLIENTE` y NO dentro del
+ * registro CLIENTES, por el mismo motivo que PASS_HASHES (ver justo debajo):
+ * Next sustituye esa variable por un literal en build, el minificador pliega el
+ * ternario y los rosters de los OTROS clientes desaparecen del bundle.
+ *
+ * Metido en CLIENTES viajaban los tres en los tres builds — comprobado el
+ * 25/9/2026: el paquete de la DEMO llevaba dentro la plantilla REAL del Inter
+ * (HERRERO, GARCIA, PIRATA…). No se veía en pantalla, pero cualquiera que
+ * abriese los ficheros del sitio la leía, y la demo existe justamente para
+ * enseñar el crono a otros clubes SIN exponer nombres reales. El 28/8 se
+ * arregló esto mismo para las contraseñas y no se aplicó a los rosters.
+ */
+const ROSTER_ACTIVO: Jugador[] =
+  process.env.NEXT_PUBLIC_CLIENTE === "pulso"
+    ? ROSTER_DEMO
+    : process.env.NEXT_PUBLIC_CLIENTE === "filial"
+      ? ROSTER_FILIAL
+      : ROSTER_REAL;
 
 /**
  * Hashes de contraseña del cliente ACTIVO.
@@ -133,7 +150,8 @@ export const CLIENTE: ConfigCliente = CLIENTES[_ID] ?? CLIENTES.inter;
 
 // Roster activo y derivados (lo que consumen los componentes). Reemplaza a los
 // antiguos exports de `roster.ts` (que ahora solo guarda los datos crudos).
-export const ROSTER: Jugador[] = CLIENTE.roster;
+// Sale de ROSTER_ACTIVO y NO de CLIENTE.roster: ver el comentario de arriba.
+export const ROSTER: Jugador[] = ROSTER_ACTIVO;
 
 /** Hashes SHA-256 válidos para el login de ESTE build (ver PASS_HASHES). */
 export const PASS_HASHES_CLIENTE: string[] = PASS_HASHES;
