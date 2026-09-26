@@ -46,6 +46,7 @@ import { uid } from "./utils";
 import { ROSTER } from "./clientes";
 import { reconstruirAgregados, recomputarMinutos } from "./reconstruir";
 import { segundosVivos } from "./reloj";
+import { configParaRehacer, type CambiosRehacer } from "./rehacer";
 
 const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
 const TICK_MS = 250;
@@ -135,12 +136,17 @@ export async function borrarPartido(id: string): Promise<void> {
   try { if (localStorage.getItem(ACTIVO_KEY) === id) localStorage.removeItem(ACTIVO_KEY); } catch { /* ignore */ }
 }
 /** Rehace un partido: crea uno NUEVO desde cero (crono a 0, sin eventos) con la
- *  MISMA config, en modo VÍDEO. Lo marca activo y devuelve su id (o null). */
-export async function rehacerPartido(id: string): Promise<string | null> {
+ *  MISMA config, en modo VÍDEO. Lo marca activo y devuelve su id (o null).
+ *
+ *  `cambios` corrige la cabecera al rehacer (26/9/2026): hasta hoy se copiaba
+ *  tal cual y un partido apuntado «en casa» por error no se podía arreglar en
+ *  ningún sitio, porque casa/fuera solo se elige al crear el partido. El
+ *  original no se toca (ver lib/rehacer.ts). */
+export async function rehacerPartido(id: string, cambios: CambiosRehacer = {}): Promise<string | null> {
   const orig = await db.partidos.get(id);
   if (!orig || !orig.config) return null;
   const nuevoId = nuevoIdPartido();
-  await db.partidos.put(construirPartidoNuevo(nuevoId, orig.config, "video"));
+  await db.partidos.put(construirPartidoNuevo(nuevoId, configParaRehacer(orig.config, cambios), "video"));
   escribirActivoId(nuevoId);
   return nuevoId;
 }
