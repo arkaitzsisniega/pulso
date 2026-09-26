@@ -294,8 +294,8 @@ export const CATALOGO: Record<string, Entrada> = {
   inf_cob_balon: { es: "Cob. balón", en: "Ball cover", it: "Cop. palla" },
   inf_cob_hombre: { es: "Cob. hombre", en: "Man cover", it: "Cop. uomo" },
   inf_pases: { es: "Pases", en: "Passes", it: "Passaggi" },
-  inf_sec_otros: { es: "Penaltis, 10 metros y tarjetas", en: "Penalties, 10m and cards", it: "Rigori, 10 metri e cartellini" },
-  inf_penaltis: { es: "Penaltis y 10 metros", en: "Penalties and 10m", it: "Rigori e 10 metri" },
+  inf_sec_otros: { es: "Penaltis, 10 metros, FSB y tarjetas", en: "Penalties, 10m, no-wall free kicks and cards", it: "Rigori, 10 metri, tiri liberi senza barriera e cartellini" },
+  inf_penaltis: { es: "Penaltis, 10 metros y FSB", en: "Penalties, 10m and no-wall free kicks", it: "Rigori, 10 metri e tiri liberi senza barriera" },
   inf_tarjetas: { es: "Tarjetas", en: "Cards", it: "Cartellini" },
   inf_duelo_c: { es: "Duelo cierre", en: "Defender duel", it: "Duello difensore" },
   inf_duelo_p: { es: "Duelo pívot", en: "Pivot duel", it: "Duello pivot" },
@@ -612,7 +612,7 @@ export const CATALOGO: Record<string, Entrada> = {
   btn_roja: { es: "🟥 ROJA", en: "🟥 RED", it: "🟥 ROSSO" },
   btn_cambio: { es: "🔄 CAMBIO", en: "🔄 SUB", it: "🔄 CAMBIO" },
   btn_tm: { es: "🛑 T.M.", en: "🛑 T.O.", it: "🛑 T.O." },
-  btn_pen10m: { es: "🎯 PEN/10M", en: "🎯 PEN/10M", it: "🎯 PEN/10M" },
+  btn_pen10m: { es: "🎯 PEN/10M/FSB", en: "🎯 PEN/10M/FSB", it: "🎯 PEN/10M/FSB" },
   btn_recuperacion_equipo: { es: "🟢 REC. EQUIPO", en: "🟢 TEAM STEAL", it: "🟢 REC. SQUADRA" },
   btn_perdida_equipo: { es: "🔴 PÉRD. EQUIPO", en: "🔴 TEAM LOSS", it: "🔴 PERD. SQUADRA" },
   btn_deshacer: { es: "↶ Deshacer", en: "↶ Undo", it: "↶ Annulla" },
@@ -778,6 +778,7 @@ export const CATALOGO: Record<string, Entrada> = {
   acc_1x1_banda: { es: "1x1 banda", en: "1v1 wing", it: "1v1 sulla fascia" },
   acc_ataque_posicional: { es: "Ataque posicional", en: "Positional attack", it: "Attacco posizionale" },
   acc_10m: { es: "10m", en: "10m", it: "10m" },
+  acc_fsb: { es: "FSB", en: "No-wall free kick", it: "Tiro libero senza barriera" },
   acc_penalti: { es: "Penalti", en: "Penalty", it: "Rigore" },
   acc_incorporacion_portero: { es: "Incorporación de portero",
                                en: "Flying goalkeeper", it: "Portiere di movimento" },
@@ -813,10 +814,12 @@ export const CATALOGO: Record<string, Entrada> = {
   },
 
   // ══════════════════ MODAL PENALTI / 10M ══════════════════
-  mp_titulo: { es: "🎯 Penalti / 10 metros", en: "🎯 Penalty / 10 metres", it: "🎯 Rigore / 10 metri" },
+  mp_titulo: { es: "🎯 Penalti / 10 metros / FSB", en: "🎯 Penalty / 10 metres / no-wall free kick", it: "🎯 Rigore / 10 metri / tiro libero senza barriera" },
   mp_tipo: { es: "Tipo", en: "Type", it: "Tipo" },
   mp_penalti_6m: { es: "Penalti (6m)", en: "Penalty (6m)", it: "Rigore (6m)" },
   mp_10m: { es: "10 metros", en: "10 metres", it: "10 metri" },
+  mp_fsb: { es: "FSB (sin barrera)", en: "No-wall free kick", it: "Tiro libero senza barriera" },
+  mp_fsb_nota: { es: "FSB = falta sin barrera: desde la 6.ª falta, la que se tira desde donde fue, más cerca que el punto de 10 m.", en: "No-wall free kick: from the 6th foul on, taken from where the foul was, closer than the 10 m mark.", it: "Tiro libero senza barriera: dal 6º fallo in poi, si batte dal punto del fallo, più vicino del punto dei 10 m." },
   mp_favor_contra: { es: "¿A favor o en contra?", en: "For or against?", it: "A favore o contro?" },
   mp_a_favor: { es: "A FAVOR (lo tira {equipo})", en: "FOR ({equipo} takes it)", it: "A FAVORE (lo tira {equipo})" },
   mp_en_contra: { es: "EN CONTRA (lo tira {rival})", en: "AGAINST ({rival} takes it)", it: "CONTRO (lo tira il {rival})" },
@@ -1072,6 +1075,7 @@ export const CATALOGO: Record<string, Entrada> = {
   ed_t_accion_individual: { es: "Acción individual", en: "Individual action", it: "Azione individuale" },
   ed_t_penalti: { es: "Penalti", en: "Penalty", it: "Rigore" },
   ed_t_diezm: { es: "10 metros", en: "10 metres", it: "10 metri" },
+  ed_t_fsb: { es: "FSB (falta sin barrera)", en: "No-wall free kick", it: "Tiro libero senza barriera" },
   ed_min_titulo: { es: "⏱ Minutos por jugador", en: "⏱ Minutes per player", it: "⏱ Minuti per giocatore" },
   ed_min_recalcular: { es: "🔄 Recalcular (aprox.)", en: "🔄 Recompute (approx.)", it: "🔄 Ricalcola (appross.)" },
   ed_min_nota: { es: "Recálculo aproximado (ignora pausas). Ajusta a mano lo que haga falta.", en: "Approximate recompute (ignores pauses). Adjust by hand as needed.", it: "Ricalcolo approssimato (ignora le pause). Regola a mano se serve." },
@@ -1324,15 +1328,15 @@ export function labelResultadoDisparo(codigo: string): string {
 
 // Mapa valor-canónico-ES de acción de gol → clave del catálogo. El VALOR de
 // la acción almacenado en el evento es SIEMPRE el español (no se traduce);
-// aquí solo se mapea para mostrar. Incluye alias "10 m" (con espacio) que usa
-// el resumen para penaltis normalizados.
+// aquí solo se mapea para mostrar. Incluye el alias "10 m" (con espacio), que
+// usaba el resumen para los 10 m sueltos hasta el 26/9/2026.
 const CLAVE_ACCION_GOL: Record<string, string> = {
   "Córner": "acc_corner", "Banda": "acc_banda", "Falta": "acc_falta",
   "5x4": "acc_5x4", "4x5": "acc_4x5", "4x3": "acc_4x3", "3x4": "acc_3x4",
   "Contraataque": "acc_contraataque", "Robo zona alta": "acc_robo_zona_alta",
   "Salida de presión": "acc_salida_presion",
   "1x1 banda": "acc_1x1_banda", "Ataque posicional": "acc_ataque_posicional",
-  "10m": "acc_10m", "10 m": "acc_10m", "Penalti": "acc_penalti",
+  "10m": "acc_10m", "10 m": "acc_10m", "Penalti": "acc_penalti", "FSB": "acc_fsb",
   "2ª jugada": "acc_2a_jugada", "Otra": "acc_otra",
   "Incorporación de portero": "acc_incorporacion_portero",
   "Defensa de incorporación": "acc_defensa_incorporacion",

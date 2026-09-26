@@ -19,8 +19,9 @@
  * play/pausa del reloj no se guardan como eventos, así que los minutos no se
  * pueden derivar exactos). Ver el bloque de minutos del plan Fase 2.
  *
- * Módulo PURO: solo imports de tipo (sin React, sin Dexie, sin alias) para que
- * sea testeable en aislamiento con `node --experimental-strip-types`.
+ * Módulo PURO: sin React, sin Dexie y sin alias (de fuera solo tipos y
+ * `lanzamientos`, que también es puro), para que sea testeable en aislamiento
+ * con `node --experimental-strip-types`.
  */
 import type {
   Partido,
@@ -29,9 +30,10 @@ import type {
   ContadoresJugador,
   ResultadoDisparo,
 } from "./db";
+import { esLanzamiento, type EventoLanzamiento } from "./lanzamientos";
 
 // ── helpers locales (espejo de los de store.ts/db.ts; aquí para mantener el
-//    módulo puro y sin imports de runtime) ──────────────────────────────────
+//    módulo puro, sin traerse Dexie ni React) ───────────────────────────────
 
 function contadoresVacios(): ContadoresJugador {
   return {
@@ -103,7 +105,7 @@ function porteroEnPista(enPista: string[], esPortero: (n: string) => boolean): s
 const ORDEN_PARTE: Record<ParteId, number> = { "1T": 0, "2T": 1, PR1: 2, PR2: 3 };
 
 /** Ordena los eventos cronológicamente (parte → segundosParte → timestamp),
- *  garantizando que un gol-padre va ANTES que su penalti/diezm hijo (golId). */
+ *  garantizando que un gol-padre va ANTES que su lanzamiento hijo (golId). */
 function ordenarEventos(eventos: Evento[]): Evento[] {
   return [...eventos].sort((a, b) => {
     const dp = ORDEN_PARTE[a.parte] - ORDEN_PARTE[b.parte];
@@ -148,7 +150,8 @@ export function reconstruirAgregados(
     }
 
     const golIdHijo = (ev0 as { golId?: string }).golId;
-    const esHijoPenalti = (ev0.tipo === "penalti" || ev0.tipo === "diezm") && !!golIdHijo;
+    // Penalti, 10 m o FSB enlazado a su gol: el gol ya contó (lib/lanzamientos.ts).
+    const esHijoPenalti = esLanzamiento(ev0) && !!golIdHijo;
 
     // Snapshot del marcador: para el hijo penalti, el de su gol padre (=pre-gol).
     let snap = { ...marcador };
@@ -183,6 +186,13 @@ function aplicarEfecto(
   enPista: string[],
   esPortero: (n: string) => boolean,
 ): void {
+  // Penalti, 10 m y FSB cuentan igual: se decide en lib/lanzamientos.ts, no
+  // con un `case` por tipo (un tipo que faltara aquí dejaba su gol fuera del
+  // marcador al editar el partido, sin avisar).
+  if (esLanzamiento(ev)) {
+    aplicarLanzamiento(ev, marcador, acciones, disparosRival, enPista, esPortero);
+    return;
+  }
   switch (ev.tipo) {
     case "gol": {
       if (ev.equipo === "INTER") {
@@ -229,34 +239,42 @@ function aplicarEfecto(
       }
       break;
     }
-    case "penalti":
-    case "diezm": {
-      if (ev.resultado === "GOL") {
-        if (ev.equipo === "INTER") {
-          marcador.inter += 1;
-          if (ev.tirador) bump(acciones, ev.tirador, "dpp", 1);
-        } else {
-          marcador.rival += 1;
-          disparosRival.puerta += 1;
-          const p = porteroEnPista(enPista, esPortero);
-          if (p) bump(acciones, p, "golesEncajados", 1);
-        }
-      } else {
-        const res: ResultadoDisparo =
-          ev.resultado === "PARADA" ? "PUERTA" : ev.resultado === "POSTE" ? "PALO" : "FUERA";
-        if (ev.equipo === "INTER") {
-          if (ev.tirador) bump(acciones, ev.tirador, campoDisparo(res), 1);
-        } else {
-          disparosRival[campoDisparoRival(res)] += 1;
-          if (ev.resultado === "PARADA") {
-            const p = ev.portero || porteroEnPista(enPista, esPortero);
-            if (p) bump(acciones, p, "paradas", 1);
-          }
-        }
-      }
-      break;
-    }
     // "roja" no tiene efecto de conteo (espejo de registrarEvento).
+  }
+}
+
+/** Efecto de un penalti, un 10 m o un FSB suelto (el enlazado a un gol no
+ *  llega aquí: ya contó su gol). ESPEJO de registrarEvento() de store.ts. */
+function aplicarLanzamiento(
+  ev: EventoLanzamiento,
+  marcador: { inter: number; rival: number },
+  acciones: Acciones,
+  disparosRival: DisparosRival,
+  enPista: string[],
+  esPortero: (n: string) => boolean,
+): void {
+  if (ev.resultado === "GOL") {
+    if (ev.equipo === "INTER") {
+      marcador.inter += 1;
+      if (ev.tirador) bump(acciones, ev.tirador, "dpp", 1);
+    } else {
+      marcador.rival += 1;
+      disparosRival.puerta += 1;
+      const p = porteroEnPista(enPista, esPortero);
+      if (p) bump(acciones, p, "golesEncajados", 1);
+    }
+  } else {
+    const res: ResultadoDisparo =
+      ev.resultado === "PARADA" ? "PUERTA" : ev.resultado === "POSTE" ? "PALO" : "FUERA";
+    if (ev.equipo === "INTER") {
+      if (ev.tirador) bump(acciones, ev.tirador, campoDisparo(res), 1);
+    } else {
+      disparosRival[campoDisparoRival(res)] += 1;
+      if (ev.resultado === "PARADA") {
+        const p = ev.portero || porteroEnPista(enPista, esPortero);
+        if (p) bump(acciones, p, "paradas", 1);
+      }
+    }
   }
 }
 

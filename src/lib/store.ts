@@ -12,14 +12,15 @@
  *
  * Reglas de auto-contabilización (no duplicar datos):
  *  - GOL INTER: marcador+1, goleador.dpp+1, evento gol.
- *      Si la acción es "Penalti" o "10m": además se crea un evento
- *      penalti/diezm enlazado al gol vía golId/penaltiId.
+ *      Si la acción es "Penalti", "10m" o "FSB": además se crea un evento
+ *      penalti/diezm/fsb enlazado al gol vía golId/penaltiId. Qué es un
+ *      lanzamiento lo dice lib/lanzamientos.ts, no una lista aquí.
  *  - GOL RIVAL: marcador+1, disparosRival.puerta+1, portero (en pista).golesEncajados+1.
  *  - DISPARO INTER (no gol): jugador.dpp/dpa/dpf/dpb +1 según resultado.
  *  - DISPARO RIVAL (no gol): disparosRival.X +1 según resultado.
- *  - PENALTI/10M con resultado=GOL: igual que un gol normal + se crea
+ *  - PENALTI/10M/FSB con resultado=GOL: igual que un gol normal + se crea
  *    automáticamente evento gol enlazado.
- *  - PENALTI/10M con resultado≠GOL: cuenta como disparo (dpp si PARADA,
+ *  - PENALTI/10M/FSB con resultado≠GOL: cuenta como disparo (dpp si PARADA,
  *    dpa si POSTE, dpf si FUERA).
  */
 "use client";
@@ -46,6 +47,7 @@ import { uid } from "./utils";
 import { ROSTER } from "./clientes";
 import { reconstruirAgregados, recomputarMinutos } from "./reconstruir";
 import { segundosVivos } from "./reloj";
+import { esLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "./lanzamientos";
 import { configParaRehacer, type CambiosRehacer } from "./rehacer";
 
 const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
@@ -767,13 +769,13 @@ export function usePartido() {
    * (marcador, contadores de disparo, goles encajados, etc.) según las
    * reglas de no-duplicación.
    *
-   * Si el evento es un gol con acción "Penalti" o "10m", se puede pasar
+   * Si el evento es un gol con acción "Penalti", "10m" o "FSB", se puede pasar
    * `penaltiExtra` con los datos del penalti (tirador, portero, resultado=GOL,
    * zona). El store creará automáticamente el evento penalti enlazado.
    */
   function registrarEvento(
     parcial: Omit<Evento, "id" | "parte" | "segundosParte" | "segundosPartido" | "timestampReal" | "marcador">,
-    extra?: { penaltiTipo?: "penalti" | "diezm"; penaltiPorteroRival?: string }
+    extra?: { penaltiTipo?: TipoLanzamiento; penaltiPorteroRival?: string }
   ) {
     setPartido((prev) => {
       const ahora = Date.now();
@@ -816,9 +818,10 @@ export function usePartido() {
             next.acciones = bumpContador(next.acciones, portero, "golesEncajados", 1);
           }
         }
-        // Si la acción fue Penalti/10m → crear evento penalti enlazado
-        if (evento.accion === "Penalti" || evento.accion === "10m") {
-          const tipoPen = extra?.penaltiTipo ?? (evento.accion === "10m" ? "diezm" : "penalti");
+        // Si la acción fue Penalti/10m/FSB → crear el lanzamiento enlazado
+        const tipoDeAccion = tipoLanzamientoDeAccion(evento.accion);
+        if (tipoDeAccion) {
+          const tipoPen = extra?.penaltiTipo ?? tipoDeAccion;
           let tirador = "", portero = "";
           if (evento.equipo === "INTER") {
             tirador = evento.goleador;
@@ -896,7 +899,8 @@ export function usePartido() {
             }
           }
         }
-      } else if (evento.tipo === "penalti" || evento.tipo === "diezm") {
+      } else if (esLanzamiento(evento)) {
+        // Penalti, 10 m o FSB (lib/lanzamientos.ts).
         // Si es gol → marcador + disparo a puerta + gol encajado portero rival.
         // Si NO es gol → contar como disparo según resultado.
         if (evento.resultado === "GOL") {
@@ -1004,7 +1008,7 @@ export function usePartido() {
             }
           }
         }
-      } else if (ev.tipo === "penalti" || ev.tipo === "diezm") {
+      } else if (esLanzamiento(ev)) {
         if (ev.resultado === "GOL") {
           next.marcador = {
             inter: next.marcador.inter - (ev.equipo === "INTER" ? 1 : 0),
@@ -1164,7 +1168,7 @@ export function usePartido() {
       if (!ev) return prev;
       const ids = new Set<string>([id]);
       if (ev.tipo === "gol" && ev.penaltiId) ids.add(ev.penaltiId);
-      if ((ev.tipo === "penalti" || ev.tipo === "diezm") && ev.golId) ids.add(ev.golId);
+      if (esLanzamiento(ev) && ev.golId) ids.add(ev.golId);
       const eventos = prev.eventos.filter((e) => !ids.has(e.id));
       return reconstruirAgregados({ ...prev, eventos }, esPorteroRoster);
     });

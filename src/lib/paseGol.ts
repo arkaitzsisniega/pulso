@@ -18,18 +18,19 @@
  *   node --experimental-strip-types src/lib/paseGol.test.ts
  */
 import type { Evento, ParteId } from "./db";
+import { esLanzamiento } from "./lanzamientos";
 
 /** Segundos de juego que se consideran "la misma jugada". */
 export const VENTANA_PASE_GOL_SEG = 20;
 
 const seg = (ev: Evento) => Number(ev.segundosParte) || 0;
 
-/** ¿Es un gol nuestro? Los del botón GOL y los penaltis/10 m metidos con su
- *  propio botón, que no tienen evento "gol" (el que lo tiene, `golId`, ya
+/** ¿Es un gol nuestro? Los del botón GOL y los penaltis/10 m/FSB metidos con
+ *  su propio botón, que no tienen evento "gol" (el que lo tiene, `golId`, ya
  *  cuenta por su gol y no se mira dos veces). */
 export function esGolNuestro(ev: Evento): boolean {
   if (ev.tipo === "gol") return ev.equipo === "INTER";
-  if (ev.tipo === "penalti" || ev.tipo === "diezm") {
+  if (esLanzamiento(ev)) {
     return ev.equipo === "INTER" && ev.resultado === "GOL" && !ev.golId;
   }
   return false;

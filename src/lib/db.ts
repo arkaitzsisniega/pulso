@@ -209,7 +209,7 @@ export type Evento =
        *  y a dónde llega, en el mismo sistema que `Flecha`. `zonaAsistencia` es
        *  la zona de SALIDA y `zonaAsistenciaDestino` la de LLEGADA, las dos
        *  calculadas de la flecha. Solo en vídeo, en un gol NUESTRO con
-       *  asistente, que no sea en propia ni de penalti o 10 m; sin flecha no va
+       *  asistente, que no sea en propia ni de penalti, 10 m o FSB; sin flecha no va
        *  ninguno de los tres. Reglas en `lib/asistencia.ts`. El remate va en
        *  zonaCampo. Los goles de vídeo anteriores pueden traer `zonaAsistencia`
        *  sola: la zona que se tocaba antes de las flechas. */
@@ -217,7 +217,7 @@ export type Evento =
       zonaAsistencia?: string;
       zonaAsistenciaDestino?: string;
       descripcion?: string;
-      /** Si este gol vino de un penalti/10m, id del evento penalti enlazado. */
+      /** Si este gol vino de un penalti/10 m/FSB, id del evento enlazado. */
       penaltiId?: string })
   | (EventoBase & { tipo: "falta"; equipo: "INTER" | "RIVAL";
       jugador?: string; sinAsignar?: boolean; rivalMano?: boolean;
@@ -256,6 +256,14 @@ export type Evento =
       /** Id del gol enlazado (si resultado=GOL). */
       golId?: string })
   | (EventoBase & { tipo: "diezm"; equipo: "INTER" | "RIVAL"; tirador: string;
+      portero: string; resultado: "GOL" | "PARADA" | "POSTE" | "FUERA";
+      zonaPorteria?: string;
+      golId?: string })
+  /** FSB, falta sin barrera (26/9/2026): la misma situación que el 10 m, pero
+   *  se tira desde donde fue la falta, más cerca que el punto de 10 m. Los
+   *  mismos campos y las mismas cuentas que el 10 m; lo que es un lanzamiento
+   *  lo dice `lib/lanzamientos.ts`, no una lista en cada sitio. */
+  | (EventoBase & { tipo: "fsb"; equipo: "INTER" | "RIVAL"; tirador: string;
       portero: string; resultado: "GOL" | "PARADA" | "POSTE" | "FUERA";
       zonaPorteria?: string;
       golId?: string });
