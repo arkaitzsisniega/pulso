@@ -62,6 +62,10 @@ console.log("── Flecha de la asistencia ──");
   ok(!pideFlechaAsistencia(gol({ enPropia: true, goleador: "", asistente: undefined }), "video"), "en propia del rival, no");
   ok(!pideFlechaAsistencia(gol({ accion: "Penalti" }), "video"), "de penalti, no: no hay pase");
   ok(!pideFlechaAsistencia(gol({ accion: "10m" }), "video"), "de 10 m, tampoco");
+  // FSB, falta sin barrera (26/9/2026): como el 10 m, se tira a puerta, sin pase.
+  ok(!pideFlechaAsistencia(gol({ accion: "FSB" }), "video"), "de FSB (falta sin barrera), tampoco");
+  ok(!golAdmiteFlecha(gol({ accion: "FSB" })), "un gol de FSB no admite flecha ni aunque ya la trajera");
+  ok(pideFlechaAsistencia(gol({ accion: "Falta" }), "video"), "una falta CON barrera sí puede llevar pase");
   ok(pideFlechaAsistencia(gol({ accion: undefined }), "video"), "sin acción apuntada sí (no es penalti)");
   ok(!pideFlechaAsistencia(gol({ tipo: "disparo" }), "video"), "algo que no es un gol, no");
   ok(pideFlechaAsistencia({ equipo: "INTER", asistente: "ASISTENTE", accion: "Córner" }, "video"),
@@ -119,6 +123,7 @@ console.log("── Flecha de la asistencia ──");
   igual(enJSON(asistenciaAlGuardar({ ...con, asistente: "" })), [], "se queda sin asistente: fuera");
   igual(enJSON(asistenciaAlGuardar({ ...con, accion: "Penalti" })), [], "pasa a penalti: fuera");
   igual(enJSON(asistenciaAlGuardar({ ...con, accion: "10m" })), [], "pasa a 10 m: fuera");
+  igual(enJSON(asistenciaAlGuardar({ ...con, accion: "FSB" })), [], "pasa a FSB: fuera");
   igual(enJSON(asistenciaAlGuardar({ ...con, enPropia: true })), [], "pasa a en propia: fuera");
   const retocado = asistenciaAlGuardar({ ...con, zonaAsistencia: "D3", zonaAsistenciaDestino: "A5" });
   igual([retocado.zonaAsistencia, retocado.zonaAsistenciaDestino], ["A8", "A1"],

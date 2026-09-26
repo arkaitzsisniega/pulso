@@ -16,6 +16,7 @@ import { etiquetaAccionInd } from "@/lib/acciones";
 import { zonasDeFlecha } from "@/lib/geometriaCampo";
 import { golNuestroCerca, pasesGolCerca } from "@/lib/paseGol";
 import { camposFlechaAsistencia, pideFlechaAsistencia } from "@/lib/asistencia";
+import { esAccionLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "@/lib/lanzamientos";
 
 export default function PartidoPage() {
   useIdioma();
@@ -1423,6 +1424,7 @@ function describirEvento(ev: Evento | undefined, rival: string): string {
         ? `disparo${quien(e.jugador)}` : `disparo de ${rival}`;
     case "penalti":   return `penalti${quien(e.tirador)}`;
     case "diezm":     return `10 m${quien(e.tirador)}`;
+    case "fsb":       return `FSB${quien(e.tirador)}`;
     case "incorporacion_rival":
       return `incorporación del portero de ${rival}`;
     case "accion_individual": {
@@ -1981,13 +1983,9 @@ function ModalTM(props: {
 // ──────────────── MODAL GOL ────────────────
 
 // Acciones de gol: el VALOR almacenado en el evento es SIEMPRE el español
-// canónico (no se traduce, para no romper datos ni las comparaciones
-// accion === "Penalti" / "10m"). Solo se traduce la ETIQUETA mostrada en el
-// botón, vía labelAccionGol().
-// Acciones de gol: el VALOR almacenado en el evento es SIEMPRE el español
-// canónico (no se traduce, para no romper datos ni las comparaciones
-// accion === "Penalti" / "10m"). Solo se traduce la ETIQUETA mostrada en el
-// botón, vía labelAccionGol() (importado de @/lib/i18n).
+// canónico (no se traduce, para no romper datos ni las comparaciones de
+// lib/lanzamientos.ts con "Penalti" / "10m" / "FSB"). Solo se traduce la
+// ETIQUETA mostrada en el botón, vía labelAccionGol() (de @/lib/i18n).
 // Dos columnas, en el orden que pidió Arkaitz (22/8/2026): a la izquierda el
 // juego abierto (lo que más se marca), a la derecha el balón parado y las
 // superioridades. El VALOR sigue siendo el español canónico; solo la etiqueta
@@ -2012,8 +2010,10 @@ const ACCIONES_GOL_IZQ = [
   "Robo zona alta", "Ataque posicional", "1x1 banda", "Contraataque",
   "2ª jugada", "Salida de presión", "Incorporación de portero",
 ];
+// "FSB" (falta sin barrera, 26/9/2026) va pegada al 10 m: es la misma
+// situación, tirada desde donde fue la falta.
 const ACCIONES_GOL_DER = [
-  "Córner", "Banda", "Falta", "10m", "Penalti",
+  "Córner", "Banda", "Falta", "10m", "FSB", "Penalti",
   "5x4", "4x5", "4x3", "3x4", "Defensa de incorporación", "Otra",
 ];
 const ACCIONES_GOL = [...ACCIONES_GOL_IZQ, ...ACCIONES_GOL_DER];
@@ -2023,8 +2023,8 @@ function ModalGol(props: {
   enPista: string[]; rivalNombre: string;
   cfg: ConfigPartido; parteActual: ParteId;
   onCerrar: () => void;
-  /** penaltiExtra: extras a pasar al store cuando acción=Penalti/10m. */
-  onConfirmar: (ev: any, penaltiExtra?: { penaltiTipo?: "penalti" | "diezm"; penaltiPorteroRival?: string }) => void;
+  /** penaltiExtra: extras a pasar al store cuando acción=Penalti/10m/FSB. */
+  onConfirmar: (ev: any, penaltiExtra?: { penaltiTipo?: TipoLanzamiento; penaltiPorteroRival?: string }) => void;
 }) {
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
   const [goleador, setGoleador] = useState("");
@@ -2043,10 +2043,12 @@ function ModalGol(props: {
   const [asistSinFlecha, setAsistSinFlecha] = useState(false);
   const [porteroRival, setPorteroRival] = useState("");
 
-  const esPenaltiOAccion = accion === "Penalti" || accion === "10m";
+  // Penalti, 10 m o FSB (lib/lanzamientos.ts): sin zona de campo, se tiran
+  // desde su sitio y van directos a la portería.
+  const esPenaltiOAccion = esAccionLanzamiento(accion);
   // ¿Lleva flecha este gol? Vídeo, nuestro, con asistente, ni en propia ni de
-  // penalti/10 m (lib/asistencia.ts). El paso sale cuando ya hay acción: hasta
-  // entonces no se sabe si es un penalti.
+  // penalti/10 m/FSB (lib/asistencia.ts). El paso sale cuando ya hay acción:
+  // hasta entonces no se sabe si es un penalti.
   const pideFlecha = pideFlechaAsistencia(
     { equipo: equipo ?? undefined, asistente: asistente === "OMIT" ? "" : asistente, enPropia, accion },
     props.directo ? "directo" : "video");
@@ -2083,9 +2085,10 @@ function ModalGol(props: {
     if (zonaCampo) ev.zonaCampo = zonaCampo;
     if (zp) ev.zonaPorteria = zp;
     if (porteroRival && equipo === "INTER") ev.portero = porteroRival;
-    const extra = esPenaltiOAccion
+    const tipoLanz = tipoLanzamientoDeAccion(accion);
+    const extra = tipoLanz
       ? {
-          penaltiTipo: (accion === "10m" ? "diezm" : "penalti") as "penalti" | "diezm",
+          penaltiTipo: tipoLanz,
           penaltiPorteroRival: porteroRival || undefined,
         }
       : undefined;
@@ -2108,9 +2111,9 @@ function ModalGol(props: {
       ev.cuarteto = [...props.enPista];  // quinteto en pista en el gol rival
     }
     ev.accion = acc;
-    const esPenOAcc = acc === "Penalti" || acc === "10m";
-    const extra = esPenOAcc
-      ? { penaltiTipo: (acc === "10m" ? "diezm" : "penalti") as "penalti" | "diezm", penaltiPorteroRival: undefined }
+    const tipoLanz = tipoLanzamientoDeAccion(acc);
+    const extra = tipoLanz
+      ? { penaltiTipo: tipoLanz, penaltiPorteroRival: undefined }
       : undefined;
     props.onConfirmar(ev, extra);
   };
@@ -2186,7 +2189,7 @@ function ModalGol(props: {
 
       {/* Flecha de la ASISTENCIA (22/9/2026): de dónde sale el pase del gol y a
           dónde llega, como la del pase de gol y en el campo girado según la
-          parte. Solo gol nuestro con asistente y que no sea penalti/10 m, antes
+          parte. Solo gol nuestro con asistente y que no sea penalti/10 m/FSB, antes
           del remate. NUNCA en directo (cero zonas). Al acabar de dibujarla se
           pasa solo al remate y queda la línea de resumen para cambiarla. */}
       {pideFlecha && accion && (
@@ -2239,7 +2242,7 @@ function ModalGol(props: {
       {!props.directo && accion && (zonaCampo || esPenaltiOAccion) && (
         <PorteriaOverlay
           titulo={esPenaltiOAccion
-            ? t("mg_porteria_entra_accion", { accion: labelAccionGol(accion).toLowerCase() })
+            ? t("mg_porteria_entra_accion", { accion: enMinusculaSalvoSigla(labelAccionGol(accion)) })
             : t("mg_porteria_entra")}
           onSelect={(z) => aplicar(z)}
           onSaltar={() => aplicar("")}
@@ -2413,7 +2416,16 @@ function ModalDisparoRival(props: {
   );
 }
 
-// ──────────────── MODAL PENALTI / 10M ────────────────
+/** «¿Dónde entra el penalti?» en minúscula, pero una sigla se queda como es:
+ *  «el FSB», no «el fsb». */
+function enMinusculaSalvoSigla(txt: string): string {
+  return /^[A-ZÁÉÍÓÚÑ0-9]+$/.test(txt) ? txt : txt.toLowerCase();
+}
+
+// ──────────────── MODAL PENALTI / 10M / FSB ────────────────
+// El FSB (falta sin barrera, 26/9/2026) es la misma situación que el 10 m y se
+// apunta con el MISMO flujo: tirador, portero, resultado y, en vídeo, cuadrante.
+// Como el 10 m, no guarda desde dónde se tiró (ninguno de los tres lo guarda).
 
 function ModalPenalti(props: {
   directo: boolean;
@@ -2421,7 +2433,7 @@ function ModalPenalti(props: {
   onCerrar: () => void;
   onConfirmar: (ev: any) => void;
 }) {
-  const [tipo, setTipo] = useState<"penalti" | "diezm" | null>(null);
+  const [tipo, setTipo] = useState<TipoLanzamiento | null>(null);
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
   const [tirador, setTirador] = useState("");
   const [porteroNuestro, setPorteroNuestro] = useState("");
@@ -2448,14 +2460,18 @@ function ModalPenalti(props: {
   return (
     <ModalShell titulo={t("mp_titulo")} onCerrar={props.onCerrar}>
       <Paso n={1} titulo={t("mp_tipo")} activo={!tipo}>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button onClick={() => setTipo("penalti")}
             className={`py-3 rounded font-bold ${tipo === "penalti" ? "bg-pink-700" : "bg-zinc-800"}`}>
             {t("mp_penalti_6m")}</button>
           <button onClick={() => setTipo("diezm")}
             className={`py-3 rounded font-bold ${tipo === "diezm" ? "bg-pink-700" : "bg-zinc-800"}`}>
             {t("mp_10m")}</button>
+          <button onClick={() => setTipo("fsb")}
+            className={`py-3 rounded font-bold ${tipo === "fsb" ? "bg-pink-700" : "bg-zinc-800"}`}>
+            {t("mp_fsb")}</button>
         </div>
+        <p className="text-xs text-zinc-500 mt-2">{t("mp_fsb_nota")}</p>
       </Paso>
 
       {tipo && (

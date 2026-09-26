@@ -12,6 +12,7 @@ import type { Evento, ParteId, Partido } from "@/lib/db";
 import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
 import { contarPorZona } from "@/lib/zonas";
+import { accionDeLanzamiento, esLanzamiento } from "@/lib/lanzamientos";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 
@@ -33,6 +34,7 @@ function emojiEvento(ev: Evento): string {
     case "disparo":           return "🎯";
     case "penalti":           return "🥅";
     case "diezm":             return "📌";
+    case "fsb":               return "📍";
     case "accion_individual": return "👤";
     default:                  return "•";
   }
@@ -76,8 +78,9 @@ function descripcionEvento(ev: Evento, rival: string): string {
         return `Disparo ${equipoTxt(ev.equipo)} — ${quien} (${ev.resultado}${ext.length ? `, ${ext.join(", ")}` : ""})`;
       }
       case "penalti":
-      case "diezm": {
-        const tipoTxt = ev.tipo === "penalti" ? "Penalti" : "10m";
+      case "diezm":
+      case "fsb": {
+        const tipoTxt = accionDeLanzamiento(ev.tipo);
         const ext: string[] = [];
         if (ev.zonaPorteria) ext.push(ev.zonaPorteria);
         return `${tipoTxt} ${equipoTxt(ev.equipo)} — ${ev.tirador || "?"} → ${ev.resultado}${ext.length ? ` (${ext.join(", ")})` : ""}`;
@@ -605,19 +608,18 @@ export default function ResumenPage() {
           <div className="bg-zinc-900 rounded-xl p-5">
             <h3 className="text-lg font-bold text-zinc-300 mb-4">{t("res_goles_partido")}</h3>
             {(() => {
-              // Incluye goles normales (tipo "gol") Y los penaltis/10 m que
-              // acabaron en GOL metidos por el botón PEN/10M (eventos
-              // "penalti"/"diezm" SIN golId; los que tienen golId son el
+              // Incluye goles normales (tipo "gol") Y los penaltis/10 m/FSB
+              // que acabaron en GOL metidos por el botón PEN/10M/FSB (eventos
+              // de lib/lanzamientos.ts SIN golId; los que tienen golId son el
               // gemelo auto-creado de un gol y ya van como "gol"). Se
               // normalizan a forma de gol (tirador→goleador, accion).
               const goles = eventosOrdenados
                 .filter((ev: any) => ev.tipo === "gol"
-                  || ((ev.tipo === "penalti" || ev.tipo === "diezm")
-                      && ev.resultado === "GOL" && !ev.golId))
+                  || (esLanzamiento(ev) && ev.resultado === "GOL" && !ev.golId))
                 .map((ev: any) => ev.tipo === "gol" ? ev : {
                   ...ev,
                   goleador: ev.tirador || ev.goleador || "",
-                  accion: ev.tipo === "penalti" ? "Penalti" : "10 m",
+                  accion: accionDeLanzamiento(ev.tipo),
                 });
               if (goles.length === 0) {
                 return <p className="text-base text-zinc-500">{t("res_sin_goles")}</p>;
@@ -1074,7 +1076,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
         clase: `${colorEq} opacity-80`,
         alturaPct: 55,
       });
-    } else if (ev.tipo === "disparo" || ev.tipo === "penalti" || ev.tipo === "diezm") {
+    } else if (ev.tipo === "disparo" || esLanzamiento(ev)) {
       const jug = (ev as any).jugador || (ev as any).tirador || "—";
       const res = (ev as any).resultado || "";
       marcas.push({
@@ -1315,8 +1317,8 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
 
   const partesFiltro: ParteId[] = filtroParte === "todo" ? partesJugadas : [filtroParte];
 
-  // ─── Recolecto disparos del partido (incluye disparos directos, penaltis y 10m
-  //     porque también acaban a puerta/gol/etc.) ───
+  // ─── Recolecto disparos del partido (incluye disparos directos, penaltis, 10m
+  //     y FSB porque también acaban a puerta/gol/etc.) ───
   type Tiro = { equipo: "INTER" | "RIVAL"; parte: ParteId; res: ResD; zonaCampo?: string; zonaPort?: string };
   const tiros: Tiro[] = [];
 
@@ -1326,12 +1328,12 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
   // decía 14 disparos y el desglose por partes sumaba 11, que son justo los 3
   // goles que faltaban. (El general sale de los contadores, que sí los cuentan.)
   //
-  // Los goles de penalti o de 10 metros YA vienen contados por su evento
-  // enlazado, así que esos se saltan para no contarlos dos veces.
+  // Los goles de penalti, de 10 metros o de FSB YA vienen contados por su
+  // evento enlazado, así que esos se saltan para no contarlos dos veces.
   const golesYaContados = new Set<string>();
   for (const ev of partido.eventos) {
     const gid = (ev as any).golId as string | undefined;
-    if (gid && (ev.tipo === "penalti" || ev.tipo === "diezm" || ev.tipo === "disparo")) {
+    if (gid && (esLanzamiento(ev) || ev.tipo === "disparo")) {
       golesYaContados.add(gid);
     }
   }
@@ -1362,7 +1364,7 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
         zonaCampo: (ev as any).zonaCampo,
         zonaPort: (ev as any).zonaPorteria,
       });
-    } else if (ev.tipo === "penalti" || ev.tipo === "diezm") {
+    } else if (esLanzamiento(ev)) {
       const r = (ev as any).resultado as "GOL" | "PARADA" | "POSTE" | "FUERA";
       const res: ResD = r === "GOL" ? "GOL"
         : r === "PARADA" ? "PUERTA"
