@@ -789,6 +789,12 @@ export const CATALOGO: Record<string, Entrada> = {
                                en: "Flying goalkeeper", it: "Portiere di movimento" },
   acc_defensa_incorporacion: { es: "Defensa de incorporación",
                                en: "Defending flying GK", it: "Difesa del portiere di movimento" },
+  // La pareja de acc_defensa_incorporacion, vista desde el que ENCAJA
+  // (28/9/2026): subimos al portero, nos roban el balón y marcan. La etiqueta
+  // va corta para que entre en el botón (como la de acc_perdida_salida_presion);
+  // el VALOR guardado es el largo, «Pérdida en incorporación de portero».
+  acc_perdida_incorporacion: { es: "Pérdida incorporación",
+                               en: "Flying GK turnover", it: "Perdita col portiere" },
   acc_otra: { es: "Otra", en: "Other", it: "Altro" },
 
   // ══════════════════ MODAL DISPARO RIVAL ══════════════════
