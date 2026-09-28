@@ -12,6 +12,7 @@ import { Porteria } from "@/components/Porteria";
 import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo, Evento, Flecha } from "@/lib/db";
 import { direccionAtaque, sacaEn, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelResultadoDisparo, labelAccionGol } from "@/lib/i18n";
+import { ACCIONES_GOL, ACCIONES_GOL_DER, ACCIONES_GOL_IZQ } from "@/lib/situaciones";
 import { etiquetaAccionInd } from "@/lib/acciones";
 import { zonasDeFlecha } from "@/lib/geometriaCampo";
 import { golNuestroCerca, pasesGolCerca } from "@/lib/paseGol";
@@ -2002,21 +2003,8 @@ function porDorsal(nombres: string[]): string[] {
   });
 }
 
-// Dos columnas: izquierda juego abierto, derecha balón parado y superioridades.
-// "Incorporación de portero" (atacamos con el portero arriba) y "Defensa de
-// incorporación" (marcamos con el portero rival subido) van con las
-// superioridades, que es su familia (pedido de Arkaitz 30/8/2026).
-const ACCIONES_GOL_IZQ = [
-  "Robo zona alta", "Ataque posicional", "1x1 banda", "Contraataque",
-  "2ª jugada", "Salida de presión", "Incorporación de portero",
-];
-// "FSB" (falta sin barrera, 26/9/2026) va pegada al 10 m: es la misma
-// situación, tirada desde donde fue la falta.
-const ACCIONES_GOL_DER = [
-  "Córner", "Banda", "Falta", "10m", "FSB", "Penalti",
-  "5x4", "4x5", "4x3", "3x4", "Defensa de incorporación", "Otra",
-];
-const ACCIONES_GOL = [...ACCIONES_GOL_IZQ, ...ACCIONES_GOL_DER];
+// Las dos columnas de botones salen del sitio único `lib/situaciones.ts`: la
+// lista estaba escrita aquí Y en el editor post-partido, y ya no coincidían.
 
 function ModalGol(props: {
   directo: boolean;

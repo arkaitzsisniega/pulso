@@ -67,6 +67,7 @@
  */
 import { useSyncExternalStore } from "react";
 import { CLIENTE } from "@/lib/clientes";
+import { ALIAS_ACCION_GOL, CLAVE_ACCION_GOL } from "./situaciones";
 
 export type Idioma = "es" | "en" | "it";
 
@@ -775,6 +776,10 @@ export const CATALOGO: Record<string, Entrada> = {
   acc_robo_zona_alta: { es: "Robo zona alta", en: "High-press steal", it: "Recupero zona alta" },
   acc_2a_jugada: { es: "Segunda jugada", en: "Second phase", it: "Seconda giocata" },
   acc_salida_presion: { es: "Salida de presión", en: "Press break", it: "Uscita dalla pressione" },
+  // La pareja de acc_robo_zona_alta, vista desde el que ENCAJA (28/9/2026): el
+  // rival nos roba arriba y marca. La etiqueta va corta para que entre en el
+  // botón; el VALOR guardado es el largo, «Pérdida en salida de presión».
+  acc_perdida_salida_presion: { es: "Pérdida salida presión", en: "Press-break turnover", it: "Perdita in uscita" },
   acc_1x1_banda: { es: "1x1 banda", en: "1v1 wing", it: "1v1 sulla fascia" },
   acc_ataque_posicional: { es: "Ataque posicional", en: "Positional attack", it: "Attacco posizionale" },
   acc_10m: { es: "10m", en: "10m", it: "10m" },
@@ -1326,25 +1331,13 @@ export function labelResultadoDisparo(codigo: string): string {
   return entrada ? (entrada[_idioma] ?? codigo) : codigo;
 }
 
-// Mapa valor-canónico-ES de acción de gol → clave del catálogo. El VALOR de
-// la acción almacenado en el evento es SIEMPRE el español (no se traduce);
-// aquí solo se mapea para mostrar. Incluye el alias "10 m" (con espacio), que
-// usaba el resumen para los 10 m sueltos hasta el 26/9/2026.
-const CLAVE_ACCION_GOL: Record<string, string> = {
-  "Córner": "acc_corner", "Banda": "acc_banda", "Falta": "acc_falta",
-  "5x4": "acc_5x4", "4x5": "acc_4x5", "4x3": "acc_4x3", "3x4": "acc_3x4",
-  "Contraataque": "acc_contraataque", "Robo zona alta": "acc_robo_zona_alta",
-  "Salida de presión": "acc_salida_presion",
-  "1x1 banda": "acc_1x1_banda", "Ataque posicional": "acc_ataque_posicional",
-  "10m": "acc_10m", "10 m": "acc_10m", "Penalti": "acc_penalti", "FSB": "acc_fsb",
-  "2ª jugada": "acc_2a_jugada", "Otra": "acc_otra",
-  "Incorporación de portero": "acc_incorporacion_portero",
-  "Defensa de incorporación": "acc_defensa_incorporacion",
-};
-
+// El mapa valor-canónico-ES → clave del catálogo vive junto a la LISTA de
+// acciones, en `lib/situaciones.ts`: si estuvieran en dos ficheros podrían
+// desparejarse (una acción nueva sin clave sale en español para todos).
 /** Etiqueta visible de una acción de gol (valor almacenado = ES canónico). */
 export function labelAccionGol(accion: string): string {
-  const clave = CLAVE_ACCION_GOL[accion];
+  const canonica = ALIAS_ACCION_GOL[accion] ?? accion;
+  const clave = CLAVE_ACCION_GOL[canonica];
   return clave ? (CATALOGO[clave]?.[_idioma] ?? accion) : accion;
 }
 

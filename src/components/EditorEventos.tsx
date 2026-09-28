@@ -20,6 +20,7 @@ import { direccionAtaque } from "@/lib/db";
 import { ROSTER, PORTEROS, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
 import { t, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
+import { ACCIONES_GOL } from "@/lib/situaciones";
 import { etiquetaAccionInd, gruposAccionInd } from "@/lib/acciones";
 import { Campo } from "@/components/Campo";
 import { CampoFlecha } from "@/components/CampoFlecha";
@@ -38,11 +39,10 @@ const TIPOS: Evento["tipo"][] = [
   "gol", "disparo", "falta", "amarilla", "roja", "tiempo_muerto",
   "penalti", "diezm", "fsb", "cambio", "accion_individual",
 ];
-const ACCIONES_GOL = [
-  "Córner", "Banda", "Falta", "5x4", "4x5", "4x3", "3x4", "Contraataque",
-  "Robo zona alta", "Salida de presión", "1x1 banda", "Ataque posicional",
-  "10m", "FSB", "Penalti", "2ª jugada", "Otra",
-];
+// Las acciones de gol, del sitio único `lib/situaciones.ts`. Hasta el 28/9/2026
+// estaban copiadas aquí y les faltaban «Incorporación de portero» y «Defensa de
+// incorporación»: al abrir un gol apuntado con una de ellas, este desplegable
+// no la tenía y enseñaba otra en su sitio, como si fuera lo guardado.
 const RES_DISPARO = ["PUERTA", "PALO", "FUERA", "BLOQUEADO"];
 const RES_PENALTI = ["GOL", "PARADA", "POSTE", "FUERA"];
 
