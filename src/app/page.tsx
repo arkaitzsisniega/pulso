@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { type Partido } from "@/lib/db";
 import { listarPartidos, marcarPartidoActivo, rehacerPartido, borrarPartido } from "@/lib/store";
+import { jugabamosEnCasa } from "@/lib/rehacer";
 import { t, useIdioma } from "@/lib/i18n";
 import { CLIENTE, VERSION_CRONO } from "@/lib/clientes";
 
@@ -24,10 +25,26 @@ export default function Home() {
 
   const verStats = (id: string) => { marcarPartidoActivo(id); router.push("/resumen"); };
   const continuar = (id: string) => { marcarPartidoActivo(id); router.push("/partido"); };
-  const rehacer = async (id: string) => {
-    if (!confirm(t("home_rehacer_confirm"))) return;
-    const nuevoId = await rehacerPartido(id);
-    if (nuevoId) router.push("/partido");
+
+  // Rehacer con vídeo (26/9/2026): antes era un confirm() que copiaba la
+  // cabecera tal cual, y si el partido estaba apuntado en casa siendo fuera no
+  // había dónde cambiarlo. Ahora sale una ventana con EN CASA / FUERA, con lo
+  // del original ya marcado (lib/rehacer.ts).
+  const [aRehacer, setARehacer] = useState<Partido | null>(null);
+  const [enCasa, setEnCasa] = useState(false);
+  const [rehaciendo, setRehaciendo] = useState(false);
+  const abrirRehacer = (p: Partido) => {
+    setARehacer(p);
+    setEnCasa(jugabamosEnCasa(p.config));
+    setRehaciendo(false);
+  };
+  const confirmarRehacer = async () => {
+    if (!aRehacer || rehaciendo) return;       // anti-doble-toque en el iPad
+    setRehaciendo(true);
+    const nuevoId = await rehacerPartido(aRehacer.id, { local: enCasa });
+    if (nuevoId) { router.push("/partido"); return; }
+    setRehaciendo(false);
+    setARehacer(null);
   };
   const borrar = async (id: string) => {
     if (!confirm(t("home_borrar_confirm"))) return;
@@ -106,7 +123,7 @@ export default function Home() {
                         className="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-bold">
                         {t("home_ver_stats")}
                       </button>
-                      <button onClick={() => rehacer(p.id)}
+                      <button onClick={() => abrirRehacer(p)}
                         className="px-3 py-2 bg-sky-700 hover:bg-sky-600 rounded-lg text-sm font-bold">
                         {t("home_rehacer")}
                       </button>
@@ -127,6 +144,53 @@ export default function Home() {
           {t("home_offline")}
         </div>
       </div>
+
+      {aRehacer && aRehacer.config && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => { if (!rehaciendo) setARehacer(null); }}>
+          <div className="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-2xl font-bold mb-1">{t("home_rehacer")}</h3>
+            <p className="text-lg font-bold text-white">
+              {aRehacer.config.partido_id}
+              <span className="font-normal text-zinc-400"> · {aRehacer.config.rival} · {aRehacer.config.fecha}</span>
+            </p>
+            <p className="text-sm text-zinc-400 mt-2 mb-5">{t("home_rehacer_explica")}</p>
+
+            <p className="text-base font-semibold text-zinc-200 mb-2">{t("home_rehacer_donde")}</p>
+            <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label={t("home_rehacer_donde")}>
+              {[true, false].map((casa) => {
+                const elegido = enCasa === casa;
+                return (
+                  <button key={String(casa)} type="button" role="radio" aria-checked={elegido}
+                    data-rehacer-local={casa ? "casa" : "fuera"}
+                    onClick={() => setEnCasa(casa)}
+                    style={{ touchAction: "manipulation" }}
+                    className={`py-5 rounded-xl text-xl font-bold border-2 ${
+                      elegido ? "bg-emerald-700 border-emerald-300 text-white"
+                              : "bg-zinc-800 border-zinc-700 text-zinc-400"}`}>
+                    {casa ? t("home_rehacer_casa") : t("home_rehacer_fuera")}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-zinc-500 mt-2">{t("home_rehacer_nota")}</p>
+
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <button type="button" onClick={() => setARehacer(null)} disabled={rehaciendo}
+                className="py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-base font-semibold">
+                {t("cancelar")}
+              </button>
+              <button type="button" onClick={confirmarRehacer} disabled={rehaciendo}
+                style={{ touchAction: "manipulation" }}
+                className={`py-3 rounded-xl text-base font-bold ${
+                  rehaciendo ? "bg-zinc-700 opacity-60" : "bg-sky-700 hover:bg-sky-600"}`}>
+                {rehaciendo ? t("home_rehacer_creando") : t("home_rehacer_ok")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

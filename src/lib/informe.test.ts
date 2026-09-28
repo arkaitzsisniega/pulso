@@ -6,11 +6,21 @@
  * club, así que un número mal no se nota: parece un dato. Se prueba con un
  * partido de mentira donde el resultado se sabe a mano.
  */
-import {
-  construirInforme, tramosDePista, mmss, valorar,
-  type ContextoInforme, type FilaJugador,
-} from "./informe.ts";
+import type { ContextoInforme, FilaJugador } from "./informe.ts";
 import type { Partido } from "./db.ts";
+// informe.ts importa `lanzamientos` como el resto de la app, sin la extensión (así
+// lo quiere el build). Node no busca extensiones al importar, así que aquí se le
+// enseña a probar con ".ts" antes de cargarlo (el truco de asistencia.test.ts).
+import { registerHooks } from "node:module";
+registerHooks({
+  resolve(especificador, contexto, siguiente) {
+    if (especificador.startsWith(".") && !/\.[cm]?[jt]sx?$/.test(especificador)) {
+      try { return siguiente(`${especificador}.ts`, contexto); } catch { /* tal cual */ }
+    }
+    return siguiente(especificador, contexto);
+  },
+});
+const { construirInforme, tramosDePista, mmss, valorar } = await import("./informe.ts");
 
 let fallos = 0;
 function ok(cond: boolean, msg: string) {
@@ -370,6 +380,28 @@ igual(mmss(125), "2:05", "mmss redondea hacia abajo");
   } } as never;
   ok(construirInforme(soloAnticipacion, CTX)!.hayVideo,
      "con solo anticipaciones apuntadas, la sección de vídeo se enseña igual");
+}
+
+// 19 · Penaltis, 10 m y FSB (falta sin barrera, 26/9/2026): los tres en la
+//      misma lista, cada uno con su nombre y en orden de partido.
+{
+  const p = base();
+  const lanz = (id: string, tipo: string, parte: string, s: number, equipo: string, resultado: string, t: number) =>
+    ({ id, tipo, equipo, parte, segundosParte: s, segundosPartido: s, timestampReal: t,
+       marcador: { inter: 0, rival: 0 }, tirador: equipo === "INTER" ? "A" : "", portero: "", resultado });
+  p.eventos = [
+    ...p.eventos,
+    lanz("l1", "fsb", "2T", 900, "INTER", "PARADA", 10),
+    lanz("l2", "diezm", "1T", 900, "RIVAL", "FUERA", 11),
+    lanz("l3", "penalti", "2T", 30, "INTER", "GOL", 12),
+  ] as never;
+  const inf = construirInforme(p, CTX)!;
+  igual(inf.penaltis.map((x) => x.tipo), ["10m", "Penalti", "FSB"],
+        "el FSB sale en la lista de lanzamientos, con su nombre y en su minuto");
+  const fsb = inf.penaltis.find((x) => x.tipo === "FSB")!;
+  igual([fsb.nuestro, fsb.tirador, fsb.resultado, fsb.parte, fsb.minuto], [true, "A", "PARADA", "2T", "15:00"],
+        "con quién lo tiró, cómo acabó y cuándo");
+  igual(construirInforme(base(), CTX)!.penaltis, [], "un partido sin lanzamientos no se inventa ninguno");
 }
 
 console.log(fallos ? `\n❌ Informe: ${fallos} fallo(s)` : "\n✅ Informe OK (0 fallos)");
