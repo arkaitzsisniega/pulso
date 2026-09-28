@@ -49,13 +49,28 @@ console.log("── Situaciones de gol ──");
   igual(ACCIONES_GOL_IZQ.indexOf("Pérdida en salida de presión" as never),
         ACCIONES_GOL_IZQ.indexOf("Salida de presión" as never) + 1,
         "pegada a «Salida de presión», que es donde se busca por el nombre");
+  // El mismo día, un poco después: el club abrió columna propia para la
+  // pérdida en la incorporación (PIP) y aquí no había botón, así que ese gol
+  // solo se podía apuntar editando el partido en la web. En directo se pulsaba
+  // «Incorporación de portero», que es otra cosa, y la pérdida se perdía.
+  ok(ACCIONES_GOL.includes("Pérdida en incorporación de portero"),
+     "«Pérdida en incorporación de portero» es un botón de gol (28/9/2026)");
+  igual(ACCIONES_GOL_IZQ.indexOf("Pérdida en incorporación de portero" as never),
+        ACCIONES_GOL_IZQ.indexOf("Incorporación de portero" as never) + 1,
+        "pegada a «Incorporación de portero», que es donde se busca por el "
+        + "nombre (su pareja, «Defensa de incorporación», va en la otra columna)");
 }
 
 // 2 · Las parejas con espejo: las dos caras se pueden apuntar
 {
   igual(PAREJAS_ESPEJO.map(([, encaja]) => encaja),
-        ["Incorporación de portero", "Pérdida en salida de presión"],
+        ["Pérdida en incorporación de portero", "Pérdida en salida de presión"],
         "las dos situaciones que se apuntan cuando NOS marcan");
+  // «Incorporación de portero» NO es el espejo de nadie: en el club es la
+  // jugada, sin decir quién la ganó, y vale para los dos lados. Antes del
+  // 28/9/2026 estaba puesta como pareja del robo y por eso no había pérdida.
+  ok(!PAREJAS_ESPEJO.some(([, encaja]) => encaja === "Incorporación de portero"),
+     "«Incorporación de portero» ya no hace de pérdida: tiene la suya");
   for (const [marca, encaja] of PAREJAS_ESPEJO) {
     ok(ACCIONES_GOL.includes(marca) && ACCIONES_GOL.includes(encaja),
        `la pareja «${marca}» / «${encaja}» tiene botón por los dos lados`);
@@ -93,6 +108,17 @@ console.log("── Situaciones de gol ──");
   igual([perdida.es, perdida.en, perdida.it],
         ["Pérdida salida presión", "Press-break turnover", "Perdita in uscita"],
         "la nueva, en los tres idiomas");
+  const perdidaInc = CAT[CLAVE_ACCION_GOL["Pérdida en incorporación de portero"]];
+  igual([perdidaInc.es, perdidaInc.en, perdidaInc.it],
+        ["Pérdida incorporación", "Flying GK turnover", "Perdita col portiere"],
+        "y la de la incorporación, también en los tres");
+  // El botón se lee de un vistazo en pleno partido: la etiqueta va CORTA
+  // aunque el valor guardado sea el nombre largo. El tope es lo que ya mide la
+  // más larga que hay hoy («Difesa del portiere di movimento»).
+  const largas = ACCIONES_GOL
+    .flatMap((a) => ["es", "en", "it"].map((l) => CAT[CLAVE_ACCION_GOL[a]][l]))
+    .filter((txt) => txt.length > 32);
+  igual(largas, [], "ninguna etiqueta de botón pasa de 32 caracteres");
   igual(ALIAS_ACCION_GOL["10 m"], "10m",
         "«10 m» con espacio sigue valiendo (partidos de antes del 26/9)");
 }
