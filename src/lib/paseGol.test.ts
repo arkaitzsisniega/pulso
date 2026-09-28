@@ -6,9 +6,21 @@
  * de gol Y como asistencia, el jugador se lleva +2 de más sin que nadie lo vea.
  */
 import type { Evento } from "./db.ts";
-import {
+// paseGol.ts importa `lanzamientos` como el resto de la app, sin la extensión (así
+// lo quiere el build). Node no busca extensiones al importar, así que aquí se le
+// enseña a probar con ".ts" antes de cargarlo (el truco de asistencia.test.ts).
+import { registerHooks } from "node:module";
+registerHooks({
+  resolve(especificador, contexto, siguiente) {
+    if (especificador.startsWith(".") && !/\.[cm]?[jt]sx?$/.test(especificador)) {
+      try { return siguiente(`${especificador}.ts`, contexto); } catch { /* tal cual */ }
+    }
+    return siguiente(especificador, contexto);
+  },
+});
+const {
   VENTANA_PASE_GOL_SEG, esGolNuestro, golNuestroCerca, pasesGolCerca,
-} from "./paseGol.ts";
+} = await import("./paseGol.ts");
 
 let fallos = 0;
 function ok(cond: boolean, msg: string) {
@@ -79,6 +91,15 @@ igual(VENTANA_PASE_GOL_SEG, 20, "la ventana es de 20 segundos");
      "un 10 m parado no es gol");
   ok(!esGolNuestro(ev({ tipo: "disparo", equipo: "INTER", resultado: "PUERTA", jugador: "RAYA" } as never)),
      "un disparo no es gol");
+  // FSB, falta sin barrera (26/9/2026): cuenta igual que el 10 m.
+  ok(esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "GOL", tirador: "RAYA", portero: "" } as never)),
+     "un FSB metido con su botón (sin evento gol) es gol nuestro");
+  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "GOL", tirador: "RAYA", portero: "", golId: "g1" } as never)),
+     "el FSB gemelo de un gol no se cuenta dos veces");
+  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "RIVAL", resultado: "GOL", tirador: "", portero: "HERRERO" } as never)),
+     "un FSB que nos meten no es gol nuestro");
+  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "POSTE", tirador: "RAYA", portero: "" } as never)),
+     "un FSB al poste no es gol");
 }
 
 console.log(fallos ? `\n❌ Pase de gol: ${fallos} fallo(s)` : "\n✅ Pase de gol OK (0 fallos)");

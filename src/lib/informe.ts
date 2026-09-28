@@ -23,10 +23,12 @@ import type {
   Partido,
   ParteId,
 } from "./db";
+import { accionDeLanzamiento, esLanzamiento } from "./lanzamientos";
 
-// Solo TIPOS de ./db, y el roster entra por parámetro: así este módulo se
-// puede probar con `node --experimental-strip-types` sin arrastrar Dexie ni la
-// configuración del cliente. Es el mismo criterio que sigue reconstruir.ts.
+// Solo TIPOS de ./db (más `lanzamientos`, que es puro), y el roster entra por
+// parámetro: así este módulo se puede probar con `node --experimental-strip-types`
+// sin arrastrar Dexie ni la configuración del cliente. Es el mismo criterio que
+// sigue reconstruir.ts.
 export const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 
 /** Espejo de JUGADOR_EQUIPO de db.ts: acciones del equipo y tarjetas al cuerpo
@@ -745,16 +747,18 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
     }
   }
 
-  // ── Penaltis, tiempos muertos y tarjetas ───────────────────────────────
+  // ── Penaltis, 10 m, FSB, tiempos muertos y tarjetas ─────────────────────
+  // Los lanzamientos sin barrera, los tres juntos (lib/lanzamientos.ts); el
+  // tipo sale con el nombre de su acción de gol: "Penalti", "10m" o "FSB".
   const penaltis = conT
-    .filter(({ ev }) => ev.tipo === "penalti" || ev.tipo === "diezm")
-    .map(({ ev }) => {
+    .flatMap(({ ev }) => (esLanzamiento(ev) ? [ev] : []))
+    .map((ev) => {
       const e = ev as unknown as Record<string, unknown>;
       return {
         minuto: mmss(n(e.segundosParte)),
         parte: ev.parte,
         nuestro: String(e.equipo) === "INTER",
-        tipo: ev.tipo === "diezm" ? "10m" : "Penalti",
+        tipo: accionDeLanzamiento(ev.tipo),
         tirador: String(e.tirador ?? "").trim() || undefined,
         resultado: String(e.resultado ?? ""),
       };

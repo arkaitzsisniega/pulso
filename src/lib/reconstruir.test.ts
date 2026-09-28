@@ -7,7 +7,19 @@
  * el NO-doble-conteo del par gol+penalti enlazado y la atribución al portero.
  */
 import type { Partido, Evento, ParteId } from "./db";
-import { reconstruirAgregados, recomputarMinutos } from "./reconstruir.ts";
+// reconstruir.ts importa `lanzamientos` como el resto de la app, sin la extensión (así
+// lo quiere el build). Node no busca extensiones al importar, así que aquí se le
+// enseña a probar con ".ts" antes de cargarlo (el truco de asistencia.test.ts).
+import { registerHooks } from "node:module";
+registerHooks({
+  resolve(especificador, contexto, siguiente) {
+    if (especificador.startsWith(".") && !/\.[cm]?[jt]sx?$/.test(especificador)) {
+      try { return siguiente(`${especificador}.ts`, contexto); } catch { /* tal cual */ }
+    }
+    return siguiente(especificador, contexto);
+  },
+});
+const { reconstruirAgregados, recomputarMinutos } = await import("./reconstruir.ts");
 
 const esPortero = (n: string) => n === "HERRERO";
 
@@ -75,7 +87,9 @@ const eventos: Evento[] = [
 const r = reconstruirAgregados(base(eventos), esPortero);
 
 let fallos = 0;
+let checks = 0;
 function check(nombre: string, real: unknown, esperado: unknown) {
+  checks += 1;
   const ok = JSON.stringify(real) === JSON.stringify(esperado);
   if (!ok) { fallos++; console.error(`  ✗ ${nombre}: esperado ${JSON.stringify(esperado)}, fue ${JSON.stringify(real)}`); }
   else console.log(`  ✓ ${nombre}`);
@@ -112,6 +126,30 @@ const p6 = r.eventos.find((e) => e.id === "p6")!;
 check("snapshot g6 (pre-gol)", g6.marcador, { inter: 1, rival: 1 });
 check("snapshot p6 = snapshot g6", p6.marcador, { inter: 1, rival: 1 });
 
+// ── FSB, falta sin barrera (26/9/2026): cuenta igual que el 10 m ─────────────
+// Si reconstruirAgregados no lo reconociera, al editar un partido su gol se
+// caería del marcador sin avisar. Los tres casos: suelto y gol, del rival y
+// parado, y gemelo de un gol (que ya contó su gol).
+{
+  const rf = reconstruirAgregados(base([
+    ev({ id: "f1", tipo: "fsb", parte: "1T", segundosParte: 100, equipo: "INTER", tirador: "B", portero: "", resultado: "GOL" } as any),
+    ev({ id: "f2", tipo: "fsb", parte: "1T", segundosParte: 200, equipo: "RIVAL", tirador: "", portero: "HERRERO", resultado: "PARADA" } as any),
+    ev({ id: "gf", tipo: "gol", parte: "2T", segundosParte: 300, equipo: "INTER", goleador: "C", accion: "FSB", cuarteto: [], penaltiId: "f3" } as any),
+    ev({ id: "f3", tipo: "fsb", parte: "2T", segundosParte: 300, equipo: "INTER", tirador: "C", portero: "", resultado: "GOL", golId: "gf" } as any),
+    ev({ id: "f4", tipo: "fsb", parte: "2T", segundosParte: 400, equipo: "RIVAL", tirador: "", portero: "HERRERO", resultado: "GOL" } as any),
+  ]), esPortero);
+  console.log("\nTest FSB (falta sin barrera):");
+  check("FSB: marcador (el suelto y el del gol cuentan una vez; el del rival, también)", rf.marcador, { inter: 2, rival: 1 });
+  check("FSB: el tirador del suelto suma su tiro a puerta", rf.acciones.porJugador["B"]?.dpp, 1);
+  check("FSB: el gemelo de un gol no duplica el tiro", rf.acciones.porJugador["C"]?.dpp, 1);
+  check("FSB parado por nuestro portero", rf.acciones.porJugador["HERRERO"]?.paradas, 1);
+  check("FSB del rival que entra: gol encajado", rf.acciones.porJugador["HERRERO"]?.golesEncajados, 1);
+  check("FSB: disparos del rival a puerta (parado + gol)", rf.disparosRival.puerta, 2);
+  const gf = rf.eventos.find((e) => e.id === "gf")!;
+  const f3 = rf.eventos.find((e) => e.id === "f3")!;
+  check("FSB: el gemelo lleva el marcador de su gol (pre-gol)", f3.marcador, gf.marcador);
+}
+
 // ── Test recomputarMinutos (opción D) ──────────────────────────────────────
 // 2×20' (1200s/parte). Pista inicial HERRERO,A,B,C,D. Cambio 1T@600: sale A, entra E.
 // → A juega 0-600 (600); E entra y sigue toda la 2ª parte; B/C/D/HERRERO completos.
@@ -128,5 +166,5 @@ check("A en 2T = 0", tm["A"]?.porParte["2T"], 0);
 check("E en 1T = 600", tm["E"]?.porParte["1T"], 600);
 check("E en 2T = 1200", tm["E"]?.porParte["2T"], 1200);
 
-if (fallos === 0) { console.log("\n✅ TODO OK (26 checks)"); }
+if (fallos === 0) { console.log(`\n✅ TODO OK (${checks} checks)`); }
 else { console.error(`\n❌ ${fallos} fallo(s)`); process.exit(1); }

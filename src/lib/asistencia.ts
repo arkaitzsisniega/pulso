@@ -12,8 +12,8 @@
  *   · flechaAsistencia       la flecha {x0, y0, x1, y1}, al menos de 1 m.
  *   · zonaAsistencia         la zona de SALIDA, calculada de la flecha.
  *   · zonaAsistenciaDestino  la zona de LLEGADA, calculada de la flecha.
- * Solo en un gol NUESTRO, con asistente, que no sea en propia ni de penalti o
- * de 10 m (ese no tiene pase), y solo se pide en los partidos de VÍDEO: en
+ * Solo en un gol NUESTRO, con asistente, que no sea en propia ni de penalti,
+ * de 10 m o de FSB (no tienen pase), y solo se pide en los partidos de VÍDEO: en
  * directo no da tiempo. Sin flecha, ninguno de los tres va en el gol.
  *
  * Una excepción que no se crea, solo se respeta: los goles de vídeo apuntados
@@ -26,6 +26,7 @@
  */
 import type { Flecha } from "./db";
 import { flechaSuficiente, normalizar, zonasDeFlecha } from "./geometriaCampo";
+import { esAccionLanzamiento } from "./lanzamientos";
 
 /** Lo que estas reglas miran de un gol: sirve el evento guardado, el borrador
  *  del editor y lo que lleva elegido el modal del gol. */
@@ -48,12 +49,12 @@ export interface CamposAsistencia {
   zonaAsistenciaDestino: string | undefined;
 }
 
-/** Las acciones de gol que no tienen pase: el penalti y el 10 m se tiran solos. */
-const SIN_PASE = new Set(["Penalti", "10m"]);
-
 /**
  * ¿Puede llevar flecha de asistencia este gol? Gol NUESTRO, con asistente, que
- * no sea en propia ni de penalti o de 10 m. No mira el modo del partido: eso es
+ * no sea en propia ni de penalti, de 10 m o de FSB: esos se tiran solos, no
+ * tienen pase (en el FSB, como en el 10 m, el que lo tira tiene que buscar
+ * portería, no puede pasarla). Cuáles son lo dice `lib/lanzamientos.ts`.
+ * No mira el modo del partido: eso es
  * cuándo se PIDE (`pideFlechaAsistencia`); una flecha ya dibujada no se pierde
  * porque alguien cambie el partido de modo.
  */
@@ -63,7 +64,7 @@ export function golAdmiteFlecha(gol: GolConAsistencia | null | undefined): boole
   if (gol.equipo !== "INTER") return false;
   if (gol.enPropia) return false;
   if (!(gol.asistente ?? "").trim()) return false;
-  return !SIN_PASE.has(gol.accion ?? "");
+  return !esAccionLanzamiento(gol.accion);
 }
 
 /** ¿Se pide la flecha? Lo de arriba, y además partido de vídeo. Los partidos
@@ -122,7 +123,7 @@ export function sinFlechaAsistencia<T extends object>(gol: T): T {
 /**
  * Cómo queda la asistencia al GUARDAR un gol editado:
  *   · si ya no puede llevar flecha (pasa a ser del rival, se queda sin
- *     asistente, en propia o de penalti/10 m): fuera los tres campos;
+ *     asistente, en propia o de penalti/10 m/FSB): fuera los tres campos;
  *   · con una flecha buena: las zonas se vuelven a sacar de ella, que es el
  *     dato (las zonas son su resumen);
  *   · con una flecha que no vale (menos de 1 m, números rotos): fuera los tres;

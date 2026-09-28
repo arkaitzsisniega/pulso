@@ -26,6 +26,7 @@ import { CampoFlecha } from "@/components/CampoFlecha";
 import { Porteria } from "@/components/Porteria";
 import { flechaSuficiente, zonasDeFlecha } from "@/lib/geometriaCampo";
 import { golNuestroCerca } from "@/lib/paseGol";
+import { esTipoLanzamiento } from "@/lib/lanzamientos";
 import {
   asistenciaAlGuardar, camposFlechaAsistencia, camposSinFlecha, conFlechaAsistencia,
   faltaFlechaAsistencia, flechaAsistenciaDe, pideFlechaAsistencia, recuentoFlechasAsistencia,
@@ -35,12 +36,12 @@ import {
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 const TIPOS: Evento["tipo"][] = [
   "gol", "disparo", "falta", "amarilla", "roja", "tiempo_muerto",
-  "penalti", "diezm", "cambio", "accion_individual",
+  "penalti", "diezm", "fsb", "cambio", "accion_individual",
 ];
 const ACCIONES_GOL = [
   "Córner", "Banda", "Falta", "5x4", "4x5", "4x3", "3x4", "Contraataque",
   "Robo zona alta", "Salida de presión", "1x1 banda", "Ataque posicional",
-  "10m", "Penalti", "2ª jugada", "Otra",
+  "10m", "FSB", "Penalti", "2ª jugada", "Otra",
 ];
 const RES_DISPARO = ["PUERTA", "PALO", "FUERA", "BLOQUEADO"];
 const RES_PENALTI = ["GOL", "PARADA", "POSTE", "FUERA"];
@@ -50,7 +51,7 @@ const NOMBRES_PORTERO = PORTEROS.map((j) => j.nombre);
 
 function emoji(tipo: Evento["tipo"]): string {
   return { gol: "⚽", falta: "⚠️", amarilla: "🟨", roja: "🟥", tiempo_muerto: "🛑",
-    cambio: "🔄", disparo: "🎯", penalti: "🥅", diezm: "📌", accion_individual: "👤",
+    cambio: "🔄", disparo: "🎯", penalti: "🥅", diezm: "📌", fsb: "📍", accion_individual: "👤",
     incorporacion_rival: "🧤" }[tipo] ?? "•";
 }
 
@@ -239,7 +240,8 @@ export function EditorEventos(props: {
       case "cambio": return `${ev.sale || "—"} → ${ev.entra || "—"}`;
       case "disparo": return `${equipoTxt(e)}${ev.jugador ? " · " + ev.jugador : ""} · ${labelResultadoDisparo(ev.resultado)}`;
       case "penalti":
-      case "diezm": return `${equipoTxt(e)}${ev.tirador ? " · " + ev.tirador : ""} · ${ev.resultado}`;
+      case "diezm":
+      case "fsb": return `${equipoTxt(e)}${ev.tirador ? " · " + ev.tirador : ""} · ${ev.resultado}`;
       case "accion_individual": {
         const extra = ev.accion === "conexPivot" && ev.receptor ? ` → ${ev.receptor}`
           : ev.accion === "paseGol" && ev.flecha && flechaSuficiente(ev.flecha)
@@ -271,7 +273,7 @@ export function EditorEventos(props: {
     if (tipo === "amarilla" || tipo === "roja") return { ...base, equipo: "INTER", jugador: "" };
     if (tipo === "tiempo_muerto") return { ...base, equipo: "INTER" };
     if (tipo === "disparo") return { ...base, equipo: "INTER", jugador: "", resultado: "PUERTA" };
-    if (tipo === "penalti" || tipo === "diezm") return { ...base, equipo: "INTER", tirador: "", portero: "", resultado: "GOL" };
+    if (esTipoLanzamiento(tipo)) return { ...base, equipo: "INTER", tirador: "", portero: "", resultado: "GOL" };
     if (tipo === "cambio") return { ...base, sale: "", entra: "" };
     if (tipo === "accion_individual") return { ...base, jugador: NOMBRES[0] ?? "", accion: "robos" };
     return base;
@@ -300,7 +302,7 @@ export function EditorEventos(props: {
       datos.zonaDestino = undefined;
     }
     // Flecha de la asistencia (22/9/2026): si el gol deja de ser nuestro, se
-    // queda sin asistente o pasa a penalti/10 m, se van los tres campos; si la
+    // queda sin asistente o pasa a penalti/10 m/FSB, se van los tres campos; si la
     // tiene, sus zonas se vuelven a sacar de ella (lib/asistencia.ts).
     if (datos.tipo === "gol") datos = asistenciaAlGuardar(datos);
     setErrorGuardar("");
@@ -458,7 +460,7 @@ export function EditorEventos(props: {
                   <Campo2 label={t("ed_tipo_gol")} value={draft.accion} onChange={(v) => set("accion", v)}
                     opciones={[{ v: "", lbl: "—" }].concat(ACCIONES_GOL.map((a) => ({ v: a, lbl: labelAccionGol(a) })))} />
                   {/* Flecha de la asistencia (22/9/2026): solo en vídeo y si el gol
-                      es nuestro, con asistente y no de penalti/10 m. */}
+                      es nuestro, con asistente y no de penalti/10 m/FSB. */}
                   {pideFlechaAsistencia(draft, partido.modo) && (
                     <FlechaBtn etiqueta={t("ed_flecha_asist")} flecha={flechaAsistenciaDe(draft) ?? undefined}
                       falta={false} onClick={() => setZonaPicker("flechaAsist")} />
@@ -489,7 +491,7 @@ export function EditorEventos(props: {
                 <Campo2 label={t("ed_jugador")} value={draft.jugador} onChange={(v) => set("jugador", v)} opciones={optJugador(true)} />
               )}
 
-              {(draft.tipo === "penalti" || draft.tipo === "diezm") && (
+              {esTipoLanzamiento(draft.tipo) && (
                 <>
                   <Campo2 label={t("ed_tirador")} value={draft.tirador} onChange={(v) => set("tirador", v)} opciones={optJugador(true)} />
                   <Campo2 label={t("ed_portero")} value={draft.portero} onChange={(v) => set("portero", v)} opciones={optPortero} />
