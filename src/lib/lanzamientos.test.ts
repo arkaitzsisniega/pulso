@@ -113,11 +113,15 @@ function fuentes(dir: string): string[] {
   for (const k of ["acc_fsb", "mp_fsb", "mp_fsb_nota", "ed_t_fsb"]) {
     ok(!!CAT[k] && ["es", "en", "it"].every((l) => CAT[k][l].trim() !== ""), `«${k}» está en es, en e it`);
   }
-  ok(/"FSB": "acc_fsb"/.test(i18n), "la acción FSB tiene su etiqueta (labelAccionGol)");
+  const situaciones = leer("lib/situaciones.ts");
+  ok(/"FSB": "acc_fsb"/.test(situaciones), "la acción FSB tiene su etiqueta (labelAccionGol)");
   ok(CAT.btn_pen10m?.es.includes("FSB"), "el botón dice que dentro está el FSB");
 
   // Cada acción de gol de los dos menús tiene su etiqueta, y el FSB está en los dos.
-  const mapa = i18n.slice(i18n.indexOf("const CLAVE_ACCION_GOL"));
+  // 28/9/2026: la lista de acciones de gol y su mapa de etiquetas se mudaron a
+  // `lib/situaciones.ts`, el sitio único (estaban en tres ficheros y ya no
+  // coincidían). Aquí se leen de allí.
+  const mapa = situaciones.slice(situaciones.indexOf("CLAVE_ACCION_GOL"));
   const conEtiqueta = new Set([...mapa.slice(0, mapa.indexOf("};")).matchAll(/"([^"]+)": "acc_/g)].map((m) => m[1]));
   const lista = (txt: string, nombre: string) => {
     const desde = txt.indexOf(`const ${nombre}`);
@@ -125,22 +129,22 @@ function fuentes(dir: string): string[] {
     if (ini < 0) { ok(false, `encuentro la lista ${nombre}`); return []; }
     return [...txt.slice(ini, txt.indexOf("];", ini)).matchAll(/"([^"]+)"/g)].map((m) => m[1]);
   };
-  const partido = leer("app/partido/page.tsx");
-  const editor = leer("components/EditorEventos.tsx");
-  const menuGol = [...lista(partido, "ACCIONES_GOL_IZQ"), ...lista(partido, "ACCIONES_GOL_DER")];
-  const menuEditor = lista(editor, "ACCIONES_GOL");
-  ok(menuGol.includes("FSB") && menuEditor.includes("FSB"), "el FSB está en el modal del gol y en el editor");
-  igual(menuGol.filter((a) => !conEtiqueta.has(a)), [], "todas las acciones del modal del gol tienen etiqueta");
-  igual(menuEditor.filter((a) => !conEtiqueta.has(a)), [], "y todas las del editor");
-  igual(lista(partido, "ACCIONES_GOL_DER").slice(3, 5), ["10m", "FSB"], "en el modal, el FSB va pegado al 10 m");
+  const menuGol = [...lista(situaciones, "ACCIONES_GOL_IZQ"), ...lista(situaciones, "ACCIONES_GOL_DER")];
+  ok(menuGol.includes("FSB"), "el FSB está en los botones de gol (modal y editor: la misma lista)");
+  igual(menuGol.filter((a) => !conEtiqueta.has(a)), [], "todas las acciones de gol tienen etiqueta");
+  igual(lista(situaciones, "ACCIONES_GOL_DER").slice(3, 5), ["10m", "FSB"], "en el modal, el FSB va pegado al 10 m");
+  // Y que los dos sitios que las pintan tiran de ahí, no de su propia copia.
+  for (const f of ["app/partido/page.tsx", "components/EditorEventos.tsx"]) {
+    ok(/from "@\/lib\/situaciones"/.test(leer(f)), `${f} tira del sitio único de acciones de gol`);
+  }
 
   // El editor ofrece crear un FSB y tiene nombre para cada tipo que ofrece.
-  const tiposEditor = lista(editor, "TIPOS");
+  const tiposEditor = lista(leer("components/EditorEventos.tsx"), "TIPOS");
   ok(tiposEditor.includes("fsb"), "el editor post-partido deja añadir un FSB");
   igual(tiposEditor.filter((tp) => !CAT[`ed_t_${tp}`]), [], "cada tipo del editor tiene su nombre (ed_t_…)");
 
   // Y el botón de penalti / 10 m ofrece el FSB con el mismo flujo.
-  ok(partido.includes('setTipo("fsb")'), "el modal PEN/10M/FSB tiene el botón del FSB");
+  ok(leer("app/partido/page.tsx").includes('setTipo("fsb")'), "el modal PEN/10M/FSB tiene el botón del FSB");
 }
 
 console.log(fallos ? `\n❌ Lanzamientos: ${fallos} fallo(s)` : "\n✅ Lanzamientos OK (0 fallos)");
