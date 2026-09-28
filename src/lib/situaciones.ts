@@ -27,7 +27,7 @@
  *
  *   marcamos nosotros                    nos lo meten
  *   ───────────────────────────────────  ────────────────────────────────────
- *   Defensa de incorporación             Incorporación de portero
+ *   Defensa de incorporación             Pérdida en incorporación de portero
  *   Robo zona alta                       Pérdida en salida de presión  ← 28/9
  *
  * «Pérdida en salida de presión» la pidió Arkaitz el 28/9/2026: «lo apuntamos
@@ -36,6 +36,17 @@
  * scouting del rival —que es quien marcó—, se convierte en su «Robo en zona
  * alta». Eso lo hace el club (`src/situaciones.py`), no el crono: aquí solo se
  * apunta lo que se ve.
+ *
+ * «Pérdida en incorporación de portero» nació ese mismo día, un poco después:
+ * el club le había abierto columna propia en el informe (PIP) y el crono no
+ * tenía botón, así que ese gol solo podía apuntarse editando el partido en la
+ * web al día siguiente. En directo se pulsaba «Incorporación de portero», que
+ * en el club es OTRA cosa —atacar con el portero arriba, sin decir quién ganó
+ * la jugada—, y la pérdida se perdía. Ahora el trío está completo:
+ *
+ *   Incorporación de portero              subimos al portero y marcamos
+ *   Defensa de incorporación              le robamos el balón al que subió
+ *   Pérdida en incorporación de portero   subimos al portero y nos lo meten
  *
  * Sin React ni Dexie, para poder probarlo con node:
  *   node --experimental-strip-types src/lib/situaciones.test.ts
@@ -48,7 +59,11 @@ export const ACCIONES_GOL_IZQ = [
   // donde se busca por el nombre, y es la pareja de «Robo zona alta» de arriba:
   // el mismo gol, contado por el que lo encaja.
   "2ª jugada", "Salida de presión", "Pérdida en salida de presión",
-  "Incorporación de portero",
+  // Y la del portero, con su pérdida pegada detrás por el mismo motivo: en
+  // directo se busca por el nombre, y las dos empiezan por «Incorporación».
+  // Su pareja de verdad —«Defensa de incorporación»— está en la otra columna,
+  // igual que «Robo zona alta» está lejos de su pérdida.
+  "Incorporación de portero", "Pérdida en incorporación de portero",
 ] as const;
 
 /** Columna derecha: balón parado y superioridades.
@@ -83,6 +98,7 @@ export const CLAVE_ACCION_GOL: Record<string, string> = {
   "10m": "acc_10m", "Penalti": "acc_penalti", "FSB": "acc_fsb",
   "2ª jugada": "acc_2a_jugada", "Otra": "acc_otra",
   "Incorporación de portero": "acc_incorporacion_portero",
+  "Pérdida en incorporación de portero": "acc_perdida_incorporacion",
   "Defensa de incorporación": "acc_defensa_incorporacion",
 };
 
@@ -94,9 +110,15 @@ export const ALIAS_ACCION_GOL: Record<string, string> = {
 
 /** Las parejas con espejo, como las llama el crono: [marcamos, nos lo meten].
  *  Está aquí escrito para que se vea que son DOS botones de la misma jugada y
- *  que ninguno se quede suelto; el que traduce de un lado al otro es el club. */
+ *  que ninguno se quede suelto; el que traduce de un lado al otro es el club.
+ *
+ *  ⚠️ Hasta el 28/9/2026 la pareja de «Defensa de incorporación» era
+ *  «Incorporación de portero», y no lo es: en el club «Incorporación del
+ *  portero» NO tiene espejo (si uno sube al portero, el otro lo encaja con el
+ *  portero rival arriba: es el mismo hecho). El espejo del robo es la PÉRDIDA,
+ *  que es la que faltaba por poner. */
 export const PAREJAS_ESPEJO: ReadonlyArray<readonly [string, string]> = [
-  ["Defensa de incorporación", "Incorporación de portero"],
+  ["Defensa de incorporación", "Pérdida en incorporación de portero"],
   ["Robo zona alta", "Pérdida en salida de presión"],
 ] as const;
 
