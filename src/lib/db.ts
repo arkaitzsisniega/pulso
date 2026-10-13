@@ -241,10 +241,37 @@ export type Evento =
    *  incorporación acabó en disparo; el disparo en sí se guarda aparte, con su
    *  propio evento, para no duplicar los contadores de tiro. */
   | (EventoBase & { tipo: "incorporacion_rival"; conDisparo: boolean })
+  /** PORTERO-JUGADOR: cuándo empieza y cuándo acaba que un equipo juegue sin
+   *  portero (13/10/2026). Lo pidió Arkaitz el 12/10: «el dónde empieza el
+   *  portero-jugador lo marcaríamos con un botón en el vídeo».
+   *
+   *  Hace falta sobre todo para el RIVAL: sus cambios no se registran, así que
+   *  no hay forma de deducirlo — hasta hoy se apuntaba a mano en una hoja del
+   *  club. Para NOSOTROS el crono ya lo sabe por los `cambio` (el portero sale
+   *  y entra un jugador de campo), y además lo sabe al segundo; marcarlo aquí
+   *  es opcional y sirve para dejar escrita la FASE, que es otra medida:
+   *    · fase      = de este «inicio» al «fin» (o al final del partido).
+   *    · efectivo  = ese tramo menos lo que el portero vuelve a entrar.
+   *  No confundirlo con `incorporacion_rival`, que es el portero subiendo a
+   *  atacar SIN salir de la pista: eso es otra cosa y él lo corrigió expresamente.
+   *
+   *  Un «inicio» sin su «fin» se entiende hasta el final del partido, que es lo
+   *  normal: el portero-jugador se saca cuando queda poco y ya no se deshace. */
+  | (EventoBase & { tipo: "portero_jugador"; equipo: "INTER" | "RIVAL";
+      estado: "inicio" | "fin" })
   | (EventoBase & { tipo: "disparo"; equipo: "INTER" | "RIVAL";
       jugador?: string;            // tirador (si INTER); si RIVAL puede no estar
       portero?: string;            // portero nuestro (si RIVAL) o rival (si INTER)
       resultado: ResultadoDisparo;
+      /** De dónde sale el disparo: córner, banda, contraataque… Es el MISMO
+       *  vocabulario que la `accion` de un gol (`lib/situaciones.ts`,
+       *  ORIGEN_DISPARO): un gol es un disparo que entra y hay que poder
+       *  cruzarlos. Opcional: los partidos de antes del 13/10/2026 no lo
+       *  llevan, y en DIRECTO tampoco se pide — se marca en el pase de vídeo.
+       *  Sin valor NO significa «juego posicional», significa «no se capturó».
+       *  Las superioridades (5x4/4x5/4x3/3x4) NO van aquí: salen de las
+       *  ventanas `portero_jugador` / expulsión, que son hechos del partido. */
+      origen?: string;
       zonaCampo?: string;
       zonaPorteria?: string;
       /** Si este disparo está enlazado a un gol/penalti, id. */

@@ -122,6 +122,30 @@ export const PAREJAS_ESPEJO: ReadonlyArray<readonly [string, string]> = [
   ["Robo zona alta", "Pérdida en salida de presión"],
 ] as const;
 
+/* ───────────────────────── DE DÓNDE SALE UN DISPARO ─────────────────────────
+ * 13/10/2026, «fase 2» del desglose que pidió Arkaitz: hasta hoy solo el GOL
+ * decía de dónde nacía (`evento.accion`); el disparo no decía nada, así que no
+ * se podía contestar «¿cuántos disparos hacemos de córner?» ni separar el
+ * balón parado del juego posicional.
+ *
+ * ⚠️ ES LA MISMA LISTA QUE LA DE LOS GOLES, a propósito: un gol es un disparo
+ * que entra, y si cada uno usara su vocabulario no se podrían cruzar (ni
+ * calcular «de 12 córners, 1 gol»). Dar de alta una situación nueva arriba la
+ * pone en los dos sitios a la vez.
+ *
+ * MENOS LAS SUPERIORIDADES. El 5x4, el 4x5, el 4x3 y el 3x4 NO se teclean
+ * disparo a disparo: salen de la VENTANA —quién está sin portero, o quién está
+ * expulsado, en ese momento—, que es un hecho del partido y no una opinión del
+ * que apunta. Y además mandan sobre el origen: lo dijo él el 12/10/2026, «si
+ * hay un disparo en un córner pero en situación de 5x4, se tiene en cuenta el
+ * 5x4». Esa prioridad la aplica el club al hacer el cuadro, no el crono: aquí
+ * se apunta lo que se ve y cada cosa va por su lado.
+ */
+export const SITUACIONES_DE_VENTANA = ["5x4", "4x5", "4x3", "3x4"] as const;
+
+export const ORIGEN_DISPARO: string[] = ACCIONES_GOL.filter(
+  (a) => !(SITUACIONES_DE_VENTANA as readonly string[]).includes(a));
+
 // ── Aviso temprano: ninguna acción se queda sin etiqueta ─────────────────────
 // Dar de alta una situación es añadirla arriba Y darle su clave de i18n.
 // Olvidarse de la clave no rompe nada: el botón sale en español para todos, sin
@@ -143,4 +167,21 @@ for (const [marca, encaja] of PAREJAS_ESPEJO) {
         `ese gol se apunta con el nombre del otro lado.`);
     }
   }
+}
+
+// Las superioridades se quitan del origen del disparo, pero siguen siendo
+// botones de GOL: si alguien las borrara de arriba, este filtro dejaría de
+// quitar nada y empezarían a ofrecerse como origen sin que nadie se enterara.
+for (const s of SITUACIONES_DE_VENTANA) {
+  if (!ACCIONES_GOL.includes(s)) {
+    throw new Error(
+      `situaciones.ts: «${s}» está en SITUACIONES_DE_VENTANA pero ya no es un ` +
+      `botón de gol. O vuelve a la lista, o sale de aquí: si no, ORIGEN_DISPARO ` +
+      `deja de filtrarla y se podría teclear como origen de un disparo.`);
+  }
+}
+if (ORIGEN_DISPARO.length !== ACCIONES_GOL.length - SITUACIONES_DE_VENTANA.length) {
+  throw new Error(
+    "situaciones.ts: ORIGEN_DISPARO no cuadra con ACCIONES_GOL menos las " +
+    "superioridades. Alguna está repetida o se ha colado.");
 }

@@ -20,7 +20,7 @@ import { direccionAtaque } from "@/lib/db";
 import { ROSTER, PORTEROS, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
 import { t, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
-import { ACCIONES_GOL } from "@/lib/situaciones";
+import { ACCIONES_GOL, ORIGEN_DISPARO } from "@/lib/situaciones";
 import { etiquetaAccionInd, gruposAccionInd } from "@/lib/acciones";
 import { Campo } from "@/components/Campo";
 import { CampoFlecha } from "@/components/CampoFlecha";
@@ -38,6 +38,10 @@ const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 const TIPOS: Evento["tipo"][] = [
   "gol", "disparo", "falta", "amarilla", "roja", "tiempo_muerto",
   "penalti", "diezm", "fsb", "cambio", "accion_individual",
+  // 13/10/2026: la ventana de portero-jugador. Se marca en el pase de VÍDEO,
+  // no en directo: en directo ya hay bastante que mirar y además del rival no
+  // se ve el cambio, se ve que juegan con cinco.
+  "portero_jugador",
 ];
 // Las acciones de gol, del sitio único `lib/situaciones.ts`. Hasta el 28/9/2026
 // estaban copiadas aquí y les faltaban «Incorporación de portero» y «Defensa de
@@ -52,7 +56,7 @@ const NOMBRES_PORTERO = PORTEROS.map((j) => j.nombre);
 function emoji(tipo: Evento["tipo"]): string {
   return { gol: "⚽", falta: "⚠️", amarilla: "🟨", roja: "🟥", tiempo_muerto: "🛑",
     cambio: "🔄", disparo: "🎯", penalti: "🥅", diezm: "📌", fsb: "📍", accion_individual: "👤",
-    incorporacion_rival: "🧤" }[tipo] ?? "•";
+    incorporacion_rival: "🧤", portero_jugador: "🧍" }[tipo] ?? "•";
 }
 
 function mmssASeg(s: string): number {
@@ -238,7 +242,9 @@ export function EditorEventos(props: {
       case "roja": return `${equipoTxt(e)}${ev.jugador ? " · " + ev.jugador : ""}`;
       case "tiempo_muerto": return equipoTxt(e);
       case "cambio": return `${ev.sale || "—"} → ${ev.entra || "—"}`;
-      case "disparo": return `${equipoTxt(e)}${ev.jugador ? " · " + ev.jugador : ""} · ${labelResultadoDisparo(ev.resultado)}`;
+      case "disparo": return `${equipoTxt(e)}${ev.jugador ? " · " + ev.jugador : ""} · ${labelResultadoDisparo(ev.resultado)}${ev.origen ? ` (${labelAccionGol(ev.origen)})` : ""}`;
+      case "portero_jugador":
+        return `${equipoTxt(e)} · ${t("ev_portero_jugador")} · ${ev.estado === "inicio" ? t("ed_pj_inicio") : t("ed_pj_fin")}`;
       case "penalti":
       case "diezm":
       case "fsb": return `${equipoTxt(e)}${ev.tirador ? " · " + ev.tirador : ""} · ${ev.resultado}`;
@@ -275,6 +281,9 @@ export function EditorEventos(props: {
     if (tipo === "disparo") return { ...base, equipo: "INTER", jugador: "", resultado: "PUERTA" };
     if (esTipoLanzamiento(tipo)) return { ...base, equipo: "INTER", tirador: "", portero: "", resultado: "GOL" };
     if (tipo === "cambio") return { ...base, sale: "", entra: "" };
+    // Por defecto, el del RIVAL: para nosotros el crono ya lo sabe por los
+    // `cambio`, y lo que de verdad no hay forma de deducir es el suyo.
+    if (tipo === "portero_jugador") return { ...base, equipo: "RIVAL", estado: "inicio" };
     if (tipo === "accion_individual") return { ...base, jugador: NOMBRES[0] ?? "", accion: "robos" };
     return base;
   }
@@ -475,9 +484,20 @@ export function EditorEventos(props: {
                   <Campo2 label={t("ed_jugador")} value={draft.jugador} onChange={(v) => set("jugador", v)} opciones={optJugador(true)} />
                   <Campo2 label={t("ed_resultado")} value={draft.resultado} onChange={(v) => set("resultado", v)}
                     opciones={RES_DISPARO.map((r) => ({ v: r, lbl: labelResultadoDisparo(r as any) }))} />
+                  <Campo2 label={t("ed_origen")} value={draft.origen}
+                    onChange={(v) => set("origen", v)}
+                    opciones={[{ v: "", lbl: t("ed_origen_vacio") },
+                               ...ORIGEN_DISPARO.map((a) => ({ v: a, lbl: labelAccionGol(a) }))]} />
                   <ZonaBtn label={t("ed_zona_campo")} valor={draft.zonaCampo} onClick={() => setZonaPicker("campo")} />
                   <ZonaBtn label={t("ed_zona_porteria")} valor={draft.zonaPorteria} onClick={() => setZonaPicker("porteria")} />
                 </>
+              )}
+
+              {draft.tipo === "portero_jugador" && (
+                <Campo2 label={t("ed_pj_estado")} value={draft.estado}
+                  onChange={(v) => set("estado", v)}
+                  opciones={[{ v: "inicio", lbl: t("ed_pj_inicio") },
+                             { v: "fin", lbl: t("ed_pj_fin") }]} />
               )}
 
               {(draft.tipo === "falta") && (

@@ -16,7 +16,7 @@
 import { readFileSync } from "node:fs";
 import {
   ACCIONES_GOL, ACCIONES_GOL_DER, ACCIONES_GOL_IZQ, ALIAS_ACCION_GOL,
-  CLAVE_ACCION_GOL, PAREJAS_ESPEJO,
+  CLAVE_ACCION_GOL, ORIGEN_DISPARO, PAREJAS_ESPEJO, SITUACIONES_DE_VENTANA,
 } from "./situaciones.ts";
 
 let fallos = 0;
@@ -155,6 +155,60 @@ console.log("── Situaciones de gol ──");
       .filter((s) => nombres.has(s));
     igual(sueltas, [],
           `${f} no nombra ninguna acción de gol suelta (van todas por la lista)`);
+  }
+}
+
+// 4 · De dónde sale un DISPARO (13/10/2026, «fase 2»)
+{
+  console.log("\n── El origen de un disparo ──");
+
+  // Es el MISMO vocabulario que el de los goles. Si no lo fuera, no se podrían
+  // cruzar («de 12 córners, 1 gol») y habría dos listas que mantener.
+  for (const o of ORIGEN_DISPARO) {
+    ok(ACCIONES_GOL.includes(o),
+       `«${o}» es también una acción de gol (una sola lista para los dos)`);
+  }
+
+  // Las superioridades NO se teclean: salen de la ventana (quién está sin
+  // portero). Y mandan sobre el origen, lo dijo Arkaitz el 12/10/2026: «si hay
+  // un disparo en un córner pero en situación de 5x4, se tiene en cuenta el 5x4».
+  for (const s of SITUACIONES_DE_VENTANA) {
+    ok(!ORIGEN_DISPARO.includes(s),
+       `«${s}» NO se ofrece como origen de un disparo (sale de la ventana)`);
+    ok(ACCIONES_GOL.includes(s),
+       `«${s}» sigue siendo un botón de gol`);
+  }
+
+  igual(ORIGEN_DISPARO.length, ACCIONES_GOL.length - SITUACIONES_DE_VENTANA.length,
+        "el origen es la lista de goles menos las superioridades, sin perder nada");
+
+  // Y el editor tira de la lista, no de una copia suya.
+  const ed = leer("components/EditorEventos.tsx");
+  ok(/ORIGEN_DISPARO/.test(ed),
+     "components/EditorEventos.tsx ofrece el origen desde el sitio único");
+  ok(/origen\?: string/.test(leer("lib/db.ts")),
+     "lib/db.ts: el disparo lleva su campo `origen`");
+}
+
+// 5 · La ventana de portero-jugador
+{
+  console.log("\n── La ventana de portero-jugador ──");
+  const db = leer("lib/db.ts");
+  ok(/tipo: "portero_jugador"/.test(db),
+     "lib/db.ts tiene el evento `portero_jugador`");
+  ok(/estado: "inicio" \| "fin"/.test(db),
+     "la ventana dice si empieza o si acaba (un inicio sin fin llega al final)");
+  const ed = leer("components/EditorEventos.tsx");
+  ok(/"portero_jugador"/.test(ed),
+     "el editor de vídeo lo deja marcar");
+  // No es lo mismo que la incorporación: el portero sube a atacar SIN salir.
+  ok(/incorporacion_rival/.test(db) && /portero_jugador/.test(db),
+     "conviven con la incorporación del rival, que es otra cosa");
+  // Y su etiqueta existe en los tres idiomas (si no, saldría en español a todos).
+  const i18n = leer("lib/i18n.ts");
+  for (const clave of ["ed_t_portero_jugador", "ev_portero_jugador", "ed_origen"]) {
+    ok(new RegExp(`${clave}:\\s*\\{[^}]*en:`).test(i18n),
+       `«${clave}» está traducida, no sale en español a todo el mundo`);
   }
 }
 
