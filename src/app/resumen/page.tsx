@@ -151,7 +151,8 @@ function colorSemaforoMin(seg: number, max: number): string {
 export default function ResumenPage() {
   useIdioma();
   const router = useRouter();
-  const { partido, cargado, editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador } = usePartido();
+  const { partido, cargado, editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
+          finalizarPartido } = usePartido();
   const [tab, setTab] = useState<"general" | "tiempos" | "individual" | "cronograma" | "disparos" | "analisis" | "editar">("general");
 
   if (!cargado) {
@@ -909,6 +910,23 @@ export default function ResumenPage() {
         <EditorEventos partido={partido} partesJugadas={partesJugadas}
           editarEvento={editarEvento} borrarEvento={borrarEvento} anadirEvento={anadirEvento}
           recalcularMinutos={recalcularMinutos} setMinutosJugador={setMinutosJugador} />
+      )}
+
+      {/* CERRAR EL PARTIDO. Aquí y no solo en el modal de «⏭ parte»: el botón
+          grande «🏁 RESUMEN» de la pantalla del partido trae a esta página sin
+          cerrar nada, así que quien acaba, mira el resumen y se va, deja el
+          partido abierto — y uno abierto NO entra en los totales de la
+          temporada. Ancho entero y separado de las demás acciones, que es la
+          que toca cuando se acaba. Pregunta antes: al resumen se entra también
+          en el descanso. */}
+      {partido.estado === "en_curso" && (
+        <button
+          onClick={() => {
+            if (confirm(t("res_finalizar_confirm"))) finalizarPartido();
+          }}
+          className="mt-6 w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-lg font-bold">
+          {t("res_finalizar")}
+        </button>
       )}
 
       {/* FOOTER — acciones */}
