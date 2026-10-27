@@ -1021,6 +1021,18 @@ export const CATALOGO: Record<string, Entrada> = {
   res_tanda_penaltis: { es: "🥇 Tanda penaltis:", en: "🥇 Penalty shootout:", it: "🥇 Serie di rigori:" },
   res_tiros: { es: "({n} tiros)", en: "({n} shots)", it: "({n} tiri)" },
   res_estado: { es: "Estado:", en: "Status:", it: "Stato:" },
+  // Cerrar el partido DESDE EL RESUMEN (27/10/2026). Hasta hoy el único sitio
+  // donde se podía era el modal de «⏭ parte», y el botón grande y verde
+  // «🏁 RESUMEN» de la pantalla del partido traía aquí SIN cerrar nada: el
+  // entrenador del filial sacaba su informe, se iba, y el partido se quedaba
+  // «en curso» para siempre — y un partido sin cerrar no entra en los totales
+  // de la temporada. Lleva confirmación porque al resumen también se entra en
+  // el descanso.
+  res_finalizar: { es: "🏁 Finalizar partido", en: "🏁 Finish match", it: "🏁 Termina la partita" },
+  res_finalizar_confirm: {
+    es: "¿Cerrar el partido? Después ya no se puede seguir cronometrando. El informe y las estadísticas se mantienen.",
+    en: "Finish the match? The clock cannot be resumed afterwards. The report and stats are kept.",
+    it: "Terminare la partita? Dopo non si può più cronometrare. Il referto e le statistiche restano." },
   res_partes_jugadas: { es: "Partes jugadas:", en: "Periods played:", it: "Tempi giocati:" },
   res_tab_general: { es: "📊 General", en: "📊 Overview", it: "📊 Generale" },
   res_tab_tiempos: { es: "⏱ Tiempos", en: "⏱ Times", it: "⏱ Tempi" },
