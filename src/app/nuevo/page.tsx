@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
-import { ROSTER, PORTEROS, CAMPO, NOMBRE_CORTO_TC } from "@/lib/clientes";
+import { ROSTER, PORTEROS, CAMPO, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
 import { hoyISO } from "@/lib/utils";
 import { PRESETS_COMPETICION } from "@/lib/db";
-import { t, useIdioma, labelCompeticion } from "@/lib/i18n";
+import { t, useIdioma, labelCompeticion, labelCompeticionCorta } from "@/lib/i18n";
 
 export default function NuevoPartido() {
   useIdioma();
@@ -193,7 +193,7 @@ export default function NuevoPartido() {
         <label className="flex flex-col">
           <span className="text-sm text-zinc-400 mb-1">{t("nuevo_id_partido")}</span>
           <input className="bg-zinc-900 rounded px-3 py-2 text-lg" value={partidoId}
-            onChange={(e) => setPartidoId(e.target.value.toUpperCase())} placeholder="J29.VALDEPEÑAS" />
+            onChange={(e) => setPartidoId(e.target.value.toUpperCase())} placeholder={t("nuevo_id_ph")} />
         </label>
         <label className="flex flex-col">
           <span className="text-sm text-zinc-400 mb-1">{t("nuevo_fecha")}</span>
@@ -214,14 +214,9 @@ export default function NuevoPartido() {
           <span className="text-sm text-zinc-400 mb-1">{t("nuevo_competicion")}</span>
           <select className="bg-zinc-900 rounded px-3 py-2 text-lg" value={competicion}
             onChange={(e) => onCompChange(e.target.value)}>
-            <option>LIGA</option>
-            <option>COPA_REY</option>
-            <option>COPA_ESPANA</option>
-            <option>COPA_MUNDO</option>
-            <option>COPA_MADRID</option>
-            <option>AMISTOSO</option>
-            <option>PLAYOFF</option>
-            <option>SUPERCOPA</option>
+            {["LIGA", "COPA_REY", "COPA_ESPANA", "COPA_MUNDO", "COPA_MADRID", "AMISTOSO", "PLAYOFF", "SUPERCOPA"].map((c) => (
+              <option key={c} value={CLIENTE.demo ? c : undefined}>{labelCompeticionCorta(c)}</option>
+            ))}
           </select>
         </label>
         <label className="flex items-center gap-2 col-span-2">

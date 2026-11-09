@@ -44,9 +44,6 @@ const X_10 = W - 10 * M;
 const X_MEDIA = W - 20 * M;
 const Y_CENTRO = H / 2;
 
-const LETRA_RES: Record<ResD, string> = {
-  GOL: "G", PUERTA: "Pa", PALO: "Pl", BLOQUEADO: "B", FUERA: "F",
-};
 const ORDEN_RES: ResD[] = ["GOL", "PUERTA", "PALO", "BLOQUEADO", "FUERA"];
 
 export function CampoConteos({ conteos, direccion = "der", nombreAtacante }: Props) {
@@ -138,7 +135,7 @@ export function CampoConteos({ conteos, direccion = "der", nombreAtacante }: Pro
           textAnchor="middle" fontSize={sizeTotal * 0.45} fontWeight="bold"
           fill="#fde68a"
           stroke="#0b0f0c" strokeWidth="0.8" paintOrder="stroke">
-          {ORDEN_RES.filter((r) => c[r] > 0).map((r) => `${LETRA_RES[r]}${c[r]}`).join(" ")}
+          {ORDEN_RES.filter((r) => c[r] > 0).map((r) => `${t(`resd_letra_${r}`)}${c[r]}`).join(" ")}
         </text>
       </g>
     );

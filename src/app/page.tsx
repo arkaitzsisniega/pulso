@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { type Partido } from "@/lib/db";
 import { listarPartidos, marcarPartidoActivo, rehacerPartido, borrarPartido } from "@/lib/store";
 import { jugabamosEnCasa } from "@/lib/rehacer";
-import { t, useIdioma } from "@/lib/i18n";
+import { t, useIdioma, labelCompeticionCorta } from "@/lib/i18n";
+import { ID_PARTIDO_EJEMPLO, sembrarPartidoEjemplo } from "@/lib/partidoEjemplo";
 import { CLIENTE, VERSION_CRONO } from "@/lib/clientes";
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
   const [cargado, setCargado] = useState(false);
 
   const recargar = async () => {
+    await sembrarPartidoEjemplo();
     const lista = await listarPartidos();
     // Solo los que ya tienen config (descartar el vacío inicial "configurando").
     setPartidos(lista.filter((p) => p.config));
@@ -102,6 +104,9 @@ export default function Home() {
                         <strong className="text-white text-lg">{p.config!.partido_id}</strong>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${bm.cls}`}>{bm.txt}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${be.cls}`}>{be.txt}</span>
+                        {CLIENTE.partidoEjemplo && p.id === ID_PARTIDO_EJEMPLO && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-700 text-amber-100">{t("home_ejemplo")}</span>
+                        )}
                       </div>
                       <div className="text-base text-zinc-300">
                         <span className="text-emerald-400 font-bold">{CLIENTE.nombreCorto} {p.marcador.inter}</span>
@@ -109,7 +114,7 @@ export default function Home() {
                         <span className="text-red-400 font-bold">{p.marcador.rival} {p.config!.rival}</span>
                       </div>
                       <div className="text-xs text-zinc-500 mt-0.5">
-                        {p.config!.fecha} · {p.config!.competicion}
+                        {p.config!.fecha} · {labelCompeticionCorta(p.config!.competicion)}
                       </div>
                     </div>
                     <div className="flex gap-2 flex-wrap">

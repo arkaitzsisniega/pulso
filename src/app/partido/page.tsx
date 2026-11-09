@@ -11,7 +11,7 @@ import { CampoFlecha } from "@/components/CampoFlecha";
 import { Porteria } from "@/components/Porteria";
 import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo, Evento, Flecha } from "@/lib/db";
 import { direccionAtaque, sacaEn, JUGADOR_EQUIPO } from "@/lib/db";
-import { t, useIdioma, labelResultadoDisparo, labelAccionGol } from "@/lib/i18n";
+import { t, useIdioma, labelResultadoDisparo, labelAccionGol, labelParte } from "@/lib/i18n";
 import { ACCIONES_GOL, ACCIONES_GOL_DER, ACCIONES_GOL_IZQ } from "@/lib/situaciones";
 import { etiquetaAccionInd } from "@/lib/acciones";
 import { zonasDeFlecha } from "@/lib/geometriaCampo";
@@ -147,7 +147,7 @@ export default function PartidoPage() {
     const rojas = rojasEquipo
       .map((r) => ({
         tInicio: r.segundosPartido || 0,
-        jugador: r.jugador || "expulsado",
+        jugador: r.jugador || t("part_expulsado_sin_nombre"),
         cancelada: false,
       }))
       .sort((a, b) => a.tInicio - b.tInicio);
@@ -455,11 +455,11 @@ export default function PartidoPage() {
             dur={dur}
             acabada={acabada} />
           <div className="text-sm text-zinc-400 leading-tight">
-            <div className="font-bold">{p}</div>
+            <div className="font-bold">{labelParte(p)}</div>
             <div className="text-xs">
               {dur > 0
                 ? `${formatMMSS(segParte)} / ${formatMMSS(dur)}`
-                : `tot ${formatMMSS(segundosPartidoTotal())}`}
+                : `${t("part_tot")} ${formatMMSS(segundosPartidoTotal())}`}
             </div>
             {acabada && <div className="text-red-400 text-xs font-bold">{t("part_fin_parte")}</div>}
           </div>
@@ -474,7 +474,7 @@ export default function PartidoPage() {
               siempre visible). Aquí quedan solo los controles de parte. */}
           <button
             onClick={() => {
-              if (p !== "1T" && confirm(t("part_volver_parte_confirm", { parte: p }))) {
+              if (p !== "1T" && confirm(t("part_volver_parte_confirm", { parte: labelParte(p) }))) {
                 retrocederParte();
               }
             }}
@@ -637,19 +637,19 @@ export default function PartidoPage() {
         </div>
         {/* Faltas / amarillas (todo el partido) / TM */}
         <div className="flex items-center gap-x-3 ml-auto text-sm">
-          <span className="text-zinc-500 text-[10px] uppercase tracking-wide">{t("part_stats_parte", { parte: p })}</span>
+          <span className="text-zinc-500 text-[10px] uppercase tracking-wide">{t("part_stats_parte", { parte: labelParte(p) })}</span>
           {/* Las faltas, en grande: son lo que hay que ver de un vistazo desde
               el banquillo (pedido del 22/8, en pleno partido). El tamaño va en
               ESTE span, no en el contenedor, para no tocar amarillas ni TM. */}
           <span className="text-2xl font-bold">
-            <span className="text-emerald-400">I</span> {t("part_faltas")}{" "}
+            <span className="text-emerald-400">{CLIENTE.demo ? CLIENTE.nombreCorto[0] : "I"}</span> {t("part_faltas")}{" "}
             <strong className={sFalt.inter >= 5 ? "text-red-400" : ""}>{sFalt.inter}</strong>
             <span className="text-zinc-600 mx-1">/</span>
-            <span className="text-red-400">R</span> {t("part_faltas")}{" "}
+            <span className="text-red-400">{t("part_rival_letra")}</span> {t("part_faltas")}{" "}
             <strong className={sFalt.rival >= 5 ? "text-red-400" : ""}>{sFalt.rival}</strong>
           </span>
           <span>🟨 <strong>{sAma.inter}</strong><span className="text-zinc-600">/</span><strong>{sAma.rival}</strong></span>
-          <span>🛑 TM <strong>{sTM.inter}</strong><span className="text-zinc-600">/</span><strong>{sTM.rival}</strong></span>
+          <span>🛑 {t("part_tm_abbr")} <strong>{sTM.inter}</strong><span className="text-zinc-600">/</span><strong>{sTM.rival}</strong></span>
         </div>
         {/* Avisos de faltas (solo el más alto que aplique) + tarjetas del rival */}
         {sFalt.inter === 4 && <span className="bg-amber-600 rounded px-3 py-1 text-base font-bold">{t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}</span>}
@@ -1408,38 +1408,40 @@ function RelojGrande(props: { segundosParte: number; ultimoStart: number | null;
 function describirEvento(ev: Evento | undefined, rival: string): string {
   if (!ev) return "";
   const e: any = ev;
-  const quien = (n?: string) => (n ? ` de ${n}` : "");
+  const quien = (n?: string) => (n ? t("ud_de", { n }) : "");
+  const quienTarjeta = (n?: string) => (n ? t("ud_de_tarjeta", { n }) : "");
   switch (e.tipo) {
     case "gol":
       return e.equipo === "INTER"
-        ? `gol${quien(e.goleador)}` : `gol de ${rival}`;
+        ? t("ud_gol", { q: quien(e.goleador) }) : t("ud_gol_rival", { rival });
     case "falta":
-      return `falta${e.equipo === "INTER" ? quien(e.jugador) : ` de ${rival}`}`;
-    case "amarilla":  return `amarilla${quien(e.jugador)}`;
-    case "roja":      return `roja${quien(e.jugador)}`;
+      return e.equipo === "INTER"
+        ? t("ud_falta", { q: quien(e.jugador) }) : t("ud_falta_rival", { rival });
+    case "amarilla":  return t("ud_amarilla", { q: quienTarjeta(e.jugador) });
+    case "roja":      return t("ud_roja", { q: quienTarjeta(e.jugador) });
     case "tiempo_muerto":
-      return `tiempo muerto${e.equipo === "INTER" ? "" : ` de ${rival}`}`;
-    case "cambio":    return `cambio (entró ${e.entra}, salió ${e.sale})`;
+      return e.equipo === "INTER" ? t("ud_tm") : t("ud_tm_rival", { rival });
+    case "cambio":    return t("ud_cambio", { entra: e.entra, sale: e.sale });
     case "disparo":
       return e.equipo === "INTER"
-        ? `disparo${quien(e.jugador)}` : `disparo de ${rival}`;
-    case "penalti":   return `penalti${quien(e.tirador)}`;
+        ? t("ud_disparo", { q: quien(e.jugador) }) : t("ud_disparo_rival", { rival });
+    case "penalti":   return t("ud_penalti", { q: quien(e.tirador) });
     case "diezm":     return `10 m${quien(e.tirador)}`;
-    case "fsb":       return `FSB${quien(e.tirador)}`;
+    case "fsb":       return t("ud_fsb", { q: quien(e.tirador) });
     case "incorporacion_rival":
-      return `incorporación del portero de ${rival}`;
+      return t("ud_incorporacion", { rival });
     case "accion_individual": {
       const acc: Record<string, string> = {
-        pf: "pérdida forzada", pnf: "pérdida no forzada", robos: "robo",
-        cortes: "corte", bdg: "balón dividido ganado",
-        bdp: "balón dividido perdido",
-        paseGol: "pase de gol",
+        pf: t("ud_acc_pf"), pnf: t("ud_acc_pnf"), robos: t("ud_acc_robo"),
+        cortes: t("ud_acc_corte"), bdg: t("ud_acc_bdg"),
+        bdp: t("ud_acc_bdp"),
+        paseGol: t("ud_acc_pase_gol"),
       };
       // Las de vídeo, con el nombre del editor («Saque · ✅ Bueno»): antes
       // salía el código tal cual («saqueB de REYES», 15/9/2026).
       const nombre = acc[e.accion] ?? etiquetaAccionInd(e.accion, t);
       return e.jugador === JUGADOR_EQUIPO
-        ? `${nombre} de equipo` : `${nombre}${quien(e.jugador)}`;
+        ? t("ud_de_equipo", { nombre }) : `${nombre}${quien(e.jugador)}`;
     }
     default: return String(e.tipo).replace(/_/g, " ");
   }
@@ -1962,7 +1964,7 @@ function ModalTM(props: {
           className={`py-6 rounded text-xl font-bold ${
             interUsado ? "bg-zinc-800 opacity-40 cursor-not-allowed"
                        : "bg-emerald-700 hover:bg-emerald-600"}`}>
-          INTER{interUsado ? t("mtm_usado") : ""}
+          {CLIENTE.demo ? CLIENTE.nombreCorto : "INTER"}{interUsado ? t("mtm_usado") : ""}
         </button>
         <button disabled={rivalUsado}
           onClick={() => { if (!rivalUsado) props.onConfirmar("RIVAL"); }}
@@ -2953,7 +2955,7 @@ function ModalTiempos(props: {
               <th className="text-left py-2 px-2">{t("mt_jugador")}</th>
               <th className="text-right px-2">{t("mt_total")}</th>
               {partesActivas.map((p) => (
-                <th key={p} className="text-right px-2">{p}</th>
+                <th key={p} className="text-right px-2">{labelParte(p)}</th>
               ))}
               <th />
             </tr>
@@ -3055,7 +3057,7 @@ function ModalTanda(props: {
               <span>
                 <span className="text-zinc-500 text-xs">#{ti.orden}</span>{" "}
                 <span className={ti.equipo === "INTER" ? "text-emerald-400" : "text-red-400"}>
-                  {ti.equipo === "INTER" ? "INTER" : props.rivalNombre}
+                  {ti.equipo === "INTER" ? (CLIENTE.demo ? CLIENTE.nombreCorto : "INTER") : props.rivalNombre}
                 </span>
                 {" · "}
                 <span className="font-bold">{ti.tirador || "—"}</span>
@@ -3082,7 +3084,7 @@ function ModalTanda(props: {
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => setEquipo("INTER")}
               className={`py-3 rounded font-bold ${equipo === "INTER" ? "bg-emerald-700" : "bg-zinc-800"}`}>
-              INTER</button>
+              {CLIENTE.demo ? CLIENTE.nombreCorto : "INTER"}</button>
             <button onClick={() => setEquipo("RIVAL")}
               className={`py-3 rounded font-bold ${equipo === "RIVAL" ? "bg-red-700" : "bg-zinc-800"}`}>
               {props.rivalNombre}</button>
@@ -3265,7 +3267,7 @@ function ModalCambioParte(props: {
           de nombre estrecha para que los tiempos queden pegados y grandes. */}
       <div className="bg-zinc-900 rounded-lg p-3 mb-3">
         <h3 className="text-sm font-bold text-zinc-400 mb-2 uppercase tracking-wide">
-          {t("mcp_tiempos_jugador", { parte: desde })}
+          {t("mcp_tiempos_jugador", { parte: labelParte(desde) })}
         </h3>
         <table className="w-full table-fixed text-2xl">
           <colgroup>
@@ -3274,7 +3276,7 @@ function ModalCambioParte(props: {
           <thead className="text-sm text-zinc-500 border-b border-zinc-800">
             <tr>
               <th className="text-left py-1 px-2">{t("mt_jugador")}</th>
-              <th className="text-right px-2">{desde}</th>
+              <th className="text-right px-2">{labelParte(desde)}</th>
               <th className="text-right px-2">{t("mcp_total_partido")}</th>
               <th />
             </tr>

@@ -35,7 +35,8 @@ const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 // El informe, también sin conexión, SOLO en la demo de PULSO (9/11/2026). Con
 // este service worker /informe/ no estaba en la caché hasta haberlo abierto
 // una vez con red: sin conexión el botón del resumen caía en la pantalla de
-// «no hay partido». En el Inter y el filial sigue todo como estaba.
+// «no hay partido». Con /totales/ pasaba lo mismo y sin conexión enseñaba la
+// pantalla del partido. En el Inter y el filial sigue todo como estaba.
 const INFORME_OFFLINE = /\/crono-demo$/.test(BASE);
 const APP_SHELL = [
   `${BASE}/`,
@@ -43,7 +44,7 @@ const APP_SHELL = [
   `${BASE}/nuevo/`,
   `${BASE}/resumen/`,
   `${BASE}/manifest.json`,
-  ...(INFORME_OFFLINE ? [`${BASE}/informe/`] : []),
+  ...(INFORME_OFFLINE ? [`${BASE}/informe/`, `${BASE}/totales/`] : []),
 ];
 
 // Precachea una página HTML Y todos los assets (_next JS/CSS) que referencia.

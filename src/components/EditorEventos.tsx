@@ -19,7 +19,7 @@ import type { Partido, Evento, ParteId, Flecha } from "@/lib/db";
 import { direccionAtaque } from "@/lib/db";
 import { ROSTER, PORTEROS, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
-import { t, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
+import { t, labelAccionGol, labelResultadoDisparo, labelParte } from "@/lib/i18n";
 import { ACCIONES_GOL, ORIGEN_DISPARO } from "@/lib/situaciones";
 import { etiquetaAccionInd, gruposAccionInd } from "@/lib/acciones";
 import { Campo } from "@/components/Campo";
@@ -247,7 +247,7 @@ export function EditorEventos(props: {
         return `${equipoTxt(e)} · ${t("ev_portero_jugador")} · ${ev.estado === "inicio" ? t("ed_pj_inicio") : t("ed_pj_fin")}`;
       case "penalti":
       case "diezm":
-      case "fsb": return `${equipoTxt(e)}${ev.tirador ? " · " + ev.tirador : ""} · ${ev.resultado}`;
+      case "fsb": return `${equipoTxt(e)}${ev.tirador ? " · " + ev.tirador : ""} · ${labelResultadoDisparo(ev.resultado)}`;
       case "accion_individual": {
         const extra = ev.accion === "conexPivot" && ev.receptor ? ` → ${ev.receptor}`
           : ev.accion === "paseGol" && ev.flecha && flechaSuficiente(ev.flecha)
@@ -384,7 +384,7 @@ export function EditorEventos(props: {
           <div key={ev.id} className="bg-zinc-900 rounded-lg px-3 py-2 flex items-center gap-2">
             <span className="text-xl shrink-0">{emoji(ev.tipo)}</span>
             <div className="w-20 shrink-0 text-xs text-zinc-500 tabular-nums">
-              {ev.parte} · {formatMMSS(ev.segundosParte || 0)}
+              {labelParte(ev.parte)} · {formatMMSS(ev.segundosParte || 0)}
             </div>
             <div className="flex-1 text-sm truncate">{descripcion(ev)}</div>
             {/* La flecha de la asistencia, a un toque: dibujarla (o cambiarla)
@@ -422,7 +422,7 @@ export function EditorEventos(props: {
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-[11px] text-zinc-500 px-1">
             <div className="flex-1">{t("ed_jugador")}</div>
-            {partes.map((p) => <div key={p} className="w-14 text-center">{p}</div>)}
+            {partes.map((p) => <div key={p} className="w-14 text-center">{labelParte(p)}</div>)}
             <div className="w-14 text-center">{t("ed_min_total")}</div>
           </div>
           {convocados.map((n) => (
@@ -454,7 +454,7 @@ export function EditorEventos(props: {
                 </label>
                 <Campo2 label={t("ed_parte")} value={draft.parte}
                   onChange={(v) => set("parte", v)}
-                  opciones={partes.map((p) => ({ v: p, lbl: p }))} />
+                  opciones={partes.map((p) => ({ v: p, lbl: labelParte(p) }))} />
               </div>
 
               {/* equipo (todos menos cambio/accion_individual) */}
@@ -569,7 +569,7 @@ export function EditorEventos(props: {
               <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-4xl max-h-[95vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}>
                 <h4 className="text-lg font-bold mb-3 text-center">
-                  {t("pg_titulo", { jugador: draft.jugador || "?" })} · {draft.parte} {minStr}
+                  {t("pg_titulo", { jugador: draft.jugador || "?" })} · {labelParte(draft.parte)} {minStr}
                 </h4>
                 <CampoFlecha flecha={flechaTmp} onChange={setFlechaTmp}
                   direccion={props.partido.config
@@ -600,7 +600,7 @@ export function EditorEventos(props: {
               borrador: se guarda con el resto al darle a «Guardar». */}
           {zonaPicker === "flechaAsist" && draft.tipo === "gol" && (
             <ModalFlechaAsistencia
-              titulo={`${t("ed_asist_titulo", { asistente: draft.asistente || "?", goleador: draft.goleador || "?" })} · ${draft.parte} ${minStr}`}
+              titulo={`${t("ed_asist_titulo", { asistente: draft.asistente || "?", goleador: draft.goleador || "?" })} · ${labelParte(draft.parte)} ${minStr}`}
               flechaInicial={flechaAsistenciaDe(draft)}
               direccion={dirInter(draft.parte as ParteId)}
               onCancelar={() => setZonaPicker(null)}
@@ -633,7 +633,7 @@ export function EditorEventos(props: {
           «Guardar», sin abrir el formulario. */}
       {golDirecto && (
         <ModalFlechaAsistencia
-          titulo={`${t("ed_asist_titulo", { asistente: golDirecto.asistente || "?", goleador: golDirecto.goleador || "?" })} · ${golDirecto.parte} ${formatMMSS(golDirecto.segundosParte || 0)}`}
+          titulo={`${t("ed_asist_titulo", { asistente: golDirecto.asistente || "?", goleador: golDirecto.goleador || "?" })} · ${labelParte(golDirecto.parte)} ${formatMMSS(golDirecto.segundosParte || 0)}`}
           flechaInicial={flechaAsistenciaDe(golDirecto)}
           direccion={dirInter(golDirecto.parte)}
           onCancelar={() => setFlechaDirectaId(null)}

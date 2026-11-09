@@ -11,7 +11,8 @@
  * Al cambiar de idioma llama a setIdioma(), que avisa a todos los componentes
  * suscritos vía useIdioma() y re-renderizan con el texto del nuevo idioma.
  */
-import { IDIOMAS_DISPONIBLES, setIdioma, useIdioma, type Idioma } from "@/lib/i18n";
+import { useEffect } from "react";
+import { IDIOMAS_DISPONIBLES, restaurarIdioma, setIdioma, useIdioma, type Idioma } from "@/lib/i18n";
 import { CLIENTE } from "@/lib/clientes";
 
 // Solo se muestra si el cliente no fija idioma (demo). El Inter va fijo en "es".
@@ -20,6 +21,9 @@ const MOSTRAR_SELECTOR = CLIENTE.idiomaFijo === null;
 export default function SelectorIdioma() {
   // Suscribe al idioma activo (re-render al cambiar).
   const idioma = useIdioma();
+  // En un efecto y no al cargar el módulo: el HTML pre-generado va en español
+  // y el primer render tiene que coincidir con él. En el Inter no hace nada.
+  useEffect(() => { restaurarIdioma(); }, []);
 
   // Cliente con idioma fijo (Inter): no mostramos nada.
   if (!MOSTRAR_SELECTOR) return null;
