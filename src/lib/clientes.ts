@@ -48,6 +48,11 @@ export interface ConfigCliente {
   idiomaFijo: IdiomaId | null;
   /** true = nombres ficticios (grabar/enseñar); false = roster real. */
   demo: boolean;
+  /** true = el informe del partido es el completo, igual que el del club y sin
+   *  carga física (`components/InformeCompleto.tsx`). false = el de siempre
+   *  (`app/informe/page.tsx`). El Inter y el filial van en false a propósito:
+   *  su informe no se toca. */
+  informeCompleto: boolean;
 }
 
 // Contraseñas: aquí SOLO va el SHA-256. La contraseña en claro NO se escribe,
@@ -75,6 +80,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     appTitulo: "Inter Crono",
     idiomaFijo: "es", // el Inter va siempre en español, sin selector
     demo: false,
+    informeCompleto: false,
   },
   // Filial (28/8/2026). MISMO código que el Inter, otro build: su roster, su
   // contraseña, su URL (/crono-filial/) y su base local. No comparte NADA con
@@ -88,6 +94,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     appTitulo: "Crono Filial",
     idiomaFijo: "es",
     demo: false,
+    informeCompleto: false,
   },
   pulso: {
     id: "pulso",
@@ -97,6 +104,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     appTitulo: "Crono CD Pulso",
     idiomaFijo: null, // la demo muestra el selector de idioma (es/en/it)
     demo: true,
+    informeCompleto: true,
   },
 };
 
