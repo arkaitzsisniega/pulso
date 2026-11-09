@@ -1,2 +1,2 @@
-:HL["/pulso/crono-filial/_next/static/chunks/0xck~g~na6x3v.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"g-lbXcESl05zTTbAOh8sM"}
+:HL["/pulso/crono-filial/_next/static/chunks/16u6pk4j89pd4.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"5xr2eMxgFzASiEg5ulZ9j"}

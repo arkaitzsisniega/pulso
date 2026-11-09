@@ -16,7 +16,7 @@
  * app router + output:export, y para una app estática esto es más robusto.
  */
 // El nombre de la caché lleva la VERSIÓN DEL DESPLIEGUE, que el workflow
-// sustituye por el SHA del commit al publicar (`aca31edf142f`).
+// sustituye por el SHA del commit al publicar (`5bfb5800579f`).
 //
 // POR QUÉ (30/8/2026): el navegador solo instala un service worker nuevo si
 // `sw.js` cambia byte a byte. Como este fichero es fijo y las peticiones de
@@ -28,14 +28,15 @@
 //
 // En local (sin sustituir) queda "dev", que no estorba: en localhost no se
 // registra el SW.
-const VERSION = "aca31edf142f".startsWith("__") ? "dev" : "aca31edf142f";
+const VERSION = "5bfb5800579f".startsWith("__") ? "dev" : "5bfb5800579f";
 const CACHE = `inter-crono-${VERSION}`;
 // Carpeta donde vive la app: "/pulso/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 // El informe, también sin conexión, SOLO en la demo de PULSO (9/11/2026). Con
 // este service worker /informe/ no estaba en la caché hasta haberlo abierto
 // una vez con red: sin conexión el botón del resumen caía en la pantalla de
-// «no hay partido». En el Inter y el filial sigue todo como estaba.
+// «no hay partido». Con /totales/ pasaba lo mismo y sin conexión enseñaba la
+// pantalla del partido. En el Inter y el filial sigue todo como estaba.
 const INFORME_OFFLINE = /\/crono-demo$/.test(BASE);
 const APP_SHELL = [
   `${BASE}/`,
@@ -43,7 +44,7 @@ const APP_SHELL = [
   `${BASE}/nuevo/`,
   `${BASE}/resumen/`,
   `${BASE}/manifest.json`,
-  ...(INFORME_OFFLINE ? [`${BASE}/informe/`] : []),
+  ...(INFORME_OFFLINE ? [`${BASE}/informe/`, `${BASE}/totales/`] : []),
 ];
 
 // Precachea una página HTML Y todos los assets (_next JS/CSS) que referencia.
