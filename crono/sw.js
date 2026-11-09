@@ -16,7 +16,7 @@
  * app router + output:export, y para una app estática esto es más robusto.
  */
 // El nombre de la caché lleva la VERSIÓN DEL DESPLIEGUE, que el workflow
-// sustituye por el SHA del commit al publicar (`4cc0a7267502`).
+// sustituye por el SHA del commit al publicar (`aca31edf142f`).
 //
 // POR QUÉ (30/8/2026): el navegador solo instala un service worker nuevo si
 // `sw.js` cambia byte a byte. Como este fichero es fijo y las peticiones de
@@ -28,16 +28,22 @@
 //
 // En local (sin sustituir) queda "dev", que no estorba: en localhost no se
 // registra el SW.
-const VERSION = "4cc0a7267502".startsWith("__") ? "dev" : "4cc0a7267502";
+const VERSION = "aca31edf142f".startsWith("__") ? "dev" : "aca31edf142f";
 const CACHE = `inter-crono-${VERSION}`;
 // Carpeta donde vive la app: "/pulso/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
+// El informe, también sin conexión, SOLO en la demo de PULSO (9/11/2026). Con
+// este service worker /informe/ no estaba en la caché hasta haberlo abierto
+// una vez con red: sin conexión el botón del resumen caía en la pantalla de
+// «no hay partido». En el Inter y el filial sigue todo como estaba.
+const INFORME_OFFLINE = /\/crono-demo$/.test(BASE);
 const APP_SHELL = [
   `${BASE}/`,
   `${BASE}/partido/`,
   `${BASE}/nuevo/`,
   `${BASE}/resumen/`,
   `${BASE}/manifest.json`,
+  ...(INFORME_OFFLINE ? [`${BASE}/informe/`] : []),
 ];
 
 // Precachea una página HTML Y todos los assets (_next JS/CSS) que referencia.
@@ -71,6 +77,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {
       await cache.add(`${BASE}/manifest.json`).catch(() => {});
+      if (INFORME_OFFLINE) await cache.add(`${BASE}/marca.png`).catch(() => {});
       await Promise.allSettled(
         APP_SHELL.filter((u) => !u.endsWith("manifest.json"))
           .map((u) => precachePaginaYAssets(cache, u))
@@ -118,7 +125,9 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() =>
           caches
-            .match(req)
+            // El botón del resumen abre /informe/?imprimir=1: sin esto no casa
+            // con el /informe/ guardado y caería en /partido/.
+            .match(req, INFORME_OFFLINE ? { ignoreSearch: true } : undefined)
             .then(
               (m) =>
                 m ||
