@@ -27,7 +27,8 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { usePartido } from "@/lib/store";
-import { NOMBRE_CORTO_TC, ROSTER } from "@/lib/clientes";
+import { CLIENTE, NOMBRE_CORTO_TC, ROSTER } from "@/lib/clientes";
+import InformeCompleto from "@/components/InformeCompleto";
 import { CampoMapa } from "@/components/CampoMapa";
 import { t, useIdioma } from "@/lib/i18n";
 import {
@@ -265,7 +266,13 @@ function GolesTramo(props: { tramos: Informe["golesPorTramo"] }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
+/** Qué informe enseña este build lo decide `clientes.ts`. Inter y filial: el de
+ *  siempre, el de aquí abajo, sin tocar. PULSO: el completo, en su componente. */
 export default function InformePage() {
+  return CLIENTE.informeCompleto ? <InformeCompleto /> : <InformeClasico />;
+}
+
+function InformeClasico() {
   const { partido, cargado } = usePartido();
   useIdioma();     // re-renderiza al cambiar de idioma
 
