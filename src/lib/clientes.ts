@@ -53,6 +53,9 @@ export interface ConfigCliente {
    *  (`app/informe/page.tsx`). El Inter y el filial van en false a propósito:
    *  su informe no se toca. */
   informeCompleto: boolean;
+  /** true = la primera vez que se abre trae ya un partido de ejemplo guardado
+   *  (`lib/partidoEjemplo.ts`). Solo la demo: el Inter y el filial, en false. */
+  partidoEjemplo: boolean;
 }
 
 // Contraseñas: aquí SOLO va el SHA-256. La contraseña en claro NO se escribe,
@@ -81,6 +84,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     idiomaFijo: "es", // el Inter va siempre en español, sin selector
     demo: false,
     informeCompleto: false,
+    partidoEjemplo: false,
   },
   // Filial (28/8/2026). MISMO código que el Inter, otro build: su roster, su
   // contraseña, su URL (/crono-filial/) y su base local. No comparte NADA con
@@ -95,6 +99,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     idiomaFijo: "es",
     demo: false,
     informeCompleto: false,
+    partidoEjemplo: false,
   },
   pulso: {
     id: "pulso",
@@ -105,6 +110,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     idiomaFijo: null, // la demo muestra el selector de idioma (es/en/it)
     demo: true,
     informeCompleto: true,
+    partidoEjemplo: true,
   },
 };
 

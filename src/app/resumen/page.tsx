@@ -10,7 +10,7 @@ import { CampoConteos } from "@/components/CampoConteos";
 import { EditorEventos } from "@/components/EditorEventos";
 import type { Evento, ParteId, Partido } from "@/lib/db";
 import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
-import { t, useIdioma, labelAccionGol, labelResultadoDisparo } from "@/lib/i18n";
+import { t, useIdioma, labelAccionGol, labelResultadoDisparo, labelParte, labelCompeticionCorta } from "@/lib/i18n";
 import { contarPorZona } from "@/lib/zonas";
 import { accionDeLanzamiento, esLanzamiento } from "@/lib/lanzamientos";
 
@@ -276,7 +276,7 @@ export default function ResumenPage() {
         </div>
         <div className="bg-zinc-900 rounded-xl p-4">
           <div className="text-base text-zinc-400 mb-1">
-            {cfg.partido_id} · {cfg.competicion} · {cfg.fecha} {cfg.hora} · {cfg.lugar || "—"}
+            {cfg.partido_id} · {labelCompeticionCorta(cfg.competicion)} · {cfg.fecha} {cfg.hora} · {cfg.lugar || "—"}
           </div>
           <div className="text-4xl font-bold tabular-nums flex items-center justify-center gap-3">
             <span className="text-emerald-400">{CLIENTE.nombreCorto}</span>
@@ -292,9 +292,9 @@ export default function ResumenPage() {
             </div>
           )}
           <div className="mt-3 text-base text-zinc-500 text-center">
-            {t("res_estado")} <strong className="text-zinc-300">{partido.estado}</strong>
+            {t("res_estado")} <strong className="text-zinc-300">{CLIENTE.demo ? t(`estado_${partido.estado}`) : partido.estado}</strong>
             {" · "}
-            {t("res_partes_jugadas")} <strong className="text-zinc-300">{partesJugadas.join(", ")}</strong>
+            {t("res_partes_jugadas")} <strong className="text-zinc-300">{partesJugadas.map(labelParte).join(", ")}</strong>
           </div>
         </div>
       </div>
@@ -489,7 +489,7 @@ export default function ResumenPage() {
                       .sort((a, b) => (a.segundosParte || 0) - (b.segundosParte || 0));
                     return (
                       <div key={p}>
-                        <div className="text-sm text-zinc-500 mb-1.5">{p} · {faltas.length}</div>
+                        <div className="text-sm text-zinc-500 mb-1.5">{labelParte(p)} · {faltas.length}</div>
                         <div className="flex flex-wrap gap-2">
                           {faltas.map((f: any, i) => {
                             const quien = f.jugador
@@ -580,7 +580,7 @@ export default function ResumenPage() {
                           <th className="px-2">{t("vid_saque")}</th>
                           <th className="px-2">{t("vid_pase")}</th>
                           <th className="px-2">{t("vid_achique")}</th>
-                          <th className="px-2">{t("vid_cob")} (BR/BN/MR/MN)</th>
+                          <th className="px-2">{t("vid_cob")} {t("res_cob_abbr")}</th>
                           <th className="px-2">{t("vid_anticipacion")}</th>
                           <th className="px-2" title={t("vid_pase_gol")}>{t("inf_pase_gol")}</th>
                         </tr>
@@ -644,10 +644,10 @@ export default function ResumenPage() {
                         }`}>
                         <div className="flex items-baseline gap-2 mb-2">
                           <span className="text-zinc-400 text-base font-mono w-16 shrink-0">
-                            {ev.parte} {formatMMSS(ev.segundosParte || 0)}
+                            {labelParte(ev.parte)} {formatMMSS(ev.segundosParte || 0)}
                           </span>
                           <span className={`text-base font-bold ${esInter ? "text-green-300" : "text-red-300"}`}>
-                            {esInter ? "INTER" : cfg.rival}
+                            {esInter ? (CLIENTE.demo ? CLIENTE.nombreCorto : "INTER") : cfg.rival}
                           </span>
                           {marcadorPostGol && (
                             <span className="text-base text-zinc-300 tabular-nums">
@@ -707,7 +707,7 @@ export default function ResumenPage() {
                   <div key={ti.id} className="flex items-center gap-2">
                     <span className="text-zinc-500 w-6">#{ti.orden}</span>
                     <span className={ti.equipo === "INTER" ? "text-emerald-400" : "text-red-400"}>
-                      {ti.equipo === "INTER" ? "INTER" : cfg.rival}
+                      {ti.equipo === "INTER" ? (CLIENTE.demo ? CLIENTE.nombreCorto : "INTER") : cfg.rival}
                     </span>
                     <span className="font-bold flex-1">{ti.tirador || "—"}</span>
                     <span className={ti.resultado === "GOL" ? "text-green-400 font-bold" : "text-yellow-400"}>
@@ -746,7 +746,7 @@ export default function ResumenPage() {
                 <th className="text-left py-2 px-2">{t("res_jugador")}</th>
                 <th className="text-right px-2">{t("res_tiempos_total")}</th>
                 {partesJugadas.map((p) => (
-                  <th key={p} className="text-right px-2">{p}</th>
+                  <th key={p} className="text-right px-2">{labelParte(p)}</th>
                 ))}
                 <th />
               </tr>
@@ -831,14 +831,14 @@ export default function ResumenPage() {
                 <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_fuera")}>{t("res_th_fuera")}</th>
                 <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_bloqueado")}>{t("res_th_bloq")}</th>
                 <th className="text-center px-1 bg-emerald-900/20 font-bold" title={t("res_title_total_disp")}>Σ</th>
-                <th className="text-center px-1 bg-red-900/10" title={t("res_title_forzada")}>PF</th>
-                <th className="text-center px-1 bg-red-900/10" title={t("res_title_no_forzada")}>PNF</th>
+                <th className="text-center px-1 bg-red-900/10" title={t("res_title_forzada")}>{t("ic_c_pf")}</th>
+                <th className="text-center px-1 bg-red-900/10" title={t("res_title_no_forzada")}>{t("ic_c_pnf")}</th>
                 <th className="text-center px-1 bg-green-900/10">{t("res_th_robos")}</th>
                 <th className="text-center px-1 bg-green-900/10">{t("res_th_cortes")}</th>
                 {!esDirecto && (
                   <>
-                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_ganados")}>BDG</th>
-                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_perdidos")}>BDP</th>
+                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_ganados")}>{t("ic_c_bdg")}</th>
+                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_perdidos")}>{t("ic_c_bdp")}</th>
                   </>
                 )}
                 <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_goles_marcados")}>{t("res_abbr_g")}</th>
@@ -1072,7 +1072,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       marcas.push({
         x, tipo: "gol", equipo: eq || "—",
         etiqueta: "⚽",
-        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_gol")} ${eq === "INTER" ? NOMBRE_CORTO_TC : cfg.rival} (${jug})`,
+        tooltip: `${formatMMSS(ev.segundosParte)} ${labelParte(ev.parte)} · ${t("res_crono_tt_gol")} ${eq === "INTER" ? NOMBRE_CORTO_TC : cfg.rival} (${jug})`,
         clase: `${colorEq} ring-2 ring-white/50`,
         alturaPct: 95,
       });
@@ -1081,7 +1081,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       marcas.push({
         x, tipo: ev.tipo, equipo: eq || "—",
         etiqueta: ev.tipo === "amarilla" ? "🟨" : "🟥",
-        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${ev.tipo} ${eq === "INTER" ? jug : cfg.rival}`,
+        tooltip: `${formatMMSS(ev.segundosParte)} ${labelParte(ev.parte)} · ${t(`res_crono_tt_${ev.tipo}`)} ${eq === "INTER" ? jug : cfg.rival}`,
         clase: ev.tipo === "amarilla" ? "bg-yellow-500" : "bg-red-600",
         alturaPct: 70,
       });
@@ -1090,7 +1090,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       marcas.push({
         x, tipo: "falta", equipo: eq || "—",
         etiqueta: "F",
-        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_falta")} ${eq === "INTER" ? NOMBRE_CORTO_TC + " (" + jug + ")" : cfg.rival}`,
+        tooltip: `${formatMMSS(ev.segundosParte)} ${labelParte(ev.parte)} · ${t("res_crono_tt_falta")} ${eq === "INTER" ? NOMBRE_CORTO_TC + " (" + jug + ")" : cfg.rival}`,
         clase: `${colorEq} opacity-80`,
         alturaPct: 55,
       });
@@ -1100,7 +1100,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       marcas.push({
         x, tipo: "disparo", equipo: eq || "—",
         etiqueta: "•",
-        tooltip: `${formatMMSS(ev.segundosParte)} ${ev.parte} · ${t("res_crono_tt_disparo")} ${eq === "INTER" ? NOMBRE_CORTO_TC + " (" + jug + ")" : cfg.rival} → ${res}`,
+        tooltip: `${formatMMSS(ev.segundosParte)} ${labelParte(ev.parte)} · ${t("res_crono_tt_disparo")} ${eq === "INTER" ? NOMBRE_CORTO_TC + " (" + jug + ")" : cfg.rival} → ${labelResultadoDisparo(res)}`,
         clase: `${colorEq} opacity-60`,
         alturaPct: 30,
       });
@@ -1750,7 +1750,7 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
             const q = quintetoInicialParte(p);
             return (
               <div key={p} className="bg-zinc-950 rounded-lg p-3">
-                <div className="text-base text-emerald-300 font-bold mb-2">{p}</div>
+                <div className="text-base text-emerald-300 font-bold mb-2">{labelParte(p)}</div>
                 <div className="flex flex-wrap gap-2">
                   {q.length === 0 ? (
                     <span className="text-zinc-500 text-base italic">{t("resa_sin_datos")}</span>

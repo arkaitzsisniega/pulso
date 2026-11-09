@@ -111,9 +111,40 @@ export function idiomaActivo(): Idioma {
   return _idioma;
 }
 
+// El idioma que eligió quien usa la demo. Antes vivía solo en memoria, así que
+// cada carga completa (abrir el informe, recargar, volver a la app en el iPad)
+// devolvía la pantalla al español a un entrenador que la estaba leyendo en inglés.
+const CLAVE_IDIOMA = `${CLIENTE.id}_crono_idioma`;
+
+function pintaIdiomaDocumento(idioma: Idioma): void {
+  if (typeof document !== "undefined") document.documentElement.lang = idioma;
+}
+
+/**
+ * Solo en los clientes con selector (la demo): recupera el idioma elegido y, la
+ * primera vez, adivina por el del aparato (español si lo tiene en español,
+ * italiano si en italiano, y si no inglés). Con idioma fijo no hace nada.
+ */
+export function restaurarIdioma(): void {
+  if (CLIENTE.idiomaFijo !== null) return;
+  let guardado: string | null = null;
+  try { guardado = localStorage.getItem(CLAVE_IDIOMA); } catch { /* sin almacenamiento */ }
+  const aparato = (navigator.language || "").slice(0, 2).toLowerCase();
+  const idioma = guardado ? normaliza(guardado)
+    : aparato === "es" || aparato === "it" ? (aparato as Idioma) : "en";
+  pintaIdiomaDocumento(idioma);
+  if (idioma === _idioma) return;
+  _idioma = idioma;
+  for (const fn of _subs) fn();
+}
+
 export function setIdioma(idioma: Idioma): void {
   if (idioma === _idioma) return;
   _idioma = idioma;
+  if (CLIENTE.idiomaFijo === null) {
+    pintaIdiomaDocumento(idioma);
+    try { localStorage.setItem(CLAVE_IDIOMA, idioma); } catch { /* sin almacenamiento */ }
+  }
   for (const fn of _subs) fn();
 }
 
@@ -196,7 +227,7 @@ export const CATALOGO: Record<string, Entrada> = {
   inf_bloqueados: { es: "Bloqueados", en: "Blocked", it: "Murati" },
   inf_faltas: { es: "Faltas", en: "Fouls", it: "Falli" },
   inf_amarillas: { es: "Amarillas", en: "Yellow cards", it: "Ammonizioni" },
-  inf_tm: { es: "Tiempos muertos", en: "Timeouts", it: "Time out" },
+  inf_tm: { es: "Tiempos muertos", en: "Time-outs", it: "Time out" },
   inf_robos: { es: "Robos", en: "Steals", it: "Recuperi" },
   inf_cortes: { es: "Cortes", en: "Interceptions", it: "Intercetti" },
   inf_perdidas: { es: "Pérdidas", en: "Turnovers", it: "Palle perse" },
@@ -388,7 +419,7 @@ export const CATALOGO: Record<string, Entrada> = {
   nuevo_modo_video: { es: "VÍDEO", en: "VIDEO", it: "VIDEO" },
   nuevo_modo_video_sub: { es: "Revisión con grabación · todo el detalle", en: "Reviewing footage · full detail", it: "Revisione col video · tutto il dettaglio" },
   nuevo_rival: { es: "Rival", en: "Opponent", it: "Avversario" },
-  nuevo_rival_ph: { es: "Ej: VALDEPEÑAS", en: "e.g. VALDEPEÑAS", it: "Es: VALDEPEÑAS" },
+  nuevo_rival_ph: { es: "Ej: VALDEPEÑAS", en: "e.g. TIGERS", it: "Es: VALDEPEÑAS" },
   nuevo_id_partido: { es: "ID partido", en: "Match ID", it: "ID partita" },
   nuevo_fecha: { es: "Fecha", en: "Date", it: "Data" },
   nuevo_hora: { es: "Hora", en: "Time", it: "Ora" },
@@ -396,9 +427,9 @@ export const CATALOGO: Record<string, Entrada> = {
   nuevo_lugar_ph: { es: "Pabellón...", en: "Arena...", it: "Palazzetto..." },
   nuevo_competicion: { es: "Competición", en: "Competition", it: "Competizione" },
   nuevo_inter_local: { es: "{equipo} juega como LOCAL", en: "{equipo} plays at HOME", it: "{equipo} gioca in CASA" },
-  nuevo_duracion_titulo: { es: "Duración por parte (min) — preset:", en: "Period length (min) — preset:", it: "Durata per tempo (min) — preset:" },
-  nuevo_1a_parte: { es: "1ª parte", en: "1st period", it: "1º tempo" },
-  nuevo_2a_parte: { es: "2ª parte", en: "2nd period", it: "2º tempo" },
+  nuevo_duracion_titulo: { es: "Duración por parte (min) — preset:", en: "Half length (min) — preset:", it: "Durata per tempo (min) — preset:" },
+  nuevo_1a_parte: { es: "1ª parte", en: "1st half", it: "1º tempo" },
+  nuevo_2a_parte: { es: "2ª parte", en: "2nd half", it: "2º tempo" },
   nuevo_prorroga1_no: { es: "Prórroga 1 (0 = no)", en: "Extra time 1 (0 = none)", it: "Supplementare 1 (0 = no)" },
   nuevo_prorroga2_no: { es: "Prórroga 2 (0 = no)", en: "Extra time 2 (0 = none)", it: "Supplementare 2 (0 = no)" },
   nuevo_permite_tanda: {
@@ -411,19 +442,19 @@ export const CATALOGO: Record<string, Entrada> = {
   // montar el crono del filial).
   nuevo_direccion_pregunta: {
     es: "¿Hacia dónde ataca {equipo} en la 1ª parte? (vista del banquillo)",
-    en: "Which way does {equipo} attack in the 1st period? (bench view)",
+    en: "Which way does {equipo} attack in the 1st half? (bench view)",
     it: "Verso dove attacca {equipo} nel 1º tempo? (vista dalla panchina)",
   },
   nuevo_izquierda: { es: "← Izquierda", en: "← Left", it: "← Sinistra" },
   nuevo_derecha: { es: "Derecha →", en: "Right →", it: "Destra →" },
   nuevo_direccion_nota: {
     es: "En 2ª parte cambian de campo automáticamente. El rival siempre ataca en sentido contrario a {equipo}.",
-    en: "In the 2nd period they switch ends automatically. The opponent always attacks the opposite way to {equipo}.",
+    en: "In the 2nd half they switch ends automatically. The opponent always attacks the opposite way to {equipo}.",
     it: "Nel 2º tempo cambiano campo automaticamente. L'avversario attacca sempre nel senso opposto a {equipo}.",
   },
   nuevo_convocados: { es: "Convocados (toca para conmutar)", en: "Squad (tap to toggle)", it: "Convocati (tocca per cambiare)" },
   nuevo_convocados_count: { es: "{n} convocados", en: "{n} called up", it: "{n} convocati" },
-  nuevo_pista_inicial: { es: "Pista inicial", en: "Starting line-up", it: "Formazione iniziale" },
+  nuevo_pista_inicial: { es: "Pista inicial", en: "Starting lineup", it: "Formazione iniziale" },
   nuevo_portero: { es: "🥅 Portero", en: "🥅 Goalkeeper", it: "🥅 Portiere" },
   nuevo_pista_n: { es: "⚽ Pista {n}", en: "⚽ Court {n}", it: "⚽ Campo {n}" },
   nuevo_elige: { es: "— elige —", en: "— choose —", it: "— scegli —" },
@@ -433,7 +464,7 @@ export const CATALOGO: Record<string, Entrada> = {
   nuevo_alert_rival: { es: "Pon el nombre del rival", en: "Enter the opponent's name", it: "Inserisci il nome dell'avversario" },
   nuevo_alert_id: {
     es: "Pon el ID del partido (ej: J29.VALDEPEÑAS)",
-    en: "Enter the match ID (e.g. J29.VALDEPEÑAS)",
+    en: "Enter the match ID (e.g. MD29.TIGERS)",
     it: "Inserisci l'ID della partita (es: J29.VALDEPEÑAS)",
   },
   nuevo_alert_cinco: {
@@ -453,7 +484,7 @@ export const CATALOGO: Record<string, Entrada> = {
   },
   nuevo_alert_no_inicio: {
     es: "No pude iniciar el partido. Mira la consola.",
-    en: "Couldn't start the match. Check the console.",
+    en: "Couldn't start the match. Try again.",
     it: "Non sono riuscito ad avviare la partita. Controlla la console.",
   },
 
@@ -461,21 +492,21 @@ export const CATALOGO: Record<string, Entrada> = {
   part_cargando: { es: "Cargando…", en: "Loading…", it: "Caricamento…" },
   part_no_en_curso: { es: "No hay partido en curso.", en: "No match in progress.", it: "Nessuna partita in corso." },
   part_crear_nuevo: { es: "🏁 Crear partido nuevo", en: "🏁 Create new match", it: "🏁 Crea nuova partita" },
-  part_fin_parte: { es: "⏱️ Fin de parte", en: "⏱️ End of period", it: "⏱️ Fine tempo" },
+  part_fin_parte: { es: "⏱️ Fin de parte", en: "⏱️ End of half", it: "⏱️ Fine tempo" },
   part_saca_badge: { es: "⚽ Saca {equipo}", en: "⚽ {equipo} kicks off", it: "⚽ Batte {equipo}" },
   part_iniciar: { es: "▶ INICIAR", en: "▶ START", it: "▶ AVVIA" },
   part_pausar: { es: "⏸ PAUSAR", en: "⏸ PAUSE", it: "⏸ PAUSA" },
   part_volver_parte_confirm: {
     es: "¿Volver a la parte anterior? (estás en {parte})",
-    en: "Go back to the previous period? (you're in {parte})",
+    en: "Go back to the previous half? (you're in {parte})",
     it: "Tornare al tempo precedente? (sei nel {parte})",
   },
   part_volver_parte_title: {
     es: "Volver a la parte anterior (deshacer ⏭)",
-    en: "Go back to the previous period (undo ⏭)",
+    en: "Go back to the previous half (undo ⏭)",
     it: "Torna al tempo precedente (annulla ⏭)",
   },
-  part_parte_btn: { es: "⏭ parte", en: "⏭ period", it: "⏭ tempo" },
+  part_parte_btn: { es: "⏭ parte", en: "⏭ half", it: "⏭ tempo" },
 
   // ══════════════════ PARTIDO — BANNERS INFERIORIDAD / SUPERIORIDAD ══════════════════
   part_inferioridad: { es: "INFERIORIDAD · expulsado {jugador}", en: "DOWN A PLAYER · sent off {jugador}", it: "INFERIORITÀ NUMERICA · espulso {jugador}" },
@@ -543,11 +574,12 @@ export const CATALOGO: Record<string, Entrada> = {
     en: "BENCH (tap a player for yellow / foul / sub)",
     it: "PANCHINA (tocca un giocatore per giallo / fallo / cambio)",
   },
+  part_expulsado_sin_nombre: { es: "expulsado", en: "player", it: "espulso" },
   part_expulsado: { es: "EXPULSADO", en: "SENT OFF", it: "ESPULSO" },
   part_expulsado_title: { es: "Expulsado", en: "Sent off", it: "Espulso" },
   part_amarilla_title: { es: "Amarilla", en: "Yellow card", it: "Giallo" },
   part_sin_dorsal: { es: "—", en: "—", it: "—" },
-  part_parte_corto: { es: "parte {tiempo}", en: "period {tiempo}", it: "tempo {tiempo}" },
+  part_parte_corto: { es: "parte {tiempo}", en: "half {tiempo}", it: "tempo {tiempo}" },
 
   // ══════════════════ PARTIDO — BOTONES ACCIÓN COLECTIVA ══════════════════
   btn_gol: { es: "⚽ GOL", en: "⚽ GOAL", it: "⚽ GOL" },
@@ -572,7 +604,7 @@ export const CATALOGO: Record<string, Entrada> = {
     it: "{n} incorporazioni in totale",
   },
   res_incorporaciones_titulo: { es: "🧤 Incorporaciones del portero rival",
-                                en: "🧤 Rival goalkeeper as outfield player",
+                                en: "🧤 Opponent flying goalkeeper",
                                 it: "🧤 Portiere di movimento avversario" },
   res_inc_con: { es: "con disparo", en: "with shot", it: "con tiro" },
   res_inc_sin: { es: "sin disparo", en: "no shot", it: "senza tiro" },
@@ -666,7 +698,7 @@ export const CATALOGO: Record<string, Entrada> = {
   conf_ama_ct_titulo: { es: "🟨 Amarilla al cuerpo técnico", en: "🟨 Yellow to the coaching staff", it: "🟨 Giallo allo staff tecnico" },
   conf_ama_ct_texto: {
     es: "Tarjeta al banquillo de {equipo}. ¿Conlleva falta de equipo (suma a las acumuladas de la parte)?",
-    en: "Card to the {equipo} bench. Does it count as a team foul (adds to the period's accumulated fouls)?",
+    en: "Card to the {equipo} bench. Does it count as a team foul (adds to the half's accumulated fouls)?",
     it: "Cartellino alla panchina del {equipo}. Conta come fallo di squadra (si somma a quelli accumulati nel tempo)?",
   },
   conf_si_suma_falta: { es: "Sí, suma falta", en: "Yes, count foul", it: "Sì, conta come fallo" },
@@ -728,7 +760,7 @@ export const CATALOGO: Record<string, Entrada> = {
   mtm_usado: { es: " ✓ usado", en: " ✓ used", it: " ✓ usato" },
   mtm_nota: {
     es: "Cada equipo tiene 1 tiempo muerto por parte. El que ya lo gastó queda deshabilitado.",
-    en: "Each team has 1 time-out per period. Whoever used it is disabled.",
+    en: "Each team has 1 time-out per half. It is greyed out once used.",
     it: "Ogni squadra ha 1 time-out per tempo. Quella che l'ha già usato resta disabilitata.",
   },
 
@@ -738,10 +770,10 @@ export const CATALOGO: Record<string, Entrada> = {
   mg_asistente: { es: "Asistente (tap o saltar)", en: "Assist (tap or skip)", it: "Assist (tocca o salta)" },
   mg_sin_asistente: { es: "sin asistente", en: "no assist", it: "senza assist" },
   mg_en_propia: { es: "🙃 En propia del rival (no la marca nadie nuestro)",
-                  en: "🙃 Rival own goal (none of ours scored it)",
+                  en: "🙃 Opponent own goal (none of ours scored it)",
                   it: "🙃 Autorete avversaria (nessuno dei nostri)" },
 
-  mg_accion_gol: { es: "Acción del gol", en: "Goal action", it: "Azione del gol" },
+  mg_accion_gol: { es: "Acción del gol", en: "Type of goal", it: "Azione del gol" },
   mg_zona_tira: { es: "Zona desde donde se REMATÓ", en: "Zone the goal was SHOT from", it: "Zona da cui si è TIRATO" },
   // Flecha de la asistencia (22/9/2026, solo vídeo): sustituye a la zona de la
   // asistencia. De dónde sale el pase del gol y a dónde llega.
@@ -766,7 +798,7 @@ export const CATALOGO: Record<string, Entrada> = {
   },
   // Acciones de gol (ACCIONES_GOL). Identificadores cortos de jugada.
   acc_corner: { es: "Córner", en: "Corner", it: "Calcio d'angolo" },
-  acc_banda: { es: "Banda", en: "Throw-in", it: "Rimessa laterale" },
+  acc_banda: { es: "Banda", en: "Kick-in", it: "Rimessa laterale" },
   acc_falta: { es: "Falta", en: "Free kick", it: "Punizione" },
   acc_5x4: { es: "5x4", en: "5x4", it: "5x4" },
   acc_4x5: { es: "4x5", en: "4x5", it: "4x5" },
@@ -951,7 +983,7 @@ export const CATALOGO: Record<string, Entrada> = {
   mt_total_minutos: { es: "Total minutos jugados", en: "Total minutes played", it: "Totale minuti giocati" },
   mt_nota: {
     es: "El valor de la parte actual incluye los segundos en vivo (se actualiza con el reloj). Los porteros marcados en amarillo.",
-    en: "The current period's value includes live seconds (updates with the clock). Goalkeepers shown in yellow.",
+    en: "The current half's value includes live seconds (updates with the clock). Goalkeepers shown in yellow.",
     it: "Il valore del tempo attuale include i secondi in diretta (si aggiorna con il cronometro). I portieri sono evidenziati in giallo.",
   },
 
@@ -971,12 +1003,12 @@ export const CATALOGO: Record<string, Entrada> = {
   mta_cerrar: { es: "Cerrar tanda", en: "Close shootout", it: "Chiudi serie di rigori" },
 
   // ══════════════════ MODAL CAMBIO DE PARTE ══════════════════
-  mcp_titulo_1t: { es: "🔵 Final de 1ª parte", en: "🔵 End of 1st period", it: "🔵 Fine del 1º tempo" },
-  mcp_titulo_2t: { es: "🏁 Final del partido (2ª parte)", en: "🏁 End of match (2nd period)", it: "🏁 Fine della partita (2º tempo)" },
+  mcp_titulo_1t: { es: "🔵 Final de 1ª parte", en: "🔵 End of 1st half", it: "🔵 Fine del 1º tempo" },
+  mcp_titulo_2t: { es: "🏁 Final del partido (2ª parte)", en: "🏁 End of match (2nd half)", it: "🏁 Fine della partita (2º tempo)" },
   mcp_titulo_pr1: { es: "🟣 Final de prórroga 1", en: "🟣 End of extra time 1", it: "🟣 Fine del supplementare 1" },
   mcp_titulo_pr2: { es: "🏁 Final de prórroga 2", en: "🏁 End of extra time 2", it: "🏁 Fine del supplementare 2" },
   mcp_empate: { es: "⚠️ Empate · hay que decidir cómo seguir", en: "⚠️ Draw · decide how to continue", it: "⚠️ Pareggio · bisogna decidere come proseguire" },
-  mcp_empezar_2a: { es: "Empezar 2ª parte", en: "Start 2nd period", it: "Inizia 2º tempo" },
+  mcp_empezar_2a: { es: "Empezar 2ª parte", en: "Start 2nd half", it: "Inizia 2º tempo" },
   mcp_empezar_pr2: { es: "Empezar prórroga 2", en: "Start extra time 2", it: "Inizia supplementare 2" },
   mcp_disparos: { es: "🎯 Disparos", en: "🎯 Shots", it: "🎯 Tiri" },
   mcp_total: { es: "total", en: "total", it: "totale" },
@@ -991,7 +1023,7 @@ export const CATALOGO: Record<string, Entrada> = {
   mcp_recuperaciones: { es: "✅ Recuperaciones", en: "✅ Recoveries", it: "✅ Recuperi" },
   mcp_robos: { es: "Robos", en: "Steals", it: "Recuperi palla" },
   mcp_cortes: { es: "Cortes", en: "Interceptions", it: "Intercetti" },
-  mcp_incorporaciones: { es: "🧤 Incorporaciones rival", en: "🧤 Rival GK as outfield", it: "🧤 Portiere di movimento" },
+  mcp_incorporaciones: { es: "🧤 Incorporaciones rival", en: "🧤 Opp. flying goalkeeper", it: "🧤 Portiere di movimento" },
   mcp_inc_con: { es: "Con disparo", en: "With shot", it: "Con tiro" },
   mcp_inc_sin: { es: "Sin disparo", en: "No shot", it: "Senza tiro" },
   mcp_divididos: { es: "⚖️ Balones divididos", en: "⚖️ Loose balls", it: "⚖️ Contrasti" },
@@ -1007,7 +1039,7 @@ export const CATALOGO: Record<string, Entrada> = {
   mcp_divid: { es: "Divid", en: "Loose", it: "Contr" },
   mcp_como_seguimos: { es: "¿Cómo seguimos?", en: "How do we continue?", it: "Come proseguiamo?" },
   mcp_hay_prorroga: { es: "🟣 Hay prórroga de", en: "🟣 Extra time of", it: "🟣 C'è un supplementare di" },
-  mcp_min_cada_parte: { es: "min cada parte", en: "min each period", it: "min per tempo" },
+  mcp_min_cada_parte: { es: "min cada parte", en: "min each half", it: "min per tempo" },
   mcp_empezar_prorroga: { es: "▶ Empezar prórroga ({a}+{b} min)", en: "▶ Start extra time ({a}+{b} min)", it: "▶ Inizia supplementare ({a}+{b} min)" },
   mcp_directo_tanda: { es: "🥇 Pasar directo a tanda de penaltis", en: "🥇 Go straight to penalty shootout", it: "🥇 Vai direttamente alla serie di rigori" },
   mcp_finalizar_resumen: { es: "🏁 Finalizar partido y ver resumen", en: "🏁 Finish match and view summary", it: "🏁 Termina partita e vedi riepilogo" },
@@ -1033,7 +1065,7 @@ export const CATALOGO: Record<string, Entrada> = {
     es: "¿Cerrar el partido? Después ya no se puede seguir cronometrando. El informe y las estadísticas se mantienen.",
     en: "Finish the match? The clock cannot be resumed afterwards. The report and stats are kept.",
     it: "Terminare la partita? Dopo non si può più cronometrare. Il referto e le statistiche restano." },
-  res_partes_jugadas: { es: "Partes jugadas:", en: "Periods played:", it: "Tempi giocati:" },
+  res_partes_jugadas: { es: "Partes jugadas:", en: "Halves played:", it: "Tempi giocati:" },
   res_tab_general: { es: "📊 General", en: "📊 Overview", it: "📊 Generale" },
   res_tab_tiempos: { es: "⏱ Tiempos", en: "⏱ Times", it: "⏱ Tempi" },
   res_tab_individual: { es: "👤 Individual", en: "👤 Individual", it: "👤 Individuale" },
@@ -1052,7 +1084,7 @@ export const CATALOGO: Record<string, Entrada> = {
   ed_nueva_accion: { es: "Nueva acción", en: "New event", it: "Nuova azione" },
   ed_tipo: { es: "Tipo de acción", en: "Event type", it: "Tipo di azione" },
   ed_minuto: { es: "Minuto (mm:ss)", en: "Minute (mm:ss)", it: "Minuto (mm:ss)" },
-  ed_parte: { es: "Parte", en: "Period", it: "Tempo" },
+  ed_parte: { es: "Parte", en: "Half", it: "Tempo" },
   ed_equipo: { es: "Equipo", en: "Team", it: "Squadra" },
   ed_goleador: { es: "Goleador", en: "Scorer", it: "Marcatore" },
   ed_asistente: { es: "Asistente", en: "Assist", it: "Assist" },
@@ -1099,7 +1131,7 @@ export const CATALOGO: Record<string, Entrada> = {
   ed_t_falta: { es: "Falta", en: "Foul", it: "Fallo" },
   ed_t_amarilla: { es: "Amarilla", en: "Yellow card", it: "Gialla" },
   ed_t_roja: { es: "Roja", en: "Red card", it: "Rossa" },
-  ed_t_tiempo_muerto: { es: "Tiempo muerto", en: "Timeout", it: "Timeout" },
+  ed_t_tiempo_muerto: { es: "Tiempo muerto", en: "Time-out", it: "Timeout" },
   ed_t_disparo: { es: "Disparo", en: "Shot", it: "Tiro" },
   ed_t_cambio: { es: "Cambio", en: "Substitution", it: "Sostituzione" },
   ed_t_accion_individual: { es: "Acción individual", en: "Individual action", it: "Azione individuale" },
@@ -1202,7 +1234,7 @@ export const CATALOGO: Record<string, Entrada> = {
 
   // ══════════════════ RESUMEN — CRONOGRAMA ══════════════════
   res_crono_titulo: { es: "📅 Cronograma del partido", en: "📅 Match timeline", it: "📅 Cronologia della partita" },
-  res_crono_sin_partes: { es: "Aún no hay partes jugadas para mostrar.", en: "No periods played to show yet.", it: "Ancora nessun tempo giocato da mostrare." },
+  res_crono_sin_partes: { es: "Aún no hay partes jugadas para mostrar.", en: "No halves played to show yet.", it: "Ancora nessun tempo giocato da mostrare." },
   res_crono_todo: { es: "Todo", en: "All", it: "Tutto" },
   res_crono_eventos: { es: "EVENTOS", en: "EVENTS", it: "EVENTI" },
   res_crono_tramo_pista: { es: "Tramo EN PISTA", en: "ON COURT spell", it: "Periodo IN CAMPO" },
@@ -1213,7 +1245,7 @@ export const CATALOGO: Record<string, Entrada> = {
   },
   res_crono_nota: {
     es: "Pasa el dedo / cursor por encima de cada marca o tramo para ver el detalle. Los tramos verdes son minutos EN PISTA del jugador (amarillo si es portero).",
-    en: "Hover your finger / cursor over each marker or spell for details. Green spells are the player's ON COURT minutes (yellow if goalkeeper).",
+    en: "Tap or hover over each marker or spell for details. Green spells are the player's ON COURT minutes (yellow if goalkeeper).",
     it: "Passa il dito / cursore su ogni marca o periodo per vedere il dettaglio. I tratti verdi sono i minuti IN CAMPO del giocatore (gialli se portiere).",
   },
   // tooltips del cronograma (descripciones cortas)
@@ -1223,8 +1255,8 @@ export const CATALOGO: Record<string, Entrada> = {
 
   // ══════════════════ RESUMEN — DISPAROS (pestaña) ══════════════════
   resd_disparos_lbl: { es: "disparos", en: "shots", it: "tiri" },
-  resd_resumen_parte: { es: "📊 Resumen por parte y resultado", en: "📊 Summary by period and outcome", it: "📊 Riepilogo per tempo ed esito" },
-  resd_parte: { es: "Parte", en: "Period", it: "Tempo" },
+  resd_resumen_parte: { es: "📊 Resumen por parte y resultado", en: "📊 Summary by half and outcome", it: "📊 Riepilogo per tempo ed esito" },
+  resd_parte: { es: "Parte", en: "Half", it: "Tempo" },
   resd_total: { es: "Total", en: "Total", it: "Totale" },
   resd_leyenda: {
     es: "Gol = a puerta y entró. Parada = a puerta pero la atajó el portero. Palo = al poste o travesaño. Bloqueado = lo cortó un defensor antes del marco. Fuera = ni a puerta ni bloqueado.",
@@ -1234,7 +1266,7 @@ export const CATALOGO: Record<string, Entrada> = {
   resd_mapa_campo: { es: "📍 Mapa del campo — desde dónde tira", en: "📍 Pitch map — where shots are taken from", it: "📍 Mappa del campo — da dove si tira" },
   resd_mapa_campo_nota: {
     es: "Intensidad del verde = nº de disparos en esa zona. Cada zona muestra el total y desglose: Goles · Paradas · Palo · Bloqueados · Fuera. La dirección de ataque coincide con la configurada para la 1ª parte. Los tiros desde la propia mitad cuentan todos en la zona grande.",
-    en: "Green intensity = number of shots in that zone. Each zone shows the total and breakdown: Goals · Saves · Post · Blocked · Wide. The attack direction matches the one set for the 1st period. Shots from a team's own half all count in the big zone.",
+    en: "Green intensity = number of shots in that zone. Each zone shows the total and breakdown: Goals · Saves · Post · Blocked · Wide. The attack direction matches the one set for the 1st half. Shots from a team's own half all count in the big zone.",
     it: "Intensità del verde = nº di tiri in quella zona. Ogni zona mostra il totale e il dettaglio: Gol · Parate · Palo · Murati · Fuori. La direzione d'attacco coincide con quella impostata per il 1º tempo. I tiri dalla propria metà campo contano tutti nella zona grande.",
   },
   resd_sin_zona_campo: {
@@ -1270,7 +1302,7 @@ export const CATALOGO: Record<string, Entrada> = {
   resa_quintetos: { es: "🟢 Quintetos iniciales", en: "🟢 Starting fives", it: "🟢 Quintetti iniziali" },
   resa_quintetos_nota: {
     es: "Con qué 5 jugadores empezamos cada parte (incluido el portero).",
-    en: "Which 5 players we started each period with (goalkeeper included).",
+    en: "Which 5 players we started each half with (goalkeeper included).",
     it: "Con quali 5 giocatori abbiamo iniziato ogni tempo (portiere incluso).",
   },
   resa_sin_datos: { es: "Sin datos", en: "No data", it: "Nessun dato" },
@@ -1313,8 +1345,8 @@ export const CATALOGO: Record<string, Entrada> = {
   res_export_error: { es: "No he podido exportar el JSON: {detalle}", en: "Couldn't export the JSON: {detalle}", it: "Non sono riuscito a esportare il JSON: {detalle}" },
 
   // ══════════════════ NOMBRES DE PARTE (NOMBRE_PARTE) ══════════════════
-  parte_1t: { es: "1ª parte", en: "1st period", it: "1º tempo" },
-  parte_2t: { es: "2ª parte", en: "2nd period", it: "2º tempo" },
+  parte_1t: { es: "1ª parte", en: "1st half", it: "1º tempo" },
+  parte_2t: { es: "2ª parte", en: "2nd half", it: "2º tempo" },
   parte_pr1: { es: "Prórroga 1", en: "Extra time 1", it: "Supplementare 1" },
   parte_pr2: { es: "Prórroga 2", en: "Extra time 2", it: "Supplementare 2" },
 
@@ -1606,6 +1638,101 @@ export const CATALOGO: Record<string, Entrada> = {
   ic_pie: { es: "Generado el {fecha} con PULSO desde el crono del banquillo", en: "Generated on {fecha} with PULSO from the bench timer", it: "Generato il {fecha} con PULSO dal cronometro della panchina" },
   ic_pie_origen: { es: "Diseñado y utilizado por Inter JP Financial", en: "Designed and used by Inter JP Financial", it: "Progettato e utilizzato da Inter JP Financial" },
 
+  // ══════════════════ TOTALES, ESTADOS Y DESHACER (9/11/2026) ══════════════════
+  tot_titulo: { es: "📊 Totales de la temporada", en: "📊 Season totals", it: "📊 Totali della stagione" },
+  tot_sin_cerrar_1: { es: "⚠️ Hay *1 partido sin finalizar* en este aparato y aquí no cuenta. Ábrelo desde el inicio y dale a *Finalizar partido* para que entre en la temporada.", en: "⚠️ *1 unfinished match* on this device does not count here. Open it from Home and tap *Finish match* to add it to the season.", it: "⚠️ *1 partita non terminata* su questo dispositivo non viene contata qui. Aprila dalla home e tocca *Termina la partita* per aggiungerla alla stagione." },
+  tot_sin_cerrar_n: { es: "⚠️ Hay *{n} partidos sin finalizar* en este aparato y aquí no cuentan. Ábrelo desde el inicio y dale a *Finalizar partido* para que entre en la temporada.", en: "⚠️ *{n} unfinished matches* on this device do not count here. Open each one from Home and tap *Finish match* to add it to the season.", it: "⚠️ *{n} partite non terminate* su questo dispositivo non vengono contate qui. Aprile dalla home e tocca *Termina la partita* per aggiungerle alla stagione." },
+  tot_vacio: { es: "Aún no hay ningún partido terminado en este aparato. En cuanto cierres uno, aparece aquí.", en: "No finished matches on this device yet. Finish one and it will appear here.", it: "Ancora nessuna partita terminata su questo dispositivo. Appena ne chiudi una, compare qui." },
+  tot_partidos: { es: "Partidos", en: "Matches", it: "Partite" },
+  tot_gep: { es: "G · E · P", en: "W · D · L", it: "V · N · P" },
+  tot_goles: { es: "Goles", en: "Goals", it: "Gol" },
+  tot_goles_val: { es: "{f} a favor · {c} en contra", en: "{f} for · {c} against", it: "{f} fatti · {c} subiti" },
+  tot_disparos: { es: "Disparos", en: "Shots", it: "Tiri" },
+  tot_disparos_val: { es: "{d} ({p} a puerta)", en: "{d} ({p} on target)", it: "{d} ({p} in porta)" },
+  tot_por_jugador: { es: "Por jugador", en: "By player", it: "Per giocatore" },
+  tot_th_num: { es: "Nº", en: "No.", it: "N." },
+  tot_th_jugador: { es: "Jugador", en: "Player", it: "Giocatore" },
+  tot_th_pj: { es: "PJ", en: "MP", it: "PG" },
+  tot_th_min: { es: "Min", en: "Min", it: "Min" },
+  tot_th_asist: { es: "Asist.", en: "Ast.", it: "Assist" },
+  tot_th_disp: { es: "Disp.", en: "Shots", it: "Tiri" },
+  tot_th_robos: { es: "Robos", en: "Steals", it: "Recuperi" },
+  tot_th_cortes: { es: "Cortes", en: "Int.", it: "Intercetti" },
+  tot_th_perd: { es: "Pérd.", en: "TO", it: "Perse" },
+  tot_nota_pj: { es: "PJ = partidos en los que llegó a saltar a pista. Solo cuentan los partidos terminados.", en: "MP = matches in which the player got on court. Only finished matches count.", it: "PG = partite in cui è sceso in campo. Contano solo le partite terminate." },
+  tot_porteros: { es: "Porteros", en: "Goalkeepers", it: "Portieri" },
+  tot_th_portero: { es: "Portero", en: "Goalkeeper", it: "Portiere" },
+  tot_th_paradas: { es: "Paradas", en: "Saves", it: "Parate" },
+  tot_th_encajados: { es: "Encajados", en: "Conceded", it: "Subiti" },
+  tot_th_pct: { es: "% parada", en: "Save %", it: "% parate" },
+  tot_por_partido: { es: "Partido a partido", en: "Match by match", it: "Partita per partita" },
+  tot_res_G: { es: "G", en: "W", it: "V" },
+  tot_res_E: { es: "E", en: "D", it: "N" },
+  tot_res_P: { es: "P", en: "L", it: "P" },
+  tot_copia: { es: "Copia de seguridad", en: "Backup", it: "Copia di sicurezza" },
+  tot_copia_txt: { es: "Los partidos se guardan *solo en este aparato*. Guarda una copia de vez en cuando: es lo único que hace falta para pasarlo todo a otro iPad.", en: "Matches are saved *only on this device*. Make a backup from time to time: it is all you need to move everything to another iPad.", it: "Le partite sono salvate *solo su questo dispositivo*. Fai una copia ogni tanto: è tutto ciò che serve per passare a un altro iPad." },
+  tot_guardar: { es: "💾 Guardar copia", en: "💾 Save backup", it: "💾 Salva copia" },
+  tot_restaurar: { es: "📂 Restaurar copia", en: "📂 Restore backup", it: "📂 Ripristina copia" },
+  tot_copia_ok: { es: "Copia con {n} partido(s). Guárdala en Archivos o mándatela a ti mismo: es lo que hay que abrir en el iPad nuevo.", en: "Backup with {n} match(es). Save it in Files or send it to yourself: open this file on the new iPad.", it: "Copia con {n} partita/e. Salvala in File o inviala a te stesso: è ciò che va aperto sul nuovo iPad." },
+  tot_copia_error: { es: "No he podido hacer la copia: {detalle}", en: "Could not make the backup: {detalle}", it: "Impossibile fare la copia: {detalle}" },
+  tot_no_es_copia: { es: "Ese fichero no parece una copia del crono.", en: "That file does not look like a backup of this app.", it: "Quel file non sembra una copia di questa app." },
+  tot_otro_equipo: { es: "Esa copia es de otro equipo ({equipo}). No la abro.", en: "That backup belongs to another team ({equipo}). It was not opened.", it: "Quella copia è di un'altra squadra ({equipo}). Non è stata aperta." },
+  tot_restaurados: { es: "Restaurados {n} partido(s) (ya había {antes}).", en: "Restored {n} match(es) ({antes} already here).", it: "Ripristinate {n} partita/e (ce n'erano già {antes})." },
+  tot_nada_nuevo: { es: "Esa copia no traía ningún partido que no estuviera ya aquí.", en: "That backup has no match that is not already here.", it: "Quella copia non contiene partite che non siano già qui." },
+  tot_error_fichero: { es: "No he podido leer el fichero: {detalle}", en: "Could not read the file: {detalle}", it: "Impossibile leggere il file: {detalle}" },
+  estado_finalizado: { es: "finalizado", en: "finished", it: "terminata" },
+  estado_en_curso: { es: "en curso", en: "in progress", it: "in corso" },
+  estado_configurando: { es: "sin empezar", en: "not started", it: "non iniziata" },
+  home_ejemplo: { es: "Ejemplo", en: "Example", it: "Esempio" },
+  pc_1T: { es: "1T", en: "1H", it: "1T" },
+  pc_2T: { es: "2T", en: "2H", it: "2T" },
+  pc_PR1: { es: "PR1", en: "ET1", it: "TS1" },
+  pc_PR2: { es: "PR2", en: "ET2", it: "TS2" },
+  compc_LIGA: { es: "Liga", en: "League", it: "Campionato" },
+  compc_COPA_REY: { es: "Copa del Rey", en: "Copa del Rey", it: "Copa del Rey" },
+  compc_COPA_ESPANA: { es: "Copa de España", en: "Copa de España", it: "Copa de España" },
+  compc_COPA_MUNDO: { es: "Copa del Mundo", en: "World Cup", it: "Coppa del Mondo" },
+  compc_COPA_MADRID: { es: "Copa de Madrid", en: "Copa de Madrid", it: "Copa de Madrid" },
+  compc_AMISTOSO: { es: "Amistoso", en: "Friendly", it: "Amichevole" },
+  compc_PLAYOFF: { es: "Playoff", en: "Playoff", it: "Playoff" },
+  compc_SUPERCOPA: { es: "Supercopa", en: "Super Cup", it: "Supercoppa" },
+  nuevo_id_ph: { es: "J29.VALDEPEÑAS", en: "e.g. MD29.TIGERS", it: "Es: G29.TIGERS" },
+  part_tot: { es: "tot", en: "total", it: "tot" },
+  part_rival_letra: { es: "R", en: "O", it: "A" },
+  part_tm_abbr: { es: "TM", en: "T.O.", it: "TO" },
+  res_cob_abbr: { es: "(BR/BN/MR/MN)", en: "(GR/GN/BR/BN)", it: "(BR/BN/CR/CN)" },
+  res_crono_tt_amarilla: { es: "amarilla", en: "yellow card", it: "giallo" },
+  res_crono_tt_roja: { es: "roja", en: "red card", it: "rosso" },
+  resd_letra_GOL: { es: "G", en: "G", it: "G" },
+  resd_letra_PUERTA: { es: "Pa", en: "S", it: "Pa" },
+  resd_letra_PALO: { es: "Pl", en: "P", it: "Pl" },
+  resd_letra_BLOQUEADO: { es: "B", en: "B", it: "M" },
+  resd_letra_FUERA: { es: "F", en: "W", it: "F" },
+  ud_de: { es: " de {n}", en: " by {n}", it: " di {n}" },
+  ud_de_tarjeta: { es: " de {n}", en: " for {n}", it: " a {n}" },
+  ud_gol: { es: "gol{q}", en: "goal{q}", it: "gol{q}" },
+  ud_gol_rival: { es: "gol de {rival}", en: "{rival} goal", it: "gol di {rival}" },
+  ud_falta: { es: "falta{q}", en: "foul{q}", it: "fallo{q}" },
+  ud_falta_rival: { es: "falta de {rival}", en: "{rival} foul", it: "fallo di {rival}" },
+  ud_amarilla: { es: "amarilla{q}", en: "yellow card{q}", it: "giallo{q}" },
+  ud_roja: { es: "roja{q}", en: "red card{q}", it: "rosso{q}" },
+  ud_tm: { es: "tiempo muerto", en: "time-out", it: "time-out" },
+  ud_tm_rival: { es: "tiempo muerto de {rival}", en: "{rival} time-out", it: "time-out di {rival}" },
+  ud_cambio: { es: "cambio (entró {entra}, salió {sale})", en: "sub ({entra} on, {sale} off)", it: "cambio (entra {entra}, esce {sale})" },
+  ud_disparo: { es: "disparo{q}", en: "shot{q}", it: "tiro{q}" },
+  ud_disparo_rival: { es: "disparo de {rival}", en: "{rival} shot", it: "tiro di {rival}" },
+  ud_penalti: { es: "penalti{q}", en: "penalty{q}", it: "rigore{q}" },
+  ud_fsb: { es: "FSB{q}", en: "no-wall free kick{q}", it: "tiro senza barriera{q}" },
+  ud_incorporacion: { es: "incorporación del portero de {rival}", en: "{rival} fly goalkeeper", it: "portiere di movimento di {rival}" },
+  ud_acc_pf: { es: "pérdida forzada", en: "forced turnover", it: "palla persa forzata" },
+  ud_acc_pnf: { es: "pérdida no forzada", en: "unforced turnover", it: "palla persa non forzata" },
+  ud_acc_robo: { es: "robo", en: "steal", it: "recupero" },
+  ud_acc_corte: { es: "corte", en: "interception", it: "intercetto" },
+  ud_acc_bdg: { es: "balón dividido ganado", en: "loose ball won", it: "contrasto vinto" },
+  ud_acc_bdp: { es: "balón dividido perdido", en: "loose ball lost", it: "contrasto perso" },
+  ud_acc_pase_gol: { es: "pase de gol", en: "key pass", it: "passaggio chiave" },
+  ud_de_equipo: { es: "{nombre} de equipo", en: "team {nombre}", it: "{nombre} di squadra" },
+
   // ══════════════════ SELECTOR DE IDIOMA (demo) ══════════════════
   selector_idioma_label: { es: "Idioma", en: "Language", it: "Lingua" },
 };
@@ -1624,6 +1751,19 @@ export function labelAccionGol(accion: string): string {
   const canonica = ALIAS_ACCION_GOL[accion] ?? accion;
   const clave = CLAVE_ACCION_GOL[canonica];
   return clave ? (CATALOGO[clave]?.[_idioma] ?? accion) : accion;
+}
+
+/** Nombre corto de una parte (1T, 2T, PR1, PR2). En español, el código de
+ *  siempre; lo que no sea una parte (p.ej. "TOTAL") se devuelve tal cual. */
+export function labelParte(parte: string): string {
+  return CATALOGO[`pc_${parte}`]?.[_idioma] ?? parte;
+}
+
+/** Competición en una lista o cabecera. Inter y filial siguen viendo el código
+ *  (LIGA, COPA_REY…); la demo, el nombre en su idioma. */
+export function labelCompeticionCorta(codigo: string): string {
+  if (!CLIENTE.demo) return codigo;
+  return CATALOGO[`compc_${codigo}`]?.[_idioma] ?? codigo;
 }
 
 /**
