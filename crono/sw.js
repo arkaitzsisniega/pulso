@@ -16,7 +16,7 @@
  * app router + output:export, y para una app estática esto es más robusto.
  */
 // El nombre de la caché lleva la VERSIÓN DEL DESPLIEGUE, que el workflow
-// sustituye por el SHA del commit al publicar (`5bfb5800579f`).
+// sustituye por el SHA del commit al publicar (`247c391ae6a9`).
 //
 // POR QUÉ (30/8/2026): el navegador solo instala un service worker nuevo si
 // `sw.js` cambia byte a byte. Como este fichero es fijo y las peticiones de
@@ -28,7 +28,7 @@
 //
 // En local (sin sustituir) queda "dev", que no estorba: en localhost no se
 // registra el SW.
-const VERSION = "5bfb5800579f".startsWith("__") ? "dev" : "5bfb5800579f";
+const VERSION = "247c391ae6a9".startsWith("__") ? "dev" : "247c391ae6a9";
 const CACHE = `inter-crono-${VERSION}`;
 // Carpeta donde vive la app: "/pulso/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
@@ -37,7 +37,8 @@ const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 // una vez con red: sin conexión el botón del resumen caía en la pantalla de
 // «no hay partido». Con /totales/ pasaba lo mismo y sin conexión enseñaba la
 // pantalla del partido. En el Inter y el filial sigue todo como estaba.
-const INFORME_OFFLINE = /\/crono-demo$/.test(BASE);
+// El juvenil (11/11/2026), igual: su guía les dice que funciona sin red.
+const INFORME_OFFLINE = /\/crono-(demo|juvenil)$/.test(BASE);
 const APP_SHELL = [
   `${BASE}/`,
   `${BASE}/partido/`,
