@@ -8,7 +8,7 @@ partido en el propio aparato.
 Al terminar genera el informe del partido en PDF y suma la temporada entera en
 la pantalla de Totales, con copia de seguridad para cambiar de iPad.
 
-## Los tres clientes
+## Los cuatro clientes
 
 El mismo código sirve a varios equipos. Lo único que cambia es la variable
 `NEXT_PUBLIC_CLIENTE`, que decide la plantilla, la contraseña, la marca y el
@@ -18,6 +18,7 @@ nombre de la base local:
 |---|---|---|
 | `inter` | `/pulso/crono/` | Primer equipo del Inter JP Financial |
 | `filial` | `/pulso/crono-filial/` | Filial (plantilla y contraseña propias) |
+| `juvenil` | `/pulso/crono-juvenil/` | Juvenil División de Honor (plantilla y contraseña propias) |
 | `pulso` | `/pulso/crono-demo/` | Demo con datos inventados, para enseñar |
 
 Cada cliente tiene **su propia base de datos** en el navegador, así que dos
@@ -46,7 +47,7 @@ NEXT_EXPORT=1 NEXT_PUBLIC_CLIENTE=inter \
 ## Publicar
 
 Se publica solo: cada push a `main` lanza `.github/workflows/deploy.yml`, que
-construye los tres clientes **uno detrás de otro** y los sube a la rama
+construye los cuatro clientes **uno detrás de otro** y los sube a la rama
 `gh-pages`. En serie a propósito — en paralelo se pisaban el push y un cliente
 se quedaba atrás en silencio.
 

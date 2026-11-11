@@ -25,6 +25,7 @@ import {
   ROSTER_REAL,
   ROSTER_DEMO,
   ROSTER_FILIAL,
+  ROSTER_JUVENIL,
   type Jugador,
 } from "@/lib/roster";
 
@@ -73,6 +74,8 @@ const HASH_PULSO =
   "e1152d88d11a421c08846c836010ca89d156a9ce9721226ef9784285a5899b32";
 const HASH_FILIAL =
   "a26a6aa1dc925ae5430ff1c96ea2297a01c8554d77ee64c2bcbf002b02bfddc4";
+const HASH_JUVENIL =
+  "346e72ff767ae7d38759b51ea30da888e936b2bca3206db9be99230ae57694a9";
 
 const CLIENTES: Record<string, ConfigCliente> = {
   inter: {
@@ -96,6 +99,21 @@ const CLIENTES: Record<string, ConfigCliente> = {
     nombreLargo: "Inter JP Financial B",
     marcaTitulo: "Inter FS · Filial",
     appTitulo: "Crono Filial",
+    idiomaFijo: "es",
+    demo: false,
+    informeCompleto: false,
+    partidoEjemplo: false,
+  },
+  // Juvenil División de Honor (11/11/2026). Igual que el filial: mismo código,
+  // otro build, con su plantilla, su contraseña, su URL (/crono-juvenil/) y su
+  // base local ("crono_partido_juvenil"). Si comparte iPad con el filial, cada
+  // uno ve solo sus partidos.
+  juvenil: {
+    id: "juvenil",
+    nombreCorto: "JUVENIL",
+    nombreLargo: "Inter JP Financial Juvenil",
+    marcaTitulo: "Inter FS · Juvenil DH",
+    appTitulo: "Crono Juvenil",
     idiomaFijo: "es",
     demo: false,
     informeCompleto: false,
@@ -134,7 +152,9 @@ const ROSTER_ACTIVO: Jugador[] =
     ? ROSTER_DEMO
     : process.env.NEXT_PUBLIC_CLIENTE === "filial"
       ? ROSTER_FILIAL
-      : ROSTER_REAL;
+      : process.env.NEXT_PUBLIC_CLIENTE === "juvenil"
+        ? ROSTER_JUVENIL
+        : ROSTER_REAL;
 
 /**
  * Hashes de contraseña del cliente ACTIVO.
@@ -152,7 +172,9 @@ const PASS_HASHES: string[] =
     ? [HASH_PULSO]
     : process.env.NEXT_PUBLIC_CLIENTE === "filial"
       ? [HASH_FILIAL]
-      : [HASH_INTER];
+      : process.env.NEXT_PUBLIC_CLIENTE === "juvenil"
+        ? [HASH_JUVENIL]
+        : [HASH_INTER];
 
 const _ID = (process.env.NEXT_PUBLIC_CLIENTE || "inter").toLowerCase();
 
