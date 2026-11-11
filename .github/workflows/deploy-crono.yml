@@ -1,4 +1,4 @@
-# Publica los TRES cronos en GitHub Pages, uno detrás de otro.
+# Publica los CUATRO cronos en GitHub Pages, uno detrás de otro.
 #
 # Viene de `arkaitz-2526/.github/workflows/deploy-crono.yml` (mudanza del
 # 31/8/2026). Antes eran tres workflows con el mismo `concurrency.group`: con
@@ -41,6 +41,9 @@ jobs:
           - cliente: filial
             carpeta: crono-filial
             basepath: /pulso/crono-filial
+          - cliente: juvenil
+            carpeta: crono-juvenil
+            basepath: /pulso/crono-juvenil
 
     steps:
       - name: Checkout main

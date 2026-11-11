@@ -151,6 +151,38 @@ export const ROSTER_FILIAL: Jugador[] = [
   { dorsal: "15", nombre: "MATEO", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
+/**
+ * Juvenil División de Honor (11/11/2026), con su crono propio (`juvenil`).
+ * Todos van como "PRIMER" para que al crear un partido salgan ya convocados.
+ * ⚠️ Hay ADRI (32, portero) y ADRI LUCAS (14, campo): son dos jugadores.
+ */
+export const ROSTER_JUVENIL: Jugador[] = [
+  // Porteros
+  { dorsal: "55", nombre: "CHACHO", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "32", nombre: "ADRI", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "01", nombre: "CHETO", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "05", nombre: "DANI", posicion: "PORTERO", equipo: "PRIMER" },
+  // Campo
+  { dorsal: "33", nombre: "ROBER", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "39", nombre: "IBAI", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "88", nombre: "PASTOR", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "70", nombre: "GUILLE", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "80", nombre: "NICO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "27", nombre: "PASCU", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "66", nombre: "DIEGO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "12", nombre: "DAVID", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "21", nombre: "SOBRIN", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "35", nombre: "CARLOS", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "17", nombre: "RAUL", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "15", nombre: "MATEO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "14", nombre: "ADRI LUCAS", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "19", nombre: "JUANJO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "11", nombre: "GONZALO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "77", nombre: "MARC", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "10", nombre: "CERRATO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "07", nombre: "RUBEN", posicion: "CAMPO", equipo: "PRIMER" },
+];
+
 /** Nombre completo de cada uno del filial, para la guía en papel y para no
  *  perder de vista a quién corresponde cada mote. */
 export const NOMBRES_FILIAL: Record<string, string> = {

@@ -37,7 +37,8 @@ const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 // una vez con red: sin conexión el botón del resumen caía en la pantalla de
 // «no hay partido». Con /totales/ pasaba lo mismo y sin conexión enseñaba la
 // pantalla del partido. En el Inter y el filial sigue todo como estaba.
-const INFORME_OFFLINE = /\/crono-demo$/.test(BASE);
+// El juvenil (11/11/2026), igual: su guía les dice que funciona sin red.
+const INFORME_OFFLINE = /\/crono-(demo|juvenil)$/.test(BASE);
 const APP_SHELL = [
   `${BASE}/`,
   `${BASE}/partido/`,
