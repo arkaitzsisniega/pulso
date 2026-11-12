@@ -419,7 +419,8 @@ export const CATALOGO: Record<string, Entrada> = {
   nuevo_modo_video: { es: "VÍDEO", en: "VIDEO", it: "VIDEO" },
   nuevo_modo_video_sub: { es: "Revisión con grabación · todo el detalle", en: "Reviewing footage · full detail", it: "Revisione col video · tutto il dettaglio" },
   nuevo_rival: { es: "Rival", en: "Opponent", it: "Avversario" },
-  nuevo_rival_ph: { es: "Ej: VALDEPEÑAS", en: "e.g. TIGERS", it: "Es: VALDEPEÑAS" },
+  // Demo (12/11/2026): sin rivales reales ni en los ejemplos; el resto de clientes, igual.
+  nuevo_rival_ph: { es: process.env.NEXT_PUBLIC_CLIENTE === "pulso" ? "Ej: ALMENDRO" : "Ej: VALDEPEÑAS", en: "e.g. TIGERS", it: process.env.NEXT_PUBLIC_CLIENTE === "pulso" ? "Es: ALMENDRO" : "Es: VALDEPEÑAS" },
   nuevo_id_partido: { es: "ID partido", en: "Match ID", it: "ID partita" },
   nuevo_fecha: { es: "Fecha", en: "Date", it: "Data" },
   nuevo_hora: { es: "Hora", en: "Time", it: "Ora" },
@@ -463,9 +464,9 @@ export const CATALOGO: Record<string, Entrada> = {
   // alerts de validación
   nuevo_alert_rival: { es: "Pon el nombre del rival", en: "Enter the opponent's name", it: "Inserisci il nome dell'avversario" },
   nuevo_alert_id: {
-    es: "Pon el ID del partido (ej: J29.VALDEPEÑAS)",
+    es: process.env.NEXT_PUBLIC_CLIENTE === "pulso" ? "Pon el ID del partido (ej: J29.ALMENDRO)" : "Pon el ID del partido (ej: J29.VALDEPEÑAS)",
     en: "Enter the match ID (e.g. MD29.TIGERS)",
-    it: "Inserisci l'ID della partita (es: J29.VALDEPEÑAS)",
+    it: process.env.NEXT_PUBLIC_CLIENTE === "pulso" ? "Inserisci l'ID della partita (es: J29.ALMENDRO)" : "Inserisci l'ID della partita (es: J29.VALDEPEÑAS)",
   },
   nuevo_alert_cinco: {
     es: "Selecciona los 5 jugadores en pista (portero + 4 campo)",
@@ -1696,7 +1697,7 @@ export const CATALOGO: Record<string, Entrada> = {
   compc_AMISTOSO: { es: "Amistoso", en: "Friendly", it: "Amichevole" },
   compc_PLAYOFF: { es: "Playoff", en: "Playoff", it: "Playoff" },
   compc_SUPERCOPA: { es: "Supercopa", en: "Super Cup", it: "Supercoppa" },
-  nuevo_id_ph: { es: "J29.VALDEPEÑAS", en: "e.g. MD29.TIGERS", it: "Es: G29.TIGERS" },
+  nuevo_id_ph: { es: process.env.NEXT_PUBLIC_CLIENTE === "pulso" ? "J29.ALMENDRO" : "J29.VALDEPEÑAS", en: "e.g. MD29.TIGERS", it: "Es: G29.TIGERS" },
   part_tot: { es: "tot", en: "total", it: "tot" },
   part_rival_letra: { es: "R", en: "O", it: "A" },
   part_tm_abbr: { es: "TM", en: "T.O.", it: "TO" },
