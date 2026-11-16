@@ -69,7 +69,7 @@ export interface ConfigCliente {
 //
 // Cambiar una:  printf %s "LA NUEVA" | shasum -a 256   → pegar aquí → desplegar.
 const HASH_INTER =
-  "2198c9c222da8099db935f222ae09b1b74ffc1d0ccdbfcc830456ab0c07a013d";
+  "d2ea257fef5e9345397cd65007d2eb74dc42dfabbdb5846e49fb9b24d10aef1e";
 const HASH_PULSO =
   "e1152d88d11a421c08846c836010ca89d156a9ce9721226ef9784285a5899b32";
 const HASH_FILIAL =
