@@ -11,6 +11,7 @@ import { CampoFlecha } from "@/components/CampoFlecha";
 import { Porteria } from "@/components/Porteria";
 import type { ContadoresJugador, ResultadoDisparo, TandaPenaltis, TiroTanda, Partido, ParteId, ConfigPartido, AccionIndTipo, Evento, Flecha } from "@/lib/db";
 import { direccionAtaque, sacaEn, JUGADOR_EQUIPO } from "@/lib/db";
+import { hayQuePreguntarSaque } from "@/lib/saque";
 import { t, useIdioma, labelResultadoDisparo, labelAccionGol, labelParte } from "@/lib/i18n";
 import { ACCIONES_GOL, ACCIONES_GOL_DER, ACCIONES_GOL_IZQ } from "@/lib/situaciones";
 import { etiquetaAccionInd } from "@/lib/acciones";
@@ -427,8 +428,10 @@ export default function PartidoPage() {
               onClick={() => {
                 // Antes de arrancar el partido, quién saca. Solo la 1ª vez:
                 // si ya está anotado, o no es el principio, arranca directo.
-                if (!partido.saqueInicial1T && p === "1T"
-                    && partido.eventos.length === 0) {
+                // Los cambios a 0:00 (corregir el quinteto antes del saque)
+                // no cuentan como «ya empezado» (J8 Xota, 14/11/2026).
+                if (hayQuePreguntarSaque(p, partido.saqueInicial1T,
+                    partido.cronometro.segundosParte, partido.eventos)) {
                   setModalSaque(true);
                   return;
                 }
