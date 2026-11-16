@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+import "./tema-nuevo.css";
 import AuthGate from "@/components/AuthGate";
 import SWRegister from "@/components/SWRegister";
 import SelectorIdioma from "@/components/SelectorIdioma";
@@ -14,6 +16,27 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Letras del aspecto NUEVO del crono (rediseño 16/11/2026). Van DENTRO de la
+// app (src/fonts, licencia OFL), no se piden a internet: el crono tiene que
+// funcionar en un pabellón sin cobertura. Solo declaran sus variables CSS; el
+// aspecto clásico no las usa y se ve exactamente igual que antes.
+const barlow = localFont({
+  src: [
+    { path: "../fonts/barlow-condensed-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/barlow-condensed-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/barlow-condensed-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/barlow-condensed-latin-800-normal.woff2", weight: "800", style: "normal" },
+  ],
+  variable: "--font-barlow",
+  display: "swap",
+});
+const interTexto = localFont({
+  src: "../fonts/inter-latin-wght-normal.woff2",
+  weight: "100 900",
+  variable: "--font-inter",
+  display: "swap",
 });
 
 // Cuando se hace `output: 'export'` con basePath, Next NO prefija
@@ -64,7 +87,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${barlow.variable} ${interTexto.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SWRegister />

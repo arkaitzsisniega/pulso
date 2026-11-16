@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
 import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
-import { formatMMSS, colorTiempoPista, colorTiempoBanquillo } from "@/lib/utils";
+import { formatMMSS, colorTiempoPista, colorTiempoBanquillo, nivelTiempoPista, nivelTiempoBanquillo } from "@/lib/utils";
 import { segundosVivos, formatCuentaAtras, msHastaSiguienteCambio } from "@/lib/reloj";
 import { Campo } from "@/components/Campo";
 import { CampoFlecha } from "@/components/CampoFlecha";
@@ -19,6 +19,12 @@ import { zonasDeFlecha } from "@/lib/geometriaCampo";
 import { golNuestroCerca, pasesGolCerca } from "@/lib/paseGol";
 import { camposFlechaAsistencia, pideFlechaAsistencia } from "@/lib/asistencia";
 import { esAccionLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "@/lib/lanzamientos";
+import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import { elegirRival, rgba } from "@/lib/tema";
+import {
+  CabeceraNueva, BotonTiempoNuevo, HerramientasNueva, PistaNueva, BanquilloNuevo,
+  BotonNuevo, Ico,
+} from "@/components/DirectoNuevo";
 
 export default function PartidoPage() {
   useIdioma();
@@ -83,6 +89,25 @@ export default function PartidoPage() {
   useEffect(() => () => {
     if (avisoTimer.current) clearTimeout(avisoTimer.current);
   }, []);
+
+  // Aspecto de la pantalla (rediseño 16/11/2026): nuevo/clásico y, en el
+  // nuevo, modo Sol. Preferencias del aparato (lib/aspecto.ts): no tocan nada
+  // del partido. Hooks: ANTES de los early returns.
+  const aspecto = useAspecto();
+  const modoSol = useModoSol();
+
+  // Amarillas de cada jugador nuestro, para enseñarlas en su ficha (aspecto
+  // nuevo). Mismo criterio que jugadoresAmarilla: sin el cuerpo técnico.
+  const amarillasPorJugador = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const ev of partido.eventos) {
+      const e = ev as any;
+      if (e.tipo === "amarilla" && e.equipo === "INTER" && e.jugador && e.jugador !== "#CT") {
+        m[e.jugador] = (m[e.jugador] || 0) + 1;
+      }
+    }
+    return m;
+  }, [partido.eventos]);
 
   // Jugadores nuestros que tienen al menos una amarilla.
   // OJO: useMemo debe ir ANTES de los early returns (reglas de hooks).
@@ -388,6 +413,44 @@ export default function PartidoPage() {
     { inter: 0, rival: 0 });
   const sTM = partido.stats.tiemposMuerto[p];
 
+  // ── Aspecto NUEVO (rediseño, tanda 1 · 16/11/2026) ─────────────────────
+  // Solo cambia cómo se dibuja: los botones llaman a los MISMOS manejadores
+  // que el clásico. Con el aspecto clásico nada de esto se usa.
+  const nuevo = aspecto === "nuevo";
+  const colorNos = modoSol ? CLIENTE.colorPropio.sol : CLIENTE.colorPropio.oscuro;
+  const parRival = elegirRival(CLIENTE.colorPropio);
+  const colorRival = modoSol ? parRival.sol : parRival.oscuro;
+  const estiloNuevo = {
+    ["--nos" as string]: colorNos,
+    ["--rival" as string]: colorRival,
+  } as React.CSSProperties;
+  // Iniciar el reloj: antes de arrancar, quién saca (mismo flujo que el botón
+  // del aspecto clásico, que tiene esta misma lógica escrita en su onClick).
+  const iniciarNuevo = () => {
+    if (hayQuePreguntarSaque(p, partido.saqueInicial1T,
+        partido.cronometro.segundosParte, partido.eventos)) {
+      setModalSaque(true);
+      return;
+    }
+    play();
+  };
+  const tarjetasRivalNuevo = (() => {
+    if (!nuevo) return null;
+    const evs = partido.eventos as any[];
+    const amaRival = evs.filter((e) => e.tipo === "amarilla" && e.equipo === "RIVAL" && e.jugador).map((e) => e.jugador as string);
+    const rojaRival = evs.filter((e) => e.tipo === "roja" && e.equipo === "RIVAL" && e.jugador).map((e) => e.jugador as string);
+    if (!amaRival.length && !rojaRival.length) return null;
+    const rojaSet = new Set(rojaRival);
+    const amaSinExp = amaRival.filter((d) => !rojaSet.has(d));
+    return (
+      <span className="pz-dato">
+        {amaSinExp.length > 0 && <span>{t("part_ama_rival", { rival: cfg.rival })} <strong style={{ fontSize: 16 }}>{amaSinExp.join(", ")}</strong></span>}
+        {amaSinExp.length > 0 && rojaRival.length > 0 && <span className="barra">·</span>}
+        {rojaRival.length > 0 && <span>{t("part_roja_rival_exp", { rival: cfg.rival })} <strong style={{ fontSize: 16 }}>{rojaRival.join(", ")}</strong></span>}
+      </span>
+    );
+  })();
+
   return (
     // PANTALLA COMPLETA SIN SCROLL (pedido Arkaitz 17/8: en el iPad en horizontal
     // había que bajar para ver faltas/tarjetas). Columna flex de la altura exacta
@@ -395,7 +458,11 @@ export default function PartidoPage() {
     // demás va compacto (modo + ajuste de reloj + faltas/tarjetas en UNA línea,
     // banquillo en una fila, botones más bajos). Si algún día no cabe (muchos
     // banners a la vez), el contenedor sí permite scroll como red de seguridad.
-    <div className="h-[100dvh] bg-zinc-950 text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto">
+    <div className={nuevo
+        ? "pz h-[100dvh] text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"
+        : "h-[100dvh] bg-zinc-950 text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"}
+      data-tema={nuevo && modoSol ? "sol" : undefined}
+      style={nuevo ? estiloNuevo : undefined}>
       {/* BOTÓN DE TIEMPO FLOTANTE — SIEMPRE accesible arriba a la derecha, por
           encima de cualquier modal (z-[60] > z-50 de los ModalShell). En futsal
           el reloj se arranca/para sin parar, también mientras metes disparos,
@@ -422,6 +489,10 @@ export default function PartidoPage() {
         );
       })()}
 
+      {nuevo && (
+        <BotonTiempoNuevo corriendo={corriendo} onIniciar={iniciarNuevo} onPausar={pausa} />
+      )}
+      {!nuevo && (
       <div className="fixed top-2 right-2 z-[60]">
         {!corriendo
           ? <button
@@ -442,7 +513,42 @@ export default function PartidoPage() {
           : <button onClick={pausa} aria-label={t("part_pausar")}
               className="px-5 py-3 bg-orange-700 hover:bg-orange-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-orange-200/40">⏸ {t("part_pausar")}</button>}
       </div>
+      )}
 
+      {nuevo && (
+        <CabeceraNueva
+          reloj={<RelojGrande
+            segundosParte={partido.cronometro.segundosParte}
+            ultimoStart={partido.cronometro.ultimoStart}
+            dur={dur}
+            acabada={acabada}
+            clase={`pz-reloj-t ${acabada ? "acabada animate-pulse" : ""}`} />}
+          parte={labelParte(p)}
+          textoTiempo={dur > 0
+            ? `${formatMMSS(segParte)} / ${formatMMSS(dur)}`
+            : `${t("part_tot")} ${formatMMSS(segundosPartidoTotal())}`}
+          progreso={dur > 0 ? segParte / dur : null}
+          acabada={acabada}
+          nombreNos={CLIENTE.nombreCorto}
+          nombreRival={cfg.rival}
+          golesNos={partido.marcador.inter}
+          golesRival={partido.marcador.rival}
+          faltasNos={sFalt.inter}
+          faltasRival={sFalt.rival}
+          colorNos={colorNos}
+          colorRival={colorRival}
+          fondoNos={rgba(colorNos, modoSol ? 0.1 : 0.16)}
+          fondoRival={rgba(colorRival, modoSol ? 0.09 : 0.16)}
+          puedeRetroceder={p !== "1T"}
+          onRetroceder={() => {
+            if (p !== "1T" && confirm(t("part_volver_parte_confirm", { parte: labelParte(p) }))) {
+              retrocederParte();
+            }
+          }}
+          onParte={() => setModalCambioParte(true)}
+        />
+      )}
+      {!nuevo && (<>
       {/* HEADER (compacto) */}
       {/* pr-52: el de iniciar/parar es flotante (fixed, arriba a la derecha) y
           con pr-36 los controles de parte le quedaban DEBAJO (Arkaitz 22/8). */}
@@ -492,6 +598,7 @@ export default function PartidoPage() {
           </button>
         </div>
       </div>
+      </>)}
 
       {/* BANNERS DE INFERIORIDAD / SUPERIORIDAD NUMÉRICA — pueden estar
           activos VARIOS a la vez (un crono independiente por expulsado,
@@ -594,6 +701,33 @@ export default function PartidoPage() {
         </div>
       )}
 
+      {nuevo && (
+        <HerramientasNueva
+          directo={directo}
+          onModo={pedirCambioModo}
+          ataqueDer={direccionAtaque(p, "INTER", cfg) === "der"}
+          colorNos={colorNos}
+          onCambiarAtaque={() => setDireccionAtaque(cfg.direccionInter1T === "der" ? "izq" : "der")}
+          onAjustar={(d) => ajustarReloj(d)}
+          parte={labelParte(p)}
+          amaNos={sAma.inter}
+          amaRival={sAma.rival}
+          tmNos={sTM.inter}
+          tmRival={sTM.rival}
+          sol={modoSol}
+          onSol={() => setModoSol(!modoSol)}
+          extra={<>
+            {sFalt.inter === 4 && <span className="pz-aviso-falta bg-amber-600">{t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}</span>}
+            {sFalt.inter === 5 && <span className="pz-aviso-falta bg-orange-600">{t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC })}</span>}
+            {sFalt.inter >= 6 && <span className="pz-aviso-falta bg-red-700">{t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC })}</span>}
+            {sFalt.rival === 4 && <span className="pz-aviso-falta bg-amber-600">{t("part_rival_4falta")}</span>}
+            {sFalt.rival === 5 && <span className="pz-aviso-falta bg-orange-600">{t("part_rival_5falta")}</span>}
+            {sFalt.rival >= 6 && <span className="pz-aviso-falta bg-emerald-700">{t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC })}</span>}
+            {tarjetasRivalNuevo}
+          </>}
+        />
+      )}
+      {!nuevo && (<>
       {/* LÍNEA DE CONTROL (una sola fila): modo directo/vídeo · ajuste de reloj ·
           faltas / amarillas / TM de la parte · avisos de faltas · tarjetas del
           rival. Antes eran 2 filas arriba + una barra al final de la página que
@@ -677,7 +811,89 @@ export default function PartidoPage() {
           );
         })()}
       </div>
+      </>)}
 
+      {nuevo && (<>
+        <PistaNueva
+          fichas={enPistaVista.map((nombre) => {
+            const seg = segundosTurnoActual(nombre);
+            const j = ROSTER.find((r) => r.nombre === nombre);
+            return {
+              nombre,
+              dorsal: j?.dorsal ? String(j.dorsal) : "",
+              seg,
+              segParte: segundosEnParte(nombre, p),
+              esPortero: j?.posicion === "PORTERO",
+              amarillas: amarillasPorJugador[nombre] ?? 0,
+              expulsado: jugadoresExpulsados.has(nombre),
+              nivel: nivelTiempoPista(seg),
+            };
+          })}
+          onTocar={(nombre) => setModalAccionInd({ jugador: nombre })}
+        />
+        <BanquilloNuevo
+          columnas={banquilloVista.length <= 8 ? Math.max(1, banquilloVista.length) : Math.ceil(banquilloVista.length / 2)}
+          fichas={banquilloVista.map((nombre) => {
+            const seg = segundosBanquillo(nombre);
+            const segUltimo = partido.tiempos[nombre]?.segTurnoUltimo ?? 0;
+            const j = ROSTER.find((r) => r.nombre === nombre);
+            return {
+              nombre,
+              dorsal: j?.dorsal ? String(j.dorsal) : "",
+              segSentado: seg,
+              segParte: segundosEnParte(nombre, p),
+              segTotal: partido.tiempos[nombre]?.totalSegundos ?? 0,
+              esPortero: j?.posicion === "PORTERO",
+              amarillas: amarillasPorJugador[nombre] ?? 0,
+              expulsado: jugadoresExpulsados.has(nombre),
+              nivel: nivelTiempoBanquillo(seg, segUltimo),
+            };
+          })}
+          onTocar={(nombre) => setModalAccionBanquillo({ jugador: nombre })}
+        />
+        {/* Botones: mismo orden, mismo sitio y mismas acciones que el clásico.
+            Color por familias (a favor, en contra, falta, tarjetas, TM,
+            penalti/10 m); solo GOL va relleno. */}
+        <div className="grid grid-cols-8 gap-1.5 flex-[22] min-h-0">
+          <BotonNuevo label={t("btn_gol")} color="var(--gol)" tipo="lleno" icono={<Ico.gol />} onClick={() => setModalGol(true)} />
+          <BotonNuevo label={t("btn_disp_rival")} color="var(--mal)" icono={<Ico.diana />} onClick={() => setModalDisparoRival(true)} />
+          <BotonNuevo label={t("btn_incorporacion")} color="var(--aviso)" icono={<Ico.arriba />} onClick={() => setModalIncorporacion(true)} />
+          <BotonNuevo label={t("btn_falta")} color="var(--aviso)" icono={<Ico.aviso />} onClick={() => setModalFalta(true)} />
+          <BotonNuevo label={t("btn_amarilla")} color="var(--amarilla)" icono={<span className="pz-tarjeta" />} onClick={() => setModalAmarilla(true)} />
+          <BotonNuevo label={t("btn_roja")} color="var(--roja)" icono={<span className="pz-tarjeta" />} onClick={() => setModalRoja(true)} />
+          <BotonNuevo label={t("btn_tm")} color="var(--tm)" icono={<Ico.reloj />} onClick={() => setModalTM(true)} />
+          <BotonNuevo label={t("btn_pen10m")} color="var(--balon)" icono={<Ico.porteria />} onClick={() => setModalPen(true)} />
+        </div>
+        <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-[22] min-h-0`}>
+          <BotonNuevo label={t("btn_recuperacion_equipo")} color="var(--ok)" icono={<Ico.check />}
+            onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "robos");
+                             mostrarAviso(t("aviso_recuperacion_equipo")); }} />
+          <BotonNuevo label={t("btn_perdida_equipo")} color="var(--mal)" icono={<Ico.cruz />}
+            onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "pf");
+                             mostrarAviso(t("aviso_perdida_equipo")); }} />
+          <BotonNuevo label={t("btn_deshacer")} color="var(--texto-2)" tipo="nav" icono={<Ico.deshacer />}
+            onClick={() => {
+              const ultimo = partido.eventos[partido.eventos.length - 1];
+              const desc = describirEvento(ultimo, cfg.rival);
+              deshacerUltimoEvento();
+              mostrarAviso(desc ? t("aviso_deshecho", { que: desc })
+                                 : t("aviso_nada_deshacer"));
+            }} />
+          <BotonNuevo label={t("btn_tiempos")} color="var(--texto-2)" tipo="nav" icono={<Ico.barras />}
+            onClick={() => setModalTiempos(true)} />
+          {cfg.permiteTanda && (
+            <BotonNuevo
+              label={`${t("btn_tanda")}${partido.tanda?.tiros.length ? ` (${partido.tanda.marcador.inter}-${partido.tanda.marcador.rival})` : ""}`}
+              color="var(--balon)" tipo={partido.tanda?.tiros.length ? "lleno" : undefined} icono={<Ico.trofeo />}
+              onClick={() => { iniciarTanda(); setModalTanda(true); }} />
+          )}
+          <BotonNuevo label={t("btn_resumen")} color="var(--texto-2)" tipo="nav" icono={<Ico.bandera />}
+            onClick={() => router.push("/resumen")} />
+          <BotonNuevo label={t("inicio")} color="var(--texto-2)" tipo="nav" icono={<Ico.casa />}
+            onClick={() => router.push("/")} />
+        </div>
+      </>)}
+      {!nuevo && (<>
       {/* EN PISTA — reparto de altura (Arkaitz 20/8/2026: "el botón del jugador
           se ve demasiado grande"). La pista cede un 40 % de su alto y ese
           espacio va a las dos filas de botones, 20 % a cada una: de ahí el
@@ -866,6 +1082,7 @@ export default function PartidoPage() {
           {t("inicio")}
         </button>
       </div>
+      </>)}
 
       {modalCambio && (
         <ModalCambio
@@ -1379,7 +1596,7 @@ export default function PartidoPage() {
  * El valor sigue calculándose contra Date.now() (exacto, sin deriva).
  * Cuenta atrás con semántica de marcador (ceil); transcurrido con floor.
  */
-function RelojGrande(props: { segundosParte: number; ultimoStart: number | null; dur: number; acabada: boolean }) {
+function RelojGrande(props: { segundosParte: number; ultimoStart: number | null; dur: number; acabada: boolean; clase?: string }) {
   const [, repintar] = useState(0);
   const { segundosParte, ultimoStart, dur } = props;
   useEffect(() => {
@@ -1397,7 +1614,7 @@ function RelojGrande(props: { segundosParte: number; ultimoStart: number | null;
   const vivos = segundosVivos({ segundosParte, ultimoStart });
   const texto = dur > 0 ? formatCuentaAtras(dur - vivos) : formatMMSS(vivos);
   return (
-    <div className={`text-6xl font-mono font-bold tabular-nums ${props.acabada ? "text-red-500 animate-pulse" : ""}`}>
+    <div className={props.clase ?? `text-6xl font-mono font-bold tabular-nums ${props.acabada ? "text-red-500 animate-pulse" : ""}`}>
       {texto}
     </div>
   );
