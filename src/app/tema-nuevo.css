@@ -1,0 +1,269 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   ASPECTO NUEVO del crono (rediseño PULSO, tanda 1 · 16/11/2026)
+
+   Todo vive bajo la clase .pz, que SOLO lleva la pantalla del partido cuando
+   el aparato tiene el aspecto nuevo activado (lib/aspecto.ts). Con el aspecto
+   clásico ninguna de estas reglas se aplica: el crono se ve como siempre.
+
+   · Pabellón (oscuro, por defecto): azul noche de la marca, no negro puro.
+   · Sol (claro): .pz[data-tema="sol"], para pistas con mucha luz.
+   · --nos (nuestro equipo) y --rival los pone la página: salen del club
+     (clientes.ts → colorPropio) y de lib/tema.ts (el rival nunca se parece).
+   · Rendimiento (iPads viejos): sin sombras difusas grandes, sin desenfoques,
+     sin transiciones; solo un «hundirse» instantáneo al pulsar. Sin
+     color-mix() (Safari < 16.2 no lo entiende): los tintes son capas con
+     opacidad.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.pz {
+  --marca-rojo: #e63946;
+  --fondo: #071324;
+  --capa: #0e1f37;
+  --capa-2: #142a49;
+  --capa-3: #1b3459;
+  --linea: #24406a;
+  --texto: #f3f6fb;
+  --texto-2: #a9b8cf;
+  --texto-3: #7489a8;
+
+  /* Semáforo de minutos: MISMO significado que siempre (<1′, 1-2′, 2-3′, ≥3′) */
+  --t0: #3b8bff;
+  --t1: #22c55e;
+  --t2: #f5b70a;
+  --t3: #ff4d4d;
+
+  /* Familias de acción */
+  --ok: #22c55e;
+  --gol: #159947;
+  --mal: #ff4d4d;
+  --aviso: #ff9f1c;
+  --amarilla: #ffd400;
+  --roja: #e5282e;
+  --tm: #a78bfa;
+  --balon: #f472b6;
+
+  --f-num: var(--font-barlow), "Arial Narrow", system-ui, sans-serif;
+  --f-txt: var(--font-inter), system-ui, -apple-system, sans-serif;
+
+  background: var(--fondo);
+  font-family: var(--f-txt);
+  -webkit-font-smoothing: antialiased;
+}
+
+.pz[data-tema="sol"] {
+  --fondo: #e9eef5;
+  --capa: #ffffff;
+  --capa-2: #f3f6fa;
+  --capa-3: #e3e9f2;
+  --linea: #c9d4e3;
+  --texto: #08162b;
+  --texto-2: #3b4d68;
+  --texto-3: #5d6f89;
+  --t0: #1565e0; --t1: #12913f; --t2: #c98a00; --t3: #d61f1f;
+  --ok: #12913f; --gol: #12873f; --mal: #d61f1f; --aviso: #d9700a;
+  --amarilla: #e8b800; --roja: #c81c22; --tm: #6d4ed8; --balon: #c22e7f;
+}
+
+.pz-num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.pz-etq {
+  font: 700 11px/1 var(--f-txt); color: var(--texto-3);
+  text-transform: uppercase; letter-spacing: .09em;
+}
+.pz-capa {
+  background: var(--capa); border: 1px solid var(--linea); border-radius: 14px;
+  color: var(--texto);
+}
+.pz-ico {
+  width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; flex: none;
+}
+/* Solo las piezas nuevas: los modales (que aún no se rediseñan) no se tocan. */
+.pz-a, .pz-btn, .pz-tj, .pz-tb, .pz-seg button, .pz-ajuste button, .pz-play {
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer;
+}
+.pz-a:active, .pz-btn:active:not(:disabled), .pz-tj:active:not(:disabled), .pz-tb:active:not(:disabled),
+.pz-seg button:active, .pz-ajuste button:active, .pz-play:active { transform: scale(.97); filter: brightness(1.12); }
+.pz-btn:disabled { opacity: .4; cursor: default; }
+.pz-tj:disabled, .pz-tb:disabled { cursor: not-allowed; }
+
+/* ── Tarjetas (icono) ─────────────────────────────────────────────────── */
+.pz-tarjeta {
+  display: inline-block; width: 14px; height: 19px; border-radius: 3px;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,.45); flex: none;
+}
+.pz-tarjeta.am { background: var(--amarilla); }
+.pz-tarjeta.ro { background: var(--roja); }
+.pz-tarjetas {
+  display: inline-flex; align-items: center; gap: 3px;
+  font: 800 18px/1 var(--f-num); color: var(--texto); margin-left: auto; flex: none;
+}
+
+/* ── Cabecera ─────────────────────────────────────────────────────────── */
+.pz-cab {
+  flex: none; display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+  gap: 16px; height: 74px; padding: 0 214px 0 14px;
+}
+.pz-reloj { display: flex; align-items: center; gap: 14px; }
+.pz-reloj-t { font: 800 70px/.9 var(--f-num); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.pz-reloj-t.acabada { color: var(--t3); }
+.pz-meta { display: flex; flex-direction: column; gap: 5px; min-width: 96px; }
+.pz-meta small { font: 600 15px/1 var(--f-num); color: var(--texto-2); font-variant-numeric: tabular-nums; }
+.pz-meta .fin { font: 700 13px/1 var(--f-txt); color: var(--t3); }
+.pz-parte-bar { width: 96px; height: 6px; border-radius: 3px; background: var(--capa-3); overflow: hidden; }
+.pz-parte-bar i { display: block; height: 100%; background: var(--texto-2); }
+
+.pz-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 10px;
+  border-radius: 999px; font: 700 12px/1 var(--f-txt); letter-spacing: .04em;
+  text-transform: uppercase; background: var(--capa-3); color: var(--texto-2);
+  white-space: nowrap; align-self: flex-start;
+}
+
+.pz-marcador { display: flex; align-items: center; justify-content: center; gap: 16px; min-width: 0; }
+.pz-equipo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pz-equipo.r { align-items: flex-end; text-align: right; }
+.pz-equipo .nom {
+  font: 700 22px/1 var(--f-num); letter-spacing: .04em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+}
+.pz-faltas { display: flex; align-items: center; gap: 4px; }
+.pz-faltas .f { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--texto-3); }
+.pz-faltas .f.on { background: var(--aviso); border-color: var(--aviso); }
+.pz-faltas.limite .f.on { background: var(--t3); border-color: var(--t3); }
+.pz-faltas b { font: 600 11px/1 var(--f-txt); color: var(--texto-3); letter-spacing: .06em; text-transform: uppercase; margin: 0 3px; }
+.pz-faltas .n { font: 800 22px/1 var(--f-num); color: var(--texto); min-width: 14px; text-align: center; }
+.pz-faltas.limite .n { color: var(--t3); }
+.pz-goles { display: flex; align-items: center; gap: 8px; font: 800 54px/1 var(--f-num); font-variant-numeric: tabular-nums; }
+.pz-goles .g { min-width: 54px; text-align: center; border-radius: 10px; padding: 2px 8px; }
+.pz-goles .sep { color: var(--texto-3); font-weight: 600; font-size: 36px; }
+
+.pz-control { display: flex; align-items: center; gap: 8px; }
+.pz-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--linea);
+  background: var(--capa-2); color: var(--texto); font: 700 18px/1 var(--f-num);
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.pz-btn.ico { width: 48px; padding: 0; }
+
+/* Iniciar / pausar: flotante (siempre encima de todo, como en el clásico),
+   colocado sobre el hueco que le deja la cabecera a la derecha. */
+.pz-play {
+  position: fixed; top: 15px; right: 20px; z-index: 60;
+  height: 60px; min-width: 186px; padding: 0 22px; border-radius: 14px; border: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font: 800 24px/1 var(--f-num); letter-spacing: .06em; text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
+}
+.pz-play svg { width: 22px; height: 22px; fill: currentColor; }
+.pz-play.iniciar { background: var(--gol); color: #fff; }
+.pz-play.pausar { background: var(--t2); color: #1a1300; }
+
+/* ── Barra de herramientas ────────────────────────────────────────────── */
+.pz-herr { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-height: 36px; color: var(--texto); }
+.pz-seg {
+  display: inline-flex; background: var(--capa); border: 1px solid var(--linea);
+  border-radius: 10px; padding: 3px; height: 36px;
+}
+.pz-seg button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 7px;
+  font: 700 13px/1 var(--f-txt); letter-spacing: .05em; color: var(--texto-2); text-transform: uppercase;
+}
+.pz-seg button.on { background: var(--capa-3); color: var(--texto); }
+.pz-seg button.on.vivo { background: rgba(230,57,70,.2); color: #ff5a66; }
+.pz[data-tema="sol"] .pz-seg button.on.vivo { color: #c81c2c; background: rgba(230,57,70,.12); }
+.pz-seg .punto { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.pz-ajuste { display: inline-flex; align-items: center; gap: 4px; }
+.pz-ajuste button {
+  height: 34px; min-width: 46px; padding: 0 6px; border-radius: 8px; background: var(--capa);
+  border: 1px solid var(--linea); font: 600 16px/1 var(--f-num); color: var(--texto-2);
+  font-variant-numeric: tabular-nums;
+}
+.pz-der { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pz-dato { display: inline-flex; align-items: center; gap: 6px; font: 600 13px/1 var(--f-txt); color: var(--texto-2); white-space: nowrap; }
+.pz-dato strong { font: 800 20px/1 var(--f-num); color: var(--texto); }
+.pz-dato .barra { color: var(--texto-3); }
+.pz-aviso-falta { border-radius: 8px; padding: 6px 10px; font: 800 16px/1 var(--f-num); letter-spacing: .03em; color: #fff; text-transform: uppercase; }
+.pz-sol { width: 44px; min-height: 36px; height: 36px; padding: 0; }
+
+/* ── Bloques de jugadores ─────────────────────────────────────────────── */
+.pz-bloque { padding: 8px 10px 10px; display: flex; flex-direction: column; }
+.pz-bloque h2 { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; flex: none; }
+.pz-bloque h2 .ayuda { font: 500 12px/1 var(--f-txt); color: var(--texto-3); }
+
+.pz-tj {
+  position: relative; overflow: hidden; border-radius: 12px; height: 100%; min-height: 0;
+  padding: 12px 12px 10px; background: var(--capa-2); border: 2px solid var(--c);
+  display: flex; flex-direction: column; text-align: left; color: var(--texto);
+}
+.pz-tj::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--c); opacity: .13; pointer-events: none; }
+.pz-tj::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--c); }
+.pz-tj > * { position: relative; z-index: 1; }
+.pz-tj .arriba { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pz-dorsal {
+  font: 700 15px/1 var(--f-num); min-width: 30px; height: 24px; border-radius: 7px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 6px;
+  background: var(--capa-3); color: var(--texto-2); flex: none;
+}
+.pz-tj .nombre {
+  font: 700 clamp(17px, 2.9vh, 24px)/1 var(--f-num); letter-spacing: .03em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.pz-tj .tiempo {
+  font: 800 clamp(34px, 8vh, 68px)/1 var(--f-num); font-variant-numeric: tabular-nums;
+  margin-top: auto; color: var(--c);
+}
+.pz-tj .pie {
+  display: flex; justify-content: space-between; align-items: center; gap: 6px;
+  font: 600 14px/1 var(--f-num); color: var(--texto-2); margin-top: 4px; text-transform: uppercase;
+}
+.pz-prog { height: 5px; border-radius: 3px; background: var(--capa-3); margin-top: 6px; overflow: hidden; flex: none; }
+.pz-prog i { display: block; height: 100%; background: var(--c); }
+.pz-tj.portero { --c: var(--texto-3); }
+.pz-tj.portero::before { opacity: 0; }
+.pz-tj.portero .tiempo { color: var(--texto); }
+.pz-tj.expulsado, .pz-tb.expulsado { --c: var(--roja); opacity: .8; }
+.pz-tj.expulsado .nombre, .pz-tb.expulsado .n span.txt { text-decoration: line-through; }
+.pz-exp-txt { font: 800 20px/1 var(--f-num); letter-spacing: .05em; color: var(--roja); text-transform: uppercase; margin-top: auto; display: flex; align-items: center; gap: 8px; }
+.pz[data-tema="sol"] .pz-exp-txt { color: var(--roja); }
+.pz-guante { width: 20px; height: 20px; color: var(--texto-3); margin-left: auto; }
+.pz-guante + .pz-tarjetas { margin-left: 4px; }
+
+.pz-tb {
+  position: relative; overflow: hidden; border-radius: 10px; min-height: 52px;
+  padding: 6px 10px 6px 14px; background: var(--capa-2); border: 1px solid var(--linea);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px;
+  text-align: left; color: var(--texto);
+}
+.pz-tb::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--c, transparent); }
+.pz-tb.expulsado { border-color: var(--roja); }
+.pz-tb .n {
+  font: 700 clamp(15px, 2.2vh, 18px)/1 var(--f-num); text-transform: uppercase; letter-spacing: .03em;
+  display: flex; gap: 6px; align-items: center; min-width: 0;
+}
+.pz-tb .n span.txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pz-tb .n .pz-dorsal { height: 20px; min-width: 24px; font-size: 13px; }
+.pz-tb .n .pz-tarjeta { width: 11px; height: 15px; }
+.pz-tb .n .pz-tarjetas { font-size: 15px; margin-left: 0; }
+.pz-tb .sub { font: 600 13px/1 var(--f-num); color: var(--texto-3); margin-top: 5px; font-variant-numeric: tabular-nums; }
+.pz-tb .sub b { color: var(--texto-2); }
+.pz-tb .sent { font: 800 clamp(22px, 3.8vh, 30px)/1 var(--f-num); text-align: right; font-variant-numeric: tabular-nums; }
+.pz-tb .sent small { display: block; font: 600 10px/1 var(--f-txt); color: var(--texto-3); letter-spacing: .08em; text-transform: uppercase; margin-top: 3px; }
+
+/* ── Botones de acción ────────────────────────────────────────────────── */
+.pz-a {
+  position: relative; overflow: hidden; height: 100%; min-height: 48px; border-radius: 12px;
+  background: var(--capa-2); border: 1px solid var(--linea); color: var(--texto);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  font: 700 clamp(15px, 2.3vh, 19px)/1.05 var(--f-num); letter-spacing: .05em; text-transform: uppercase;
+  padding: 4px 4px 8px; text-align: center;
+}
+.pz-a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--c); }
+.pz-a .pz-ico { width: 26px; height: 26px; color: var(--c); stroke-width: 2.2; }
+.pz-a .pz-tarjeta { width: 18px; height: 24px; background: var(--c); box-shadow: none; }
+.pz-a.lleno { background: var(--c); border-color: transparent; color: #fff; padding-bottom: 4px; }
+.pz-a.lleno .pz-ico { color: #fff; }
+.pz-a.lleno::after { display: none; }
+.pz-a.nav { background: transparent; color: var(--texto-2); }
+.pz-a.nav::after { display: none; }
+.pz-a.nav .pz-ico { color: var(--texto-2); }

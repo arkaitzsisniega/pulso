@@ -72,15 +72,37 @@ export function colorTiempoBanquillo(
   segBanquillo: number,
   segUltimoTurno: number | null | undefined = null
 ): string {
+  const nivelActual = nivelTiempoBanquillo(segBanquillo, segUltimoTurno);
+  if (nivelActual < 0) return COLOR_BANQUILLO_FRESCO;
+  return COLOR_BANQUILLO_POR_NIVEL[nivelActual];
+}
+
+/**
+ * El NIVEL del semáforo (0 azul · 1 verde · 2 amarillo · 3 rojo) en vez de la
+ * clase de color. Lo usa el aspecto NUEVO del crono (rediseño, tanda 1,
+ * 16/11/2026), que pinta el color solo en el número y en una franja, no la
+ * ficha entera. Mismos umbrales que colorTiempoPista (lo vigila utils.test.ts).
+ */
+export function nivelTiempoPista(segundos: number): 0 | 1 | 2 | 3 {
+  return nivelDePista(segundos) as 0 | 1 | 2 | 3;
+}
+
+/**
+ * Nivel de fatiga residual en el banquillo: el de la última rotación menos un
+ * nivel por minuto sentado; -1 = descansado (gris). Es EXACTAMENTE el cálculo
+ * que siempre hizo colorTiempoBanquillo, que ahora lo usa por debajo.
+ */
+export function nivelTiempoBanquillo(
+  segBanquillo: number,
+  segUltimoTurno: number | null | undefined = null
+): -1 | 0 | 1 | 2 | 3 {
   // Si nunca estuvo en pista (segUltimoTurno null/0), está fresco por defecto.
-  if (!segUltimoTurno || segUltimoTurno <= 0) {
-    return COLOR_BANQUILLO_FRESCO;
-  }
+  if (!segUltimoTurno || segUltimoTurno <= 0) return -1;
   const nivelSalida = nivelDePista(segUltimoTurno);
   const minutosBanquillo = Math.floor(segBanquillo / 60);
   const nivelActual = nivelSalida - minutosBanquillo;
-  if (nivelActual < 0) return COLOR_BANQUILLO_FRESCO;
-  return COLOR_BANQUILLO_POR_NIVEL[nivelActual];
+  if (nivelActual < 0) return -1;
+  return nivelActual as 0 | 1 | 2 | 3;
 }
 
 /** Generar UUID corto sin dependencias. */

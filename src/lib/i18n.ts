@@ -1734,6 +1734,20 @@ export const CATALOGO: Record<string, Entrada> = {
   ud_acc_pase_gol: { es: "pase de gol", en: "key pass", it: "passaggio chiave" },
   ud_de_equipo: { es: "{nombre} de equipo", en: "team {nombre}", it: "{nombre} di squadra" },
 
+  // ══════════════════ ASPECTO NUEVO (rediseño, tanda 1 · 16/11/2026) ══════════════════
+  pz_sentado: { es: "sentado", en: "on bench", it: "in panchina" },
+  pz_portero: { es: "portero", en: "keeper", it: "portiere" },
+  pz_tema_sol: { es: "Modo Sol (claro)", en: "Sun mode (light)", it: "Modalità Sole (chiara)" },
+  pz_tema_pabellon: { es: "Modo Pabellón (oscuro)", en: "Arena mode (dark)", it: "Modalità Palazzetto (scura)" },
+  pz_aspecto_titulo: { es: "Aspecto del crono en este aparato", en: "Look of the clock on this device", it: "Aspetto del crono su questo dispositivo" },
+  pz_aspecto_clasico: { es: "Clásico", en: "Classic", it: "Classico" },
+  pz_aspecto_nuevo: { es: "Nuevo", en: "New", it: "Nuovo" },
+  pz_aspecto_nota: {
+    es: "Solo cambia cómo se ve la pantalla del partido. Los datos y los botones son los mismos.",
+    en: "It only changes how the match screen looks. Data and buttons stay the same.",
+    it: "Cambia solo l'aspetto della schermata della partita. Dati e pulsanti restano uguali.",
+  },
+
   // ══════════════════ SELECTOR DE IDIOMA (demo) ══════════════════
   selector_idioma_label: { es: "Idioma", en: "Language", it: "Lingua" },
 };

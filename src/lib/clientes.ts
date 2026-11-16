@@ -28,6 +28,7 @@ import {
   ROSTER_JUVENIL,
   type Jugador,
 } from "@/lib/roster";
+import type { ParColor } from "@/lib/tema";
 
 export type IdiomaId = "es" | "en" | "it";
 
@@ -57,7 +58,21 @@ export interface ConfigCliente {
   /** true = la primera vez que se abre trae ya un partido de ejemplo guardado
    *  (`lib/partidoEjemplo.ts`). Solo la demo: el Inter y el filial, en false. */
   partidoEjemplo: boolean;
+  /** Color de NUESTRO equipo en el aspecto nuevo del crono (marcador, nombre,
+   *  dirección de ataque). Uno para el modo Pabellón (oscuro) y otro para el
+   *  modo Sol (claro). El del rival sale solo (lib/tema.ts → elegirRival): es
+   *  coral, salvo que el del club se le parezca. */
+  colorPropio: ParColor;
+  /** Aspecto con el que arranca el crono en un aparato que no lo ha elegido:
+   *  "nuevo" (rediseño 16/11/2026) o "clasico" (el de siempre). Cada aparato
+   *  lo cambia desde la pantalla de inicio y se le queda guardado. */
+  aspectoPorDefecto: "nuevo" | "clasico";
 }
+
+// Colores de club para el aspecto nuevo. El verde del Inter lo llevan los tres
+// equipos del club; la demo, el azul de PULSO.
+const VERDE_INTER: ParColor = { oscuro: "#34d27b", sol: "#0f7a43" };
+const AZUL_PULSO: ParColor = { oscuro: "#4ea8ff", sol: "#0b5fd1" };
 
 // Contraseñas: aquí SOLO va el SHA-256. La contraseña en claro NO se escribe,
 // ni siquiera en un comentario — este repositorio es público y hasta el
@@ -88,6 +103,8 @@ const CLIENTES: Record<string, ConfigCliente> = {
     demo: false,
     informeCompleto: false,
     partidoEjemplo: false,
+    colorPropio: VERDE_INTER,
+    aspectoPorDefecto: "clasico",
   },
   // Filial (28/8/2026). MISMO código que el Inter, otro build: su roster, su
   // contraseña, su URL (/crono-filial/) y su base local. No comparte NADA con
@@ -103,6 +120,8 @@ const CLIENTES: Record<string, ConfigCliente> = {
     demo: false,
     informeCompleto: false,
     partidoEjemplo: false,
+    colorPropio: VERDE_INTER,
+    aspectoPorDefecto: "clasico",
   },
   // Juvenil División de Honor (11/11/2026). Igual que el filial: mismo código,
   // otro build, con su plantilla, su contraseña, su URL (/crono-juvenil/) y su
@@ -118,6 +137,8 @@ const CLIENTES: Record<string, ConfigCliente> = {
     demo: false,
     informeCompleto: false,
     partidoEjemplo: false,
+    colorPropio: VERDE_INTER,
+    aspectoPorDefecto: "clasico",
   },
   pulso: {
     id: "pulso",
@@ -129,6 +150,8 @@ const CLIENTES: Record<string, ConfigCliente> = {
     demo: true,
     informeCompleto: true,
     partidoEjemplo: true,
+    colorPropio: AZUL_PULSO,
+    aspectoPorDefecto: "nuevo",
   },
 };
 
