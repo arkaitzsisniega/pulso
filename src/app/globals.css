@@ -25,6 +25,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* ── Barra de la hora y la batería del iPad (17/11/2026) ──────────────────
+   Instalado en la pantalla de inicio, el crono ocupa TODA la pantalla
+   (statusBarStyle black-translucent + viewportFit cover) y la barra de estado
+   del iPad se pinta ENCIMA: tras una actualización del iPad tapaba el reloj y
+   los botones de arriba. Se deja un margen del alto exacto de esa barra. En el
+   navegador normal y en el ordenador vale 0: allí no cambia nada. */
+@media screen {
+  body { padding-top: env(safe-area-inset-top, 0px); }
+}
+
 /* ── Impresión: el informe del partido en papel (o en PDF) ────────────────
    El crono se ve en negro sobre fondo oscuro, que en papel se come la tinta y
    se lee mal. Al imprimir se le da la vuelta: fondo blanco, letra negra y
