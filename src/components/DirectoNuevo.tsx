@@ -32,7 +32,8 @@ export const Ico = {
   arriba: (p: IcoProps) => <Svg {...p}><path d="M12 19V5M5 12l7-7 7 7" /></Svg>,
   aviso: (p: IcoProps) => <Svg {...p}><path d="M12 3l9 16H3z" /><path d="M12 10v4M12 17h.01" /></Svg>,
   reloj: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2M10 2h4" /></Svg>,
-  porteria: (p: IcoProps) => <Svg {...p}><rect x="3" y="5" width="18" height="12" rx="1" /><circle cx="12" cy="20" r="1.5" /></Svg>,
+  // Portería vista de frente: postes, larguero y la red en cuadrícula.
+  porteria: (p: IcoProps) => <Svg {...p}><path d="M2 20V5h20v15" /><path d="M6 5v15M10 5v15M14 5v15M18 5v15M2 10h20M2 15h20" strokeWidth="1" /></Svg>,
   check: (p: IcoProps) => <Svg {...p}><path d="M20 6L9 17l-5-5" /></Svg>,
   cruz: (p: IcoProps) => <Svg {...p}><path d="M18 6L6 18M6 6l12 12" /></Svg>,
   deshacer: (p: IcoProps) => <Svg {...p}><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></Svg>,
@@ -51,7 +52,8 @@ export const Ico = {
   robo: (p: IcoProps) => <Svg {...p}><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 21v-5h5" /></Svg>,
   tijeras: (p: IcoProps) => <Svg {...p}><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12" /></Svg>,
   medalla: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="15" r="6" /><path d="M8.5 10L6 2h4l2 5 2-5h4l-2.5 8" /></Svg>,
-  silla: (p: IcoProps) => <Svg {...p}><path d="M6 3v18M6 12h12v9M6 12V3h10v9" /></Svg>,
+  // Banco de banquillo: respaldo, asiento y patas.
+  silla: (p: IcoProps) => <Svg {...p}><path d="M3 6h18M3 13h18M5 13v6M19 13v6M5 6v7M19 6v7" /></Svg>,
   persona: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></Svg>,
   balanza: (p: IcoProps) => <Svg {...p}><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z" /></Svg>,
   video: (p: IcoProps) => <Svg {...p}><rect x="2" y="6" width="14" height="12" rx="2" /><path d="M22 8l-6 4 6 4z" /></Svg>,
@@ -107,7 +109,7 @@ const EMOJI_ICONO: Record<string, DefIcono> = {
   "⏸": { ico: "pausa" },
   "⏭": { ico: "adelante" },
   "⏮": { ico: "atras" },
-  "🥅": { ico: "porteria", color: "var(--balon)" },
+  "🥅": { ico: "guante", color: "var(--texto-2)" },
   "ℹ": { ico: "info" },
   "➕": { ico: "mas" },
 };

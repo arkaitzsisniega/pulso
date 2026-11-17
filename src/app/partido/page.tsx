@@ -1705,15 +1705,17 @@ function ModalShell(props: { titulo: string; onCerrar: () => void; children: Rea
         onClick={props.onCerrar}>
         <div className={`bg-zinc-900 pz-panel w-full ${props.maxW || "max-w-4xl"} max-h-[95vh] overflow-y-auto`}
           onClick={(e) => e.stopPropagation()}>
+          {/* La X va a la IZQUIERDA: arriba a la derecha está el botón
+              flotante de iniciar/pausar (siempre por encima) y la tapaba. */}
           <div className="pz-panel-cab">
+            <button onClick={props.onCerrar} className="pz-btn ico pz-panel-x" aria-label="×">
+              <Ico.cruz />
+            </button>
             {icono && (
               <span className={`pz-panel-ico ${icono.color ? "" : "neutro"}`}
                 style={icono.color ? { background: icono.color } : undefined}>{icono.nodo}</span>
             )}
             <h2 className="pz-panel-tit">{conIconos(titulo)}</h2>
-            <button onClick={props.onCerrar} className="pz-btn ico pz-panel-x" aria-label="×">
-              <Ico.cruz />
-            </button>
           </div>
           <div className={props.clase}>{props.children}</div>
         </div>
@@ -2331,6 +2333,7 @@ function ModalGol(props: {
   const [flechaAsist, setFlechaAsist] = useState<Flecha | null>(null);
   const [asistSinFlecha, setAsistSinFlecha] = useState(false);
   const [porteroRival, setPorteroRival] = useState("");
+  const nuevo = useNuevo();
 
   // Penalti, 10 m o FSB (lib/lanzamientos.ts): sin zona de campo, se tiran
   // desde su sitio y van directos a la portería.
@@ -2439,6 +2442,26 @@ function ModalGol(props: {
 
           {goleador && !enPropia && (
             <Paso n={3} titulo={t("mg_asistente")} activo={!asistente}>
+              {nuevo ? (
+                // Aspecto nuevo: los mismos botones que el goleador (dorsal +
+                // nombre). Mismas acciones que abajo.
+                <div className="flex flex-wrap gap-2">
+                  {props.enPista.filter((n) => n !== goleador).map((n) => {
+                    const dorsal = ROSTER.find((j) => j.nombre === n)?.dorsal;
+                    return (
+                      <button key={n} onClick={() => setAsistente(n)}
+                        className={`pz-jb ${asistente === n ? "on" : ""}`}>
+                        {dorsal && <span className="d">{dorsal}</span>}{n}
+                        {asistente === n && <Ico.check className="pz-ico pz-jb-ok" />}
+                      </button>
+                    );
+                  })}
+                  <button onClick={() => setAsistente("OMIT")}
+                    className={`pz-jb sec ${asistente === "OMIT" ? "on" : ""}`}>
+                    {ic(t("mg_sin_asistente"))}
+                  </button>
+                </div>
+              ) : (
               <div className="flex flex-wrap gap-2">
                 {props.enPista.filter((n) => n !== goleador).map((n) => (
                   <button key={n} onClick={() => setAsistente(n)}
@@ -2451,6 +2474,7 @@ function ModalGol(props: {
                     asistente === "OMIT" ? "bg-zinc-500" : "bg-zinc-800"
                   }`}>{ic(t("mg_sin_asistente"))}</button>
               </div>
+              )}
             </Paso>
           )}
         </>
@@ -2458,6 +2482,21 @@ function ModalGol(props: {
 
       {(equipo === "RIVAL" || enPropia || (goleador && asistente)) && (
         <Paso n={equipo === "RIVAL" ? 2 : 4} titulo={t("mg_accion_gol")} activo={!accion}>
+          {nuevo ? (
+            // Aspecto nuevo: en 3 columnas para que la ventana quepa entera en
+            // el iPad sin desplazar. Se leen de arriba abajo: primero el juego
+            // abierto y luego el balón parado, igual que las dos columnas.
+            <div className="pz-acc-gol" style={{ gridTemplateRows:
+              `repeat(${Math.ceil((ACCIONES_GOL_IZQ.length + ACCIONES_GOL_DER.length) / 3)}, auto)` }}>
+              {[...ACCIONES_GOL_IZQ, ...ACCIONES_GOL_DER].map((a) => (
+                <button key={a} onClick={() => {
+                    if (props.directo) { aplicarDirecto(a); return; }
+                    setAccion(a);
+                  }}
+                  className={`pz-ab ${accion === a ? "on" : ""}`}>{labelAccionGol(a)}</button>
+              ))}
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-x-3 gap-y-2">
             {[ACCIONES_GOL_IZQ, ACCIONES_GOL_DER].map((columna, i) => (
               <div key={i} className="flex flex-col gap-2">
@@ -2473,6 +2512,7 @@ function ModalGol(props: {
               </div>
             ))}
           </div>
+          )}
         </Paso>
       )}
 

@@ -392,7 +392,7 @@
 .pz-panel-ico .pz-ti .pz-ico { width: 24px; height: 24px; }
 .pz-panel-ico .pz-ti-tarjeta { width: 18px; height: 24px; margin: 0; }
 .pz-panel-tit { font: 800 26px/1.05 var(--f-num); letter-spacing: .04em; text-transform: uppercase; min-width: 0; }
-.pz-panel-x { margin-left: auto; flex: none; }
+.pz-panel-x { flex: none; margin-right: 2px; }
 
 .pz-paso { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; margin-bottom: 8px; }
 .pz-paso .nro {
@@ -440,3 +440,16 @@
   box-shadow: inset 0 0 0 2px var(--texto-3), 0 6px 18px rgba(0,0,0,.4);
 }
 .pz-saca.nos { box-shadow: inset 0 0 0 2px var(--nos), 0 6px 18px rgba(0,0,0,.4); }
+
+/* Ventana de GOL (retoque 17/11): asistente igual que el goleador y acciones
+   en 3 columnas para que quepa entera en el iPad horizontal sin desplazar. */
+.pz-jb.sec { font: 600 15px/1 var(--f-txt); letter-spacing: 0; text-transform: none; color: var(--texto-2); }
+.pz-jb.sec.on { color: var(--texto); }
+.pz-acc-gol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: column; gap: 6px 8px; }
+.pz-ab {
+  min-height: 44px; padding: 6px 12px; border-radius: 10px; text-align: left;
+  background: var(--capa-2); box-shadow: inset 0 0 0 1px var(--linea); color: var(--texto);
+  font: 600 16px/1.15 var(--f-txt);
+}
+.pz-ab.on { background: rgba(34,197,94,.16); box-shadow: inset 0 0 0 2px var(--ok); }
+.pz[data-tema="sol"] .pz-ab.on, .pz[data-tema="sol"] .pz-jb.on { background: rgba(18,145,63,.12); }
