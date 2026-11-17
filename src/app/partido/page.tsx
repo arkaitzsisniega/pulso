@@ -459,8 +459,8 @@ export default function PartidoPage() {
     // banquillo en una fila, botones más bajos). Si algún día no cabe (muchos
     // banners a la vez), el contenedor sí permite scroll como red de seguridad.
     <div className={nuevo
-        ? "pz h-[100dvh] text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"
-        : "h-[100dvh] bg-zinc-950 text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"}
+        ? "pz h-[calc(100dvh-env(safe-area-inset-top,0px))] text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"
+        : "h-[calc(100dvh-env(safe-area-inset-top,0px))] bg-zinc-950 text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"}
       data-tema={nuevo && modoSol ? "sol" : undefined}
       style={nuevo ? estiloNuevo : undefined}>
       {/* BOTÓN DE TIEMPO FLOTANTE — SIEMPRE accesible arriba a la derecha, por
