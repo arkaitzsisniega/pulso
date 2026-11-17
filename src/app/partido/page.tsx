@@ -23,7 +23,7 @@ import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { elegirRival, rgba } from "@/lib/tema";
 import {
   CabeceraNueva, BotonTiempoNuevo, HerramientasNueva, PistaNueva, BanquilloNuevo,
-  BotonNuevo, Ico,
+  BotonNuevo, Ico, NuevoCtx, useNuevo, useIc, conIconos, iconoDeTexto, sinEmojis,
 } from "@/components/DirectoNuevo";
 
 export default function PartidoPage() {
@@ -434,6 +434,9 @@ export default function PartidoPage() {
     }
     play();
   };
+  // Ventanas y avisos (tanda 2): con el aspecto nuevo, emojis → iconos SVG; con
+  // el clásico, el texto tal cual.
+  const ic = nuevo ? conIconos : (txt: string): React.ReactNode => txt;
   const tarjetasRivalNuevo = (() => {
     if (!nuevo) return null;
     const evs = partido.eventos as any[];
@@ -458,6 +461,8 @@ export default function PartidoPage() {
     // demás va compacto (modo + ajuste de reloj + faltas/tarjetas en UNA línea,
     // banquillo en una fila, botones más bajos). Si algún día no cabe (muchos
     // banners a la vez), el contenedor sí permite scroll como red de seguridad.
+    // NuevoCtx: las ventanas saben si van con el aspecto nuevo (no añade nada al DOM).
+    <NuevoCtx.Provider value={nuevo}>
     <div className={nuevo
         ? "pz h-[calc(100dvh-env(safe-area-inset-top,0px))] text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"
         : "h-[calc(100dvh-env(safe-area-inset-top,0px))] bg-zinc-950 text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"}
@@ -478,13 +483,15 @@ export default function PartidoPage() {
         if ((partido.cronometro.segundosParte ?? 0) > 0) return null;
         const esNuestro = saca === "INTER";
         return (
-          <div className={`fixed top-2 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-xl
+          <div className={nuevo
+            ? `pz-saca ${esNuestro ? "nos" : "rival"}`
+            : `fixed top-2 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-xl
                            text-base font-bold shadow-lg shadow-black/60 border ${
             esNuestro ? "bg-emerald-700 border-emerald-300/50" : "bg-zinc-700 border-zinc-400/50"
           }`}>
-            {t("part_saca_badge", {
+            {ic(t("part_saca_badge", {
               equipo: esNuestro ? CLIENTE.nombreCorto : cfg.rival,
-            })}
+            }))}
           </div>
         );
       })()}
@@ -509,9 +516,9 @@ export default function PartidoPage() {
                 play();
               }}
               aria-label={t("part_iniciar")}
-              className="px-5 py-3 bg-green-700 hover:bg-green-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-green-300/40">▶ {t("part_iniciar")}</button>
+              className="px-5 py-3 bg-green-700 hover:bg-green-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-green-300/40">▶ {ic(t("part_iniciar"))}</button>
           : <button onClick={pausa} aria-label={t("part_pausar")}
-              className="px-5 py-3 bg-orange-700 hover:bg-orange-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-orange-200/40">⏸ {t("part_pausar")}</button>}
+              className="px-5 py-3 bg-orange-700 hover:bg-orange-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-orange-200/40">⏸ {ic(t("part_pausar"))}</button>}
       </div>
       )}
 
@@ -570,7 +577,7 @@ export default function PartidoPage() {
                 ? `${formatMMSS(segParte)} / ${formatMMSS(dur)}`
                 : `${t("part_tot")} ${formatMMSS(segundosPartidoTotal())}`}
             </div>
-            {acabada && <div className="text-red-400 text-xs font-bold">{t("part_fin_parte")}</div>}
+            {acabada && <div className="text-red-400 text-xs font-bold">{ic(t("part_fin_parte"))}</div>}
           </div>
         </div>
         <div className="text-3xl font-bold tabular-nums">
@@ -594,7 +601,7 @@ export default function PartidoPage() {
           </button>
           <button onClick={() => setModalCambioParte(true)}
             className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
-            {t("part_parte_btn")}
+            {ic(t("part_parte_btn"))}
           </button>
         </div>
       </div>
@@ -611,13 +618,13 @@ export default function PartidoPage() {
             <div key={`inf-${c.tInicio}-${i}`}
               className="bg-red-700/90 border-2 border-red-400 rounded-lg p-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">🟥</span>
+                <span className="text-3xl">{ic("🟥")}</span>
                 <div>
                   <div className="text-base font-bold leading-tight">
-                    {t("part_inferioridad", { jugador: c.jugador })}
+                    {ic(t("part_inferioridad", { jugador: c.jugador }))}
                   </div>
                   <div className="text-xs text-red-100 mt-0.5">
-                    {t("part_inferioridad_nota")}
+                    {ic(t("part_inferioridad_nota"))}
                   </div>
                 </div>
               </div>
@@ -630,13 +637,13 @@ export default function PartidoPage() {
             <div key={`sup-${c.tInicio}-${i}`}
               className="bg-emerald-700/90 border-2 border-emerald-400 rounded-lg p-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">🟩</span>
+                <span className="text-3xl">{ic("🟩")}</span>
                 <div>
                   <div className="text-base font-bold leading-tight">
-                    {t("part_superioridad", { jugador: c.jugador })}
+                    {ic(t("part_superioridad", { jugador: c.jugador }))}
                   </div>
                   <div className="text-xs text-emerald-100 mt-0.5">
-                    {t("part_superioridad_nota")}
+                    {ic(t("part_superioridad_nota"))}
                   </div>
                 </div>
               </div>
@@ -654,14 +661,14 @@ export default function PartidoPage() {
       {huecosRellenables > 0 && (
         <div className="bg-emerald-700/90 border-2 border-emerald-400 rounded-lg p-2 flex-none">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-3xl">✅</span>
+            <span className="text-3xl">{ic("✅")}</span>
             <div>
               <div className="text-base font-bold leading-tight">
-                {t("part_inf_terminada")}
+                {ic(t("part_inf_terminada"))}
                 {huecosRellenables > 1 ? t("part_inf_huecos", { n: huecosRellenables }) : ""}
               </div>
               <div className="text-xs text-emerald-100 mt-0.5">
-                {t("part_inf_toca_entra")}
+                {ic(t("part_inf_toca_entra"))}
               </div>
             </div>
           </div>
@@ -670,13 +677,13 @@ export default function PartidoPage() {
               {banquilloActivos.map((n) => (
                 <button key={n} onClick={() => reincorporar(n)}
                   className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-semibold">
-                  ➕ {n}
+                  {ic("➕")} {n}
                 </button>
               ))}
             </div>
           ) : (
             <div className="text-xs text-emerald-100">
-              {t("part_inf_nadie")}
+              {ic(t("part_inf_nadie"))}
             </div>
           )}
         </div>
@@ -688,16 +695,16 @@ export default function PartidoPage() {
             perdiendo (portero-jugador). Línea pequeña discreta. */}
       {porterosEnPista.length >= 2 && (
         <div className="bg-yellow-600/90 border-2 border-yellow-300 rounded-lg p-2 flex-none flex items-center gap-2">
-          <span className="text-2xl">⚠️</span>
+          <span className="text-2xl">{ic("⚠️")}</span>
           <div className="text-sm font-bold leading-tight">
-            {t("part_porteros_dos", { n: porterosEnPista.length, lista: porterosEnPista.join(", ") })}
+            {ic(t("part_porteros_dos", { n: porterosEnPista.length, lista: porterosEnPista.join(", ") }))}
           </div>
         </div>
       )}
       {porterosEnPista.length === 0 && enPista.length > 0 && (
         <div className="text-xs text-zinc-500 flex-none flex items-center gap-1.5">
-          <span>ℹ️</span>
-          <span>{t("part_sin_portero")}</span>
+          <span>{ic("ℹ️")}</span>
+          <span>{ic(t("part_sin_portero"))}</span>
         </div>
       )}
 
@@ -717,12 +724,12 @@ export default function PartidoPage() {
           sol={modoSol}
           onSol={() => setModoSol(!modoSol)}
           extra={<>
-            {sFalt.inter === 4 && <span className="pz-aviso-falta bg-amber-600">{t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}</span>}
-            {sFalt.inter === 5 && <span className="pz-aviso-falta bg-orange-600">{t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC })}</span>}
-            {sFalt.inter >= 6 && <span className="pz-aviso-falta bg-red-700">{t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC })}</span>}
-            {sFalt.rival === 4 && <span className="pz-aviso-falta bg-amber-600">{t("part_rival_4falta")}</span>}
-            {sFalt.rival === 5 && <span className="pz-aviso-falta bg-orange-600">{t("part_rival_5falta")}</span>}
-            {sFalt.rival >= 6 && <span className="pz-aviso-falta bg-emerald-700">{t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC })}</span>}
+            {sFalt.inter === 4 && <span className="pz-aviso-falta bg-amber-600">{ic(t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC }))}</span>}
+            {sFalt.inter === 5 && <span className="pz-aviso-falta bg-orange-600">{ic(t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC }))}</span>}
+            {sFalt.inter >= 6 && <span className="pz-aviso-falta bg-red-700">{ic(t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC }))}</span>}
+            {sFalt.rival === 4 && <span className="pz-aviso-falta bg-amber-600">{ic(t("part_rival_4falta"))}</span>}
+            {sFalt.rival === 5 && <span className="pz-aviso-falta bg-orange-600">{ic(t("part_rival_5falta"))}</span>}
+            {sFalt.rival >= 6 && <span className="pz-aviso-falta bg-emerald-700">{ic(t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC }))}</span>}
             {tarjetasRivalNuevo}
           </>}
         />
@@ -742,11 +749,11 @@ export default function PartidoPage() {
               Con el reloj ya corrido se pregunta antes (30/8/2026). */}
           <button onClick={() => pedirCambioModo("directo")}
             className={`px-2.5 py-1 text-xs font-bold ${directo ? "bg-red-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
-            🔴 {t("part_modo_directo")}
+            🔴 {ic(t("part_modo_directo"))}
           </button>
           <button onClick={() => pedirCambioModo("video")}
             className={`px-2.5 py-1 text-xs font-bold ${!directo ? "bg-sky-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>
-            🎥 {t("part_modo_video")}
+            🎥 {ic(t("part_modo_video"))}
           </button>
         </div>
         {/* Dirección de ataque. Se elige al crear el partido, pero hasta el
@@ -758,13 +765,13 @@ export default function PartidoPage() {
           title={t("part_direccion_nota")}
           className="flex items-center gap-1 px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700
                      rounded-lg border border-zinc-700 text-xs font-bold">
-          <span className="text-zinc-500 text-[10px] uppercase">{t("part_direccion")}</span>
+          <span className="text-zinc-500 text-[10px] uppercase">{ic(t("part_direccion"))}</span>
           <span className="text-emerald-300 text-base leading-none">
             {direccionAtaque(p, "INTER", cfg) === "der" ? "▶" : "◀"}
           </span>
         </button>
         <div className="flex items-center gap-1" title={t("part_ajustar_nota")}>
-          <span className="text-zinc-500 text-[10px]">{t("part_ajustar_reloj")}</span>
+          <span className="text-zinc-500 text-[10px]">{ic(t("part_ajustar_reloj"))}</span>
           {([-60, -10, -1, 1, 10, 60] as const).map((d) => (
             <button key={d} onClick={() => ajustarReloj(d)}
               className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 font-mono text-xs">
@@ -774,27 +781,27 @@ export default function PartidoPage() {
         </div>
         {/* Faltas / amarillas (todo el partido) / TM */}
         <div className="flex items-center gap-x-3 ml-auto text-sm">
-          <span className="text-zinc-500 text-[10px] uppercase tracking-wide">{t("part_stats_parte", { parte: labelParte(p) })}</span>
+          <span className="text-zinc-500 text-[10px] uppercase tracking-wide">{ic(t("part_stats_parte", { parte: labelParte(p) }))}</span>
           {/* Las faltas, en grande: son lo que hay que ver de un vistazo desde
               el banquillo (pedido del 22/8, en pleno partido). El tamaño va en
               ESTE span, no en el contenedor, para no tocar amarillas ni TM. */}
           <span className="text-2xl font-bold">
-            <span className="text-emerald-400">{CLIENTE.demo ? CLIENTE.nombreCorto[0] : "I"}</span> {t("part_faltas")}{" "}
+            <span className="text-emerald-400">{CLIENTE.demo ? CLIENTE.nombreCorto[0] : "I"}</span> {ic(t("part_faltas"))}{" "}
             <strong className={sFalt.inter >= 5 ? "text-red-400" : ""}>{sFalt.inter}</strong>
             <span className="text-zinc-600 mx-1">/</span>
-            <span className="text-red-400">{t("part_rival_letra")}</span> {t("part_faltas")}{" "}
+            <span className="text-red-400">{ic(t("part_rival_letra"))}</span> {ic(t("part_faltas"))}{" "}
             <strong className={sFalt.rival >= 5 ? "text-red-400" : ""}>{sFalt.rival}</strong>
           </span>
           <span>🟨 <strong>{sAma.inter}</strong><span className="text-zinc-600">/</span><strong>{sAma.rival}</strong></span>
-          <span>🛑 {t("part_tm_abbr")} <strong>{sTM.inter}</strong><span className="text-zinc-600">/</span><strong>{sTM.rival}</strong></span>
+          <span>🛑 {ic(t("part_tm_abbr"))} <strong>{sTM.inter}</strong><span className="text-zinc-600">/</span><strong>{sTM.rival}</strong></span>
         </div>
         {/* Avisos de faltas (solo el más alto que aplique) + tarjetas del rival */}
-        {sFalt.inter === 4 && <span className="bg-amber-600 rounded px-3 py-1 text-base font-bold">{t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC })}</span>}
-        {sFalt.inter === 5 && <span className="bg-orange-600 rounded px-3 py-1 text-base font-bold">{t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC })}</span>}
-        {sFalt.inter >= 6 && <span className="bg-red-700 rounded px-3 py-1 text-base font-bold">{t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC })}</span>}
-        {sFalt.rival === 4 && <span className="bg-amber-600 rounded px-3 py-1 text-base font-bold">{t("part_rival_4falta")}</span>}
-        {sFalt.rival === 5 && <span className="bg-orange-600 rounded px-3 py-1 text-base font-bold">{t("part_rival_5falta")}</span>}
-        {sFalt.rival >= 6 && <span className="bg-emerald-700 rounded px-3 py-1 text-base font-bold">{t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC })}</span>}
+        {sFalt.inter === 4 && <span className="bg-amber-600 rounded px-3 py-1 text-base font-bold">{ic(t("part_inter_4falta", { equipo: NOMBRE_CORTO_TC }))}</span>}
+        {sFalt.inter === 5 && <span className="bg-orange-600 rounded px-3 py-1 text-base font-bold">{ic(t("part_inter_5falta", { equipo: NOMBRE_CORTO_TC }))}</span>}
+        {sFalt.inter >= 6 && <span className="bg-red-700 rounded px-3 py-1 text-base font-bold">{ic(t("part_inter_6falta", { n: sFalt.inter, equipo: NOMBRE_CORTO_TC }))}</span>}
+        {sFalt.rival === 4 && <span className="bg-amber-600 rounded px-3 py-1 text-base font-bold">{ic(t("part_rival_4falta"))}</span>}
+        {sFalt.rival === 5 && <span className="bg-orange-600 rounded px-3 py-1 text-base font-bold">{ic(t("part_rival_5falta"))}</span>}
+        {sFalt.rival >= 6 && <span className="bg-emerald-700 rounded px-3 py-1 text-base font-bold">{ic(t("part_rival_6falta", { n: sFalt.rival, equipo: NOMBRE_CORTO_TC }))}</span>}
         {(() => {
           const evs = partido.eventos as any[];
           const amaRival = evs.filter((e) => e.tipo === "amarilla" && e.equipo === "RIVAL" && e.jugador).map((e) => e.jugador as string);
@@ -804,9 +811,9 @@ export default function PartidoPage() {
           const amaSinExp = amaRival.filter((d) => !rojaSet.has(d));
           return (
             <span className="text-xs">
-              {amaSinExp.length > 0 && <span className="text-yellow-300">{t("part_ama_rival", { rival: cfg.rival })} <strong>{amaSinExp.join(", ")}</strong></span>}
+              {amaSinExp.length > 0 && <span className="text-yellow-300">{ic(t("part_ama_rival", { rival: cfg.rival }))} <strong>{amaSinExp.join(", ")}</strong></span>}
               {amaSinExp.length > 0 && rojaRival.length > 0 && <span className="text-zinc-600 mx-1">·</span>}
-              {rojaRival.length > 0 && <span className="text-red-300">{t("part_roja_rival_exp", { rival: cfg.rival })} <strong>{rojaRival.join(", ")}</strong></span>}
+              {rojaRival.length > 0 && <span className="text-red-300">{ic(t("part_roja_rival_exp", { rival: cfg.rival }))} <strong>{rojaRival.join(", ")}</strong></span>}
             </span>
           );
         })()}
@@ -900,7 +907,7 @@ export default function PartidoPage() {
           6 / 2 / 2 de los `flex-[n]`. Antes la pista se quedaba con TODO el
           sobrante (flex-1) y los botones tenían la altura justa del texto. */}
       <div className="bg-zinc-900 rounded-xl p-2 flex-[34] min-h-[70px] flex flex-col">
-        <h2 className="text-zinc-400 text-xs mb-1 flex-none">{t("part_en_pista")}</h2>
+        <h2 className="text-zinc-400 text-xs mb-1 flex-none">{ic(t("part_en_pista"))}</h2>
         <div className="grid grid-cols-5 gap-2 flex-1 min-h-0">
           {enPistaVista.map((nombre) => {
             const seg = segundosTurnoActual(nombre);
@@ -937,11 +944,11 @@ export default function PartidoPage() {
                 <div className="text-xs opacity-70 leading-none">{dorsal ? `#${dorsal}` : "—"}</div>
                 <div className={`font-bold leading-tight text-[clamp(0.9rem,2.4vh,1.35rem)] ${estaExpulsado ? "line-through" : ""}`}>{nombre}</div>
                 {estaExpulsado ? (
-                  <div className="text-base font-bold mt-1 text-red-200">{t("part_expulsado")}</div>
+                  <div className="text-base font-bold mt-1 text-red-200">{ic(t("part_expulsado"))}</div>
                 ) : (
                   <>
                     <div className="font-mono tabular-nums leading-none mt-1 text-[clamp(1.4rem,5.5vh,3rem)]">{formatMMSS(seg)}</div>
-                    <div className="text-xs opacity-70 mt-1">{t("part_parte_corto", { tiempo: formatMMSS(totalParte) })}</div>
+                    <div className="text-xs opacity-70 mt-1">{ic(t("part_parte_corto", { tiempo: formatMMSS(totalParte) }))}</div>
                   </>
                 )}
               </button>
@@ -956,7 +963,7 @@ export default function PartidoPage() {
           de alto fijo a repartirse el espacio; con dos filas, mitad para cada
           una. Proporción final: pista 42 · botones 20+20 · banquillo 18. */}
       <div className="bg-zinc-900 rounded-xl p-2 flex-[26] min-h-[110px] flex flex-col">
-        <h2 className="text-zinc-400 text-xs mb-1 flex-none">{t("part_banquillo")}</h2>
+        <h2 className="text-zinc-400 text-xs mb-1 flex-none">{ic(t("part_banquillo"))}</h2>
         <div className="grid gap-1.5 flex-1 min-h-0 auto-rows-fr"
           style={{ gridTemplateColumns: `repeat(${banquilloVista.length <= 8 ? Math.max(1, banquilloVista.length) : Math.ceil(banquilloVista.length / 2)}, minmax(0, 1fr))` }}>
           {banquilloVista.map((nombre) => {
@@ -993,7 +1000,7 @@ export default function PartidoPage() {
                   <span className="opacity-60 font-normal text-xs mr-1">{dorsal ? `#${dorsal}` : ""}</span>{nombre}
                 </div>
                 {estaExpulsado ? (
-                  <div className="text-[10px] font-bold text-red-200">{t("part_expulsado")}</div>
+                  <div className="text-[10px] font-bold text-red-200">{ic(t("part_expulsado"))}</div>
                 ) : (
                   <>
                     {/* Arriba, lo que lleva SENTADO (para decidir el cambio).
@@ -1040,13 +1047,13 @@ export default function PartidoPage() {
                                  mostrarAviso(t("aviso_recuperacion_equipo")); }}
           className="h-full min-h-[44px] py-1 px-0.5 bg-green-800 hover:bg-green-700 active:bg-green-500
                      active:scale-95 transition rounded-lg text-lg font-bold leading-none leading-tight">
-          {t("btn_recuperacion_equipo")}
+          {ic(t("btn_recuperacion_equipo"))}
         </button>
         <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "pf");
                                  mostrarAviso(t("aviso_perdida_equipo")); }}
           className="h-full min-h-[44px] py-1 px-0.5 bg-rose-900 hover:bg-rose-800 active:bg-rose-600
                      active:scale-95 transition rounded-lg text-lg font-bold leading-none leading-tight">
-          {t("btn_perdida_equipo")}
+          {ic(t("btn_perdida_equipo"))}
         </button>
         <button onClick={() => {
                   const ultimo = partido.eventos[partido.eventos.length - 1];
@@ -1056,11 +1063,11 @@ export default function PartidoPage() {
                                      : t("aviso_nada_deshacer"));
                 }}
           className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-bold leading-none">
-          {t("btn_deshacer")}
+          {ic(t("btn_deshacer"))}
         </button>
         <button onClick={() => setModalTiempos(true)}
           className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-bold leading-none">
-          {t("btn_tiempos")}
+          {ic(t("btn_tiempos"))}
         </button>
         {cfg.permiteTanda && (
           <button onClick={() => { iniciarTanda(); setModalTanda(true); }}
@@ -1069,17 +1076,17 @@ export default function PartidoPage() {
                 ? "bg-pink-700 hover:bg-pink-600"
                 : "bg-zinc-800 hover:bg-zinc-700"
             }`}>
-            {t("btn_tanda")}
+            {ic(t("btn_tanda"))}
             {partido.tanda?.tiros.length ? ` (${partido.tanda.marcador.inter}-${partido.tanda.marcador.rival})` : ""}
           </button>
         )}
         <button onClick={() => router.push("/resumen")}
           className="h-full min-h-[44px] py-1 px-0.5 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-lg font-bold leading-none">
-          {t("btn_resumen")}
+          {ic(t("btn_resumen"))}
         </button>
         <button onClick={() => router.push("/")}
           className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-bold leading-none">
-          {t("inicio")}
+          {ic(t("inicio"))}
         </button>
       </div>
       </>)}
@@ -1293,9 +1300,9 @@ export default function PartidoPage() {
       {confirmExpulRival && (
         <ModalShell titulo={t("conf_2a_ama_rival_titulo")} onCerrar={() => setConfirmExpulRival(null)} maxW="max-w-md">
           <p className="text-zinc-300 text-base mb-4">
-            {t("conf_2a_ama_rival_texto", { dorsal: confirmExpulRival.dorsal, rival: cfg.rival })}
+            {ic(t("conf_2a_ama_rival_texto", { dorsal: confirmExpulRival.dorsal, rival: cfg.rival }))}
             <span className="block text-zinc-500 text-sm mt-1">
-              {t("conf_2a_ama_rival_nota")}
+              {ic(t("conf_2a_ama_rival_nota"))}
             </span>
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -1305,12 +1312,12 @@ export default function PartidoPage() {
                 setConfirmExpulRival(null);
               }}
               className="py-5 bg-red-700 hover:bg-red-600 rounded text-lg font-bold">
-              {t("conf_si_uno_menos")}
+              {ic(t("conf_si_uno_menos"))}
             </button>
             <button
               onClick={() => setConfirmExpulRival(null)}
               className="py-5 bg-zinc-700 hover:bg-zinc-600 rounded text-lg font-bold">
-              {t("conf_no_siguen")}
+              {ic(t("conf_no_siguen"))}
             </button>
           </div>
         </ModalShell>
@@ -1320,7 +1327,7 @@ export default function PartidoPage() {
       {confirmFaltaCT && (
         <ModalShell titulo={t("conf_ama_ct_titulo")} onCerrar={() => setConfirmFaltaCT(null)} maxW="max-w-md">
           <p className="text-zinc-300 text-base mb-4">
-            {t("conf_ama_ct_texto", { equipo: confirmFaltaCT.equipo === "INTER" ? CLIENTE.nombreCorto : cfg.rival })}
+            {ic(t("conf_ama_ct_texto", { equipo: confirmFaltaCT.equipo === "INTER" ? CLIENTE.nombreCorto : cfg.rival }))}
           </p>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -1329,12 +1336,12 @@ export default function PartidoPage() {
                 setConfirmFaltaCT(null);
               }}
               className="py-5 bg-orange-700 hover:bg-orange-600 rounded text-lg font-bold">
-              {t("conf_si_suma_falta")}
+              {ic(t("conf_si_suma_falta"))}
             </button>
             <button
               onClick={() => setConfirmFaltaCT(null)}
               className="py-5 bg-zinc-700 hover:bg-zinc-600 rounded text-lg font-bold">
-              {t("conf_no")}
+              {ic(t("conf_no"))}
             </button>
           </div>
         </ModalShell>
@@ -1344,10 +1351,10 @@ export default function PartidoPage() {
       {confirmPaseGol && (
         <ModalShell titulo={t("pg_conf_titulo")} onCerrar={() => setConfirmPaseGol(null)} maxW="max-w-md">
           <p className="text-zinc-300 text-base mb-4">
-            {t("pg_conf_pase_texto", {
+            {ic(t("pg_conf_pase_texto", {
               minuto: formatMMSS(confirmPaseGol.gol.segundosParte || 0),
               quien: quienMarco(confirmPaseGol.gol),
-            })}
+            }))}
           </p>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -1356,12 +1363,12 @@ export default function PartidoPage() {
                 setConfirmPaseGol(null);
               }}
               className="py-5 bg-sky-700 hover:bg-sky-600 rounded text-lg font-bold">
-              {t("pg_otra_jugada")}
+              {ic(t("pg_otra_jugada"))}
             </button>
             <button
               onClick={() => setConfirmPaseGol(null)}
               className="py-5 bg-zinc-700 hover:bg-zinc-600 rounded text-lg font-bold">
-              {t("ed_cancelar")}
+              {ic(t("ed_cancelar"))}
             </button>
           </div>
         </ModalShell>
@@ -1379,7 +1386,7 @@ export default function PartidoPage() {
               return (
                 <div key={pase.id}>
                   <p className="text-zinc-300 text-base mb-2">
-                    {t("pg_conf_gol_texto", { jugador, minuto: formatMMSS(pase.segundosParte || 0) })}
+                    {ic(t("pg_conf_gol_texto", { jugador, minuto: formatMMSS(pase.segundosParte || 0) }))}
                   </p>
                   <button
                     onClick={() => {
@@ -1389,7 +1396,7 @@ export default function PartidoPage() {
                       setConfirmGolConPase(quedan.length ? quedan : null);
                     }}
                     className="w-full py-4 bg-red-800 hover:bg-red-700 rounded text-lg font-bold">
-                    {t("pg_quitar")}{confirmGolConPase.length > 1 ? ` (${jugador})` : ""}
+                    {ic(t("pg_quitar"))}{confirmGolConPase.length > 1 ? ` (${jugador})` : ""}
                   </button>
                 </div>
               );
@@ -1398,7 +1405,7 @@ export default function PartidoPage() {
           <button
             onClick={() => setConfirmGolConPase(null)}
             className="w-full py-4 bg-zinc-700 hover:bg-zinc-600 rounded text-lg font-bold">
-            {t("pg_distintas")}
+            {ic(t("pg_distintas"))}
           </button>
         </ModalShell>
       )}
@@ -1439,8 +1446,8 @@ export default function PartidoPage() {
       {modalSaque && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg">
-            <h3 className="text-2xl font-bold mb-1">⚽ {t("saque_titulo")}</h3>
-            <p className="text-base text-zinc-400 mb-5">{t("saque_sub")}</p>
+            <h3 className="text-2xl font-bold mb-1">{ic("⚽ " + t("saque_titulo"))}</h3>
+            <p className="text-base text-zinc-400 mb-5">{ic(t("saque_sub"))}</p>
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => { setSaqueInicial("INTER"); setModalSaque(false); play(); }}
@@ -1455,7 +1462,7 @@ export default function PartidoPage() {
             </div>
             <button onClick={() => { setModalSaque(false); play(); }}
               className="mt-5 w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
-              {t("saque_sin_anotar")}
+              {ic(t("saque_sin_anotar"))}
             </button>
           </div>
         </div>
@@ -1469,8 +1476,8 @@ export default function PartidoPage() {
              onClick={() => setModalIncorporacion(false)}>
           <div className="bg-zinc-900 rounded-2xl p-5 w-full max-w-md"
                onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold mb-1">🧤 {t("inc_titulo")}</h3>
-            <p className="text-sm text-zinc-400 mb-4">{t("inc_sub")}</p>
+            <h3 className="text-xl font-bold mb-1">{ic("🧤 " + t("inc_titulo"))}</h3>
+            <p className="text-sm text-zinc-400 mb-4">{ic(t("inc_sub"))}</p>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => {
@@ -1479,7 +1486,7 @@ export default function PartidoPage() {
                   setModalDisparoRival(true);   // encadena el disparo
                 }}
                 className="py-6 bg-red-700 hover:bg-red-600 rounded-xl text-lg font-bold">
-                {t("inc_con_disparo")}
+                {ic(t("inc_con_disparo"))}
               </button>
               <button
                 onClick={() => {
@@ -1488,12 +1495,12 @@ export default function PartidoPage() {
                   mostrarAviso(t("aviso_incorporacion"));
                 }}
                 className="py-6 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-lg font-bold">
-                {t("inc_sin_disparo")}
+                {ic(t("inc_sin_disparo"))}
               </button>
             </div>
             <button onClick={() => setModalIncorporacion(false)}
               className="mt-4 w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm">
-              {t("ed_cancelar")}
+              {ic(t("ed_cancelar"))}
             </button>
           </div>
         </div>
@@ -1502,10 +1509,14 @@ export default function PartidoPage() {
       {/* Aviso corto de "apuntado" para las acciones sin modal. */}
       {aviso && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+          {nuevo ? (
+            <div className="pz-toast"><Ico.check className="pz-ico" />{ic(aviso)}</div>
+          ) : (
           <div className="bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg
                           text-base font-bold">
             ✓ {aviso}
           </div>
+          )}
         </div>
       )}
 
@@ -1583,6 +1594,7 @@ export default function PartidoPage() {
         />
       )}
     </div>
+    </NuevoCtx.Provider>
   );
 }
 
@@ -1681,6 +1693,33 @@ function BotonAccion(props: { label: string; color: string; onClick: () => void 
 }
 
 function ModalShell(props: { titulo: string; onCerrar: () => void; children: React.ReactNode; maxW?: string; tituloClass?: string; clase?: string }) {
+  const nuevo = useNuevo();
+  if (nuevo) {
+    // Aspecto nuevo (tanda 2): cabecera con el icono de la acción en su
+    // color, título en letra deportiva y un botón de cerrar de 48 px. El
+    // contenido es el mismo; el color lo pone tema-nuevo.css.
+    const icono = iconoDeTexto(props.titulo);
+    const titulo = icono ? props.titulo.replace(/^\s*\S+\s*/u, "") : props.titulo;
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+        onClick={props.onCerrar}>
+        <div className={`bg-zinc-900 pz-panel w-full ${props.maxW || "max-w-4xl"} max-h-[95vh] overflow-y-auto`}
+          onClick={(e) => e.stopPropagation()}>
+          <div className="pz-panel-cab">
+            {icono && (
+              <span className={`pz-panel-ico ${icono.color ? "" : "neutro"}`}
+                style={icono.color ? { background: icono.color } : undefined}>{icono.nodo}</span>
+            )}
+            <h2 className="pz-panel-tit">{conIconos(titulo)}</h2>
+            <button onClick={props.onCerrar} className="pz-btn ico pz-panel-x" aria-label="×">
+              <Ico.cruz />
+            </button>
+          </div>
+          <div className={props.clase}>{props.children}</div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
       onClick={props.onCerrar}>
@@ -1709,13 +1748,14 @@ function PorteriaOverlay(props: {
   onAtras: () => void;
   extra?: React.ReactNode;
 }) {
+  const ic = useIc();
   return (
     <div className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4"
       onClick={props.onAtras}>
       <div className="bg-zinc-900 rounded-xl p-5 w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
           <button onClick={props.onAtras} className="text-zinc-400 text-2xl leading-none px-2">←</button>
-          <h2 className="text-xl font-bold text-center flex-1">{props.titulo}</h2>
+          <h2 className="text-xl font-bold text-center flex-1">{ic(props.titulo)}</h2>
           <span className="w-8" />
         </div>
         <Porteria onSelect={props.onSelect} />
@@ -1723,7 +1763,7 @@ function PorteriaOverlay(props: {
         <div className="mt-3 text-right">
           <button onClick={props.onSaltar}
             className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs">
-            {t("saltar_zona_porteria_guardar")}
+            {ic(t("saltar_zona_porteria_guardar"))}
           </button>
         </div>
       </div>
@@ -1736,6 +1776,24 @@ function ChipsJugador(props: {
   seleccionado: string;
   onSelect: (n: string) => void;
 }) {
+  const nuevo = useNuevo();
+  if (nuevo) {
+    // Aspecto nuevo: con el dorsal delante y el elegido con su marca.
+    return (
+      <div className="flex flex-wrap gap-2">
+        {props.opciones.map((n) => {
+          const dorsal = ROSTER.find((j) => j.nombre === n)?.dorsal;
+          return (
+            <button key={n} onClick={() => props.onSelect(n)}
+              className={`pz-jb ${props.seleccionado === n ? "on" : ""}`}>
+              {dorsal && <span className="d">{dorsal}</span>}{n}
+              {props.seleccionado === n && <Ico.check className="pz-ico pz-jb-ok" />}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap gap-2">
       {props.opciones.map((n) => (
@@ -1749,6 +1807,20 @@ function ChipsJugador(props: {
 }
 
 function Paso(props: { n: number; titulo: string; activo: boolean; children: React.ReactNode }) {
+  const nuevo = useNuevo();
+  if (nuevo) {
+    // Aspecto nuevo: el paso que toca, con el número en rojo; los ya
+    // contestados, en verde.
+    return (
+      <div className={`pz-paso ${props.activo ? "activo" : "hecho"}`}>
+        <span className="nro">{props.n}</span>
+        <div className="min-w-0">
+          <h3 className="tit">{conIconos(props.titulo)}</h3>
+          {props.children}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={`mb-3 ${props.activo ? "" : "opacity-50"}`}>
       <h3 className="text-sm text-zinc-400 mb-2">
@@ -1772,24 +1844,25 @@ function ModalAccionBanquillo(props: {
   onFalta: () => void;
   onCambioPor: (saleDePista: string) => void;
 }) {
+  const ic = useIc();
   return (
     <ModalShell titulo={t("mab_titulo", { jugador: props.jugador })} onCerrar={props.onCerrar} maxW="max-w-2xl">
       {/* Mismo orden y colores que en el menú de pista: FALTA · AMARILLA · ROJA */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <button onClick={props.onFalta}
           className="py-4 bg-orange-600 hover:bg-orange-500 rounded-lg text-lg font-bold">
-          {t("mab_falta")}
+          {ic(t("mab_falta"))}
         </button>
         <button onClick={props.onAmarilla}
           className="py-4 bg-yellow-400 hover:bg-yellow-300 text-zinc-950 rounded-lg text-lg font-bold">
-          {t("mab_amarilla")}
+          {ic(t("mab_amarilla"))}
         </button>
         <button onClick={props.onRoja}
           className="py-4 bg-red-950 border-2 border-red-500 hover:bg-red-900 rounded-lg text-lg font-bold">
-          {t("mab_roja")}
+          {ic(t("mab_roja"))}
         </button>
       </div>
-      <h3 className="text-sm text-zinc-400 mb-2">{t("mab_entra_por")}</h3>
+      <h3 className="text-sm text-zinc-400 mb-2">{ic(t("mab_entra_por"))}</h3>
       <div className="grid grid-cols-5 gap-2">
         {props.enPista.map((n) => (
           <button key={n}
@@ -1855,6 +1928,7 @@ function ModalFalta(props: {
   onCerrar: () => void;
   onConfirmar: (ev: any) => void;
 }) {
+  const ic = useIc();
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
   const [jugador, setJugador] = useState<string>("");
   const [sinAsignar, setSinAsignar] = useState(false);
@@ -1897,11 +1971,11 @@ function ModalFalta(props: {
           <button onClick={() => { setEquipo("INTER"); }}
             className={`px-6 py-4 rounded text-lg font-bold ${
               equipo === "INTER" ? "bg-emerald-700" : "bg-zinc-800"
-            }`}>{t("mf_la_cometemos")}</button>
+            }`}>{ic(t("mf_la_cometemos"))}</button>
           <button onClick={() => { setEquipo("RIVAL"); }}
             className={`px-6 py-4 rounded text-lg font-bold ${
               equipo === "RIVAL" ? "bg-red-700" : "bg-zinc-800"
-            }`}>{t("mf_la_comete_rival", { rival: props.rivalNombre })}</button>
+            }`}>{ic(t("mf_la_comete_rival", { rival: props.rivalNombre }))}</button>
         </div>
       </Paso>
 
@@ -1924,19 +1998,19 @@ function ModalFalta(props: {
                                   : enBanquillo ? "bg-zinc-700 opacity-70" : "bg-zinc-800"
                   }`}
                   title={enBanquillo ? t("mf_jugador_banquillo_title") : undefined}>
-                  {n}{enBanquillo ? " 🪑" : ""}
+                  {n}{enBanquillo ? ic(" 🪑") : ""}
                 </button>
               );
             })}
             <button onClick={() => seleccionar({ sinAsignar: true })}
               className={`px-3 py-2 rounded text-base ${
                 sinAsignar ? "bg-zinc-500" : "bg-zinc-800"
-              }`}>{t("sin_asignar")}</button>
+              }`}>{ic(t("sin_asignar"))}</button>
             {equipo === "INTER" && (
               <button onClick={() => seleccionar({ rivalMano: true })}
                 className={`px-3 py-2 rounded text-base ${
                   rivalMano ? "bg-purple-700" : "bg-zinc-800"
-                }`}>{t("mf_rival_mano")}</button>
+                }`}>{ic(t("mf_rival_mano"))}</button>
             )}
           </div>
         </Paso>
@@ -1956,7 +2030,7 @@ function ModalFalta(props: {
           <div className="mt-2 flex justify-end">
             <button onClick={() => aplicar(undefined)}
               className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs">
-              {t("saltar_zona_guardar")}
+              {ic(t("saltar_zona_guardar"))}
             </button>
           </div>
         </Paso>
@@ -1974,6 +2048,7 @@ function ModalAmarilla(props: {
   onCerrar: () => void;
   onConfirmar: (ev: any) => void;
 }) {
+  const ic = useIc();
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
 
   const candidatos = [...props.enPista, ...props.banquillo];
@@ -2004,14 +2079,14 @@ function ModalAmarilla(props: {
                                 : "bg-emerald-700 hover:bg-emerald-600"
                   }`}
                   title={enBanquillo ? t("mf_jugador_banquillo_title") : undefined}>
-                  {n}{enBanquillo ? " 🪑" : ""}
+                  {n}{enBanquillo ? ic(" 🪑") : ""}
                 </button>
               );
             })}
             <button onClick={() => props.onConfirmar({ tipo: "amarilla", equipo: "INTER", jugador: "#CT" })}
-              className="px-3 py-2 rounded bg-purple-700 hover:bg-purple-600 font-bold">{t("cuerpo_tecnico")}</button>
+              className="px-3 py-2 rounded bg-purple-700 hover:bg-purple-600 font-bold">{ic(t("cuerpo_tecnico"))}</button>
             <button onClick={() => props.onConfirmar({ tipo: "amarilla", equipo: "INTER" })}
-              className="px-3 py-2 rounded bg-zinc-700">{t("sin_asignar")}</button>
+              className="px-3 py-2 rounded bg-zinc-700">{ic(t("sin_asignar"))}</button>
           </div>
         </Paso>
       )}
@@ -2039,6 +2114,7 @@ function ModalRoja(props: {
   onCerrar: () => void;
   onConfirmar: (ev: any) => void;
 }) {
+  const ic = useIc();
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
   const candidatos = [...props.enPista, ...props.banquillo];
 
@@ -2067,7 +2143,7 @@ function ModalRoja(props: {
                     enBanquillo ? "bg-zinc-700 hover:bg-zinc-600 opacity-80"
                                 : "bg-red-700 hover:bg-red-600"
                   }`}>
-                  {n}{enBanquillo ? " 🪑" : ""}
+                  {n}{enBanquillo ? ic(" 🪑") : ""}
                 </button>
               );
             })}
@@ -2097,6 +2173,7 @@ function TecladoDorsalRival(props: {
   onConfirmar: (dorsalOCT: string) => void;
   onSinAsignar: () => void;
 }) {
+  const ic = useIc();
   const [dorsal, setDorsal] = useState("");
   const teclas = ["1","2","3","4","5","6","7","8","9","0"];
 
@@ -2112,7 +2189,7 @@ function TecladoDorsalRival(props: {
   return (
     <Paso n={2} titulo={props.titulo} activo>
       <div className="bg-zinc-950 rounded-lg p-4 mb-3 text-center">
-        <div className="text-zinc-500 text-sm mb-1">{t("tdr_dorsal_sel")}</div>
+        <div className="text-zinc-500 text-sm mb-1">{ic(t("tdr_dorsal_sel"))}</div>
         <div className="text-5xl font-bold font-mono tabular-nums min-h-[60px]">
           {dorsal ? `#${dorsal}` : <span className="text-zinc-700">—</span>}
         </div>
@@ -2142,11 +2219,11 @@ function TecladoDorsalRival(props: {
       <div className="grid grid-cols-2 gap-2 mt-3">
         <button onClick={() => props.onConfirmar("#CT")}
           className="py-4 bg-purple-700 hover:bg-purple-600 rounded text-base font-bold">
-          {t("cuerpo_tecnico")}
+          {ic(t("cuerpo_tecnico"))}
         </button>
         <button onClick={props.onSinAsignar}
           className="py-4 bg-zinc-700 hover:bg-zinc-600 rounded text-base font-bold">
-          {t("sin_asignar_min")}
+          {ic(t("sin_asignar_min"))}
         </button>
       </div>
     </Paso>
@@ -2163,12 +2240,13 @@ function ModalTM(props: {
   onCerrar: () => void;
   onConfirmar: (equipo: "INTER" | "RIVAL") => void;
 }) {
+  const ic = useIc();
   // En la prórroga no hay tiempos muertos (regla futsal).
   if (props.esProrroga) {
     return (
       <ModalShell titulo={t("mtm_titulo")} onCerrar={props.onCerrar} maxW="max-w-md">
         <p className="text-center text-zinc-300 py-6 text-lg">
-          {t("mtm_prorroga")}
+          {ic(t("mtm_prorroga"))}
         </p>
       </ModalShell>
     );
@@ -2196,7 +2274,7 @@ function ModalTM(props: {
       </div>
       {(interUsado || rivalUsado) && (
         <p className="text-xs text-zinc-400 mt-3 text-center">
-          {t("mtm_nota")}
+          {ic(t("mtm_nota"))}
         </p>
       )}
     </ModalShell>
@@ -2236,6 +2314,7 @@ function ModalGol(props: {
   /** penaltiExtra: extras a pasar al store cuando acción=Penalti/10m/FSB. */
   onConfirmar: (ev: any, penaltiExtra?: { penaltiTipo?: TipoLanzamiento; penaltiPorteroRival?: string }) => void;
 }) {
+  const ic = useIc();
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
   const [goleador, setGoleador] = useState("");
   // Gol a favor que mete el rival en su propia puerta: no lo marca nadie
@@ -2354,7 +2433,7 @@ function ModalGol(props: {
               className={`mt-2 w-full py-3 rounded-lg text-base font-bold ${
                 enPropia ? "bg-amber-600" : "bg-zinc-800 hover:bg-zinc-700"
               }`}>
-              {t("mg_en_propia")}
+              {ic(t("mg_en_propia"))}
             </button>
           </Paso>
 
@@ -2370,7 +2449,7 @@ function ModalGol(props: {
                 <button onClick={() => setAsistente("OMIT")}
                   className={`px-3 py-2 rounded ${
                     asistente === "OMIT" ? "bg-zinc-500" : "bg-zinc-800"
-                  }`}>{t("mg_sin_asistente")}</button>
+                  }`}>{ic(t("mg_sin_asistente"))}</button>
               </div>
             </Paso>
           )}
@@ -2413,7 +2492,7 @@ function ModalGol(props: {
                 <div className="mt-1 text-right">
                   <button onClick={() => setAsistSinFlecha(true)}
                     className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-sm font-semibold">
-                    {t("mg_sin_flecha")}
+                    {ic(t("mg_sin_flecha"))}
                   </button>
                 </div>
               </>
@@ -2421,14 +2500,14 @@ function ModalGol(props: {
               <div className="flex items-center justify-between gap-3 rounded-lg bg-zinc-800 px-3 py-2">
                 {flechaAsist ? (
                   <span className="text-xl font-bold tabular-nums text-yellow-300" data-asistencia-flecha>
-                    {t("mg_asist_resumen", zonasDeFlecha(flechaAsist))}
+                    {ic(t("mg_asist_resumen", zonasDeFlecha(flechaAsist)))}
                   </span>
                 ) : (
-                  <span className="text-base text-zinc-300">{t("mg_asist_sin_flecha")}</span>
+                  <span className="text-base text-zinc-300">{ic(t("mg_asist_sin_flecha"))}</span>
                 )}
                 <button onClick={() => { setFlechaAsist(null); setAsistSinFlecha(false); }}
                   className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-sm font-semibold">
-                  {t("ed_cambiar")}
+                  {ic(t("ed_cambiar"))}
                 </button>
               </div>
             )}
@@ -2444,7 +2523,7 @@ function ModalGol(props: {
             nombreAtacante={equipo === "INTER" ? NOMBRE_CORTO_TC : props.rivalNombre} />
           <div className="mt-1 text-right">
             <button onClick={() => setZonaCampo("__skip__")}
-              className="px-3 py-1 bg-zinc-700 rounded text-xs">{t("saltar_zona_campo_corto")}</button>
+              className="px-3 py-1 bg-zinc-700 rounded text-xs">{ic(t("saltar_zona_campo_corto"))}</button>
           </div>
         </Paso>
       )}
@@ -2484,6 +2563,7 @@ function ModalDisparoRival(props: {
   onCerrar: () => void;
   onConfirmar: (ev: any) => void;
 }) {
+  const ic = useIc();
   const [resultado, setResultado] = useState<ResultadoDisparo | null>(null);
   const [zonaCampo, setZonaCampo] = useState("");
   const [zonaPorteria, setZonaPorteria] = useState("");
@@ -2559,7 +2639,7 @@ function ModalDisparoRival(props: {
   return (
     <ModalShell titulo={t("mdr_titulo", { rival: props.rivalNombre })} onCerrar={props.onCerrar}>
       <p className="text-xs text-zinc-500 mb-2">
-        {t("mdr_intro")}
+        {ic(t("mdr_intro"))}
       </p>
 
       <Paso n={1} titulo={t("mdr_como_acabo")} activo={!resultado}>
@@ -2573,7 +2653,7 @@ function ModalDisparoRival(props: {
           ))}
         </div>
         <p className="text-[11px] text-zinc-500 mt-2">
-          {t("mdr_puerta_nota")}
+          {ic(t("mdr_puerta_nota"))}
         </p>
       </Paso>
 
@@ -2592,7 +2672,7 @@ function ModalDisparoRival(props: {
           <div className="mt-2 flex justify-end">
             <button onClick={() => setZonaCampo("__skip__")}
               className="px-3 py-1 bg-zinc-700 rounded text-xs">
-              {t("saltar_zona_campo")}
+              {ic(t("saltar_zona_campo"))}
             </button>
           </div>
         </Paso>
@@ -2606,12 +2686,12 @@ function ModalDisparoRival(props: {
           onAtras={() => setZonaCampo("")}
           extra={
             <div className="mt-3">
-              <h4 className="text-xs text-zinc-400 mb-1">{t("mdr_portero_paro")}</h4>
+              <h4 className="text-xs text-zinc-400 mb-1">{ic(t("mdr_portero_paro"))}</h4>
               <ChipsJugador
                 opciones={porterosPista}
                 seleccionado={porteroNuestro}
                 onSelect={setPorteroNuestro} />
-              <p className="text-xs text-zinc-500 mt-2 italic">{t("mdr_guarda_auto_porteria")}</p>
+              <p className="text-xs text-zinc-500 mt-2 italic">{ic(t("mdr_guarda_auto_porteria"))}</p>
             </div>
           }
         />
@@ -2619,7 +2699,7 @@ function ModalDisparoRival(props: {
 
       {!props.directo && resultado && resultado !== "PUERTA" && !zonaCampo && (
         <p className="text-xs text-zinc-500 mt-2 italic">
-          {t("mdr_guarda_auto_campo")}
+          {ic(t("mdr_guarda_auto_campo"))}
         </p>
       )}
     </ModalShell>
@@ -2643,6 +2723,7 @@ function ModalPenalti(props: {
   onCerrar: () => void;
   onConfirmar: (ev: any) => void;
 }) {
+  const ic = useIc();
   const [tipo, setTipo] = useState<TipoLanzamiento | null>(null);
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
   const [tirador, setTirador] = useState("");
@@ -2673,15 +2754,15 @@ function ModalPenalti(props: {
         <div className="grid grid-cols-3 gap-2">
           <button onClick={() => setTipo("penalti")}
             className={`py-3 rounded font-bold ${tipo === "penalti" ? "bg-pink-700" : "bg-zinc-800"}`}>
-            {t("mp_penalti_6m")}</button>
+            {ic(t("mp_penalti_6m"))}</button>
           <button onClick={() => setTipo("diezm")}
             className={`py-3 rounded font-bold ${tipo === "diezm" ? "bg-pink-700" : "bg-zinc-800"}`}>
-            {t("mp_10m")}</button>
+            {ic(t("mp_10m"))}</button>
           <button onClick={() => setTipo("fsb")}
             className={`py-3 rounded font-bold ${tipo === "fsb" ? "bg-pink-700" : "bg-zinc-800"}`}>
-            {t("mp_fsb")}</button>
+            {ic(t("mp_fsb"))}</button>
         </div>
-        <p className="text-xs text-zinc-500 mt-2">{t("mp_fsb_nota")}</p>
+        <p className="text-xs text-zinc-500 mt-2">{ic(t("mp_fsb_nota"))}</p>
       </Paso>
 
       {tipo && (
@@ -2689,10 +2770,10 @@ function ModalPenalti(props: {
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => setEquipo("INTER")}
               className={`py-3 rounded font-bold ${equipo === "INTER" ? "bg-emerald-700" : "bg-zinc-800"}`}>
-              {t("mp_a_favor", { equipo: NOMBRE_CORTO_TC })}</button>
+              {ic(t("mp_a_favor", { equipo: NOMBRE_CORTO_TC }))}</button>
             <button onClick={() => setEquipo("RIVAL")}
               className={`py-3 rounded font-bold ${equipo === "RIVAL" ? "bg-red-700" : "bg-zinc-800"}`}>
-              {t("mp_en_contra", { rival: props.rivalNombre })}</button>
+              {ic(t("mp_en_contra", { rival: props.rivalNombre }))}</button>
           </div>
         </Paso>
       )}
@@ -2780,6 +2861,7 @@ function ModalAccionIndividual(props: {
    *  hay un gol nuestro cerca antes de guardarlo. */
   onPaseGol: (flecha: Flecha) => void;
 }) {
+  const ic = useIc();
   const [paso, setPaso] = useState<"menu" | "accionZona" | "disparoTipo" | "disparoCampo" | "disparoPorteria" | "videoMenu" | "videoResultado" | "videoConexion" | "paseGol">("menu");
   // Pase de gol: la flecha que se está dibujando y a qué pantalla vuelve «Atrás»
   // (se llega desde el menú del jugador y desde el de stats de vídeo).
@@ -2898,10 +2980,10 @@ function ModalAccionIndividual(props: {
             con su orden (el que menos lleva sentado, primero). */}
         <div className="mt-4 pt-3 border-t border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-300 mb-2">
-            {t("mai_cambio_rapido")}
+            {ic(t("mai_cambio_rapido"))}
           </h3>
           {props.banquillo.length === 0 ? (
-            <p className="text-xs text-zinc-500">{t("mai_no_banquillo")}</p>
+            <p className="text-xs text-zinc-500">{ic(t("mai_no_banquillo"))}</p>
           ) : (
             <div className="grid grid-cols-4 gap-2">
               {porDorsal(props.banquillo).map((n) => {
@@ -2914,14 +2996,14 @@ function ModalAccionIndividual(props: {
                       esPor ? "bg-zinc-800 border-zinc-500" : "bg-zinc-700 border-zinc-500 hover:bg-zinc-600"
                     }`}>
                     <span className="text-3xl font-mono tabular-nums leading-none">{dorsal || "·"}</span>
-                    <span className="text-lg leading-tight text-left">{n}{esPor ? " 🥅" : ""}</span>
+                    <span className="text-lg leading-tight text-left">{n}{esPor ? ic(" 🥅") : ""}</span>
                   </button>
                 );
               })}
             </div>
           )}
           <p className="text-[11px] text-zinc-500 mt-2">
-            {t("mai_sale_pre")}<strong>{props.jugador}</strong>{t("mai_sale_post")}
+            {ic(t("mai_sale_pre"))}<strong>{props.jugador}</strong>{ic(t("mai_sale_post"))}
           </p>
         </div>
       </ModalShell>
@@ -2939,10 +3021,10 @@ function ModalAccionIndividual(props: {
             nombreAtacante={NOMBRE_CORTO_TC} />
           <div className="mt-2 flex justify-between">
             <button onClick={() => { setAccionPendiente(null); setReceptorPendiente(""); setPaso("menu"); }}
-              className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+              className="px-4 py-2 bg-zinc-700 rounded">{ic(t("atras"))}</button>
             <button onClick={() => props.onAccionConZona(accionPendiente, undefined, receptorPendiente || undefined)}
               className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs">
-              {t("saltar_zona_guardar")}
+              {ic(t("saltar_zona_guardar"))}
             </button>
           </div>
         </Paso>
@@ -2969,7 +3051,7 @@ function ModalAccionIndividual(props: {
             ))}
           </div>
         </Paso>
-        <button onClick={() => setPaso("menu")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+        <button onClick={() => setPaso("menu")} className="px-4 py-2 bg-zinc-700 rounded">{ic(t("atras"))}</button>
       </ModalShell>
     );
   }
@@ -2986,11 +3068,11 @@ function ModalAccionIndividual(props: {
           direccion={direccionAtaque(props.parteActual, "INTER", props.cfg)}
           nombreAtacante={NOMBRE_CORTO_TC} />
           <div className="mt-2 flex justify-between">
-            <button onClick={() => setPaso("disparoTipo")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+            <button onClick={() => setPaso("disparoTipo")} className="px-4 py-2 bg-zinc-700 rounded">{ic(t("atras"))}</button>
             <button onClick={() => {
               if (disparoRes === "PUERTA") setPaso("disparoPorteria");
               else props.onDisparo({ resultado: disparoRes, zonaCampo: "", zonaPorteria: "" });
-            }} className="px-4 py-2 bg-zinc-700 rounded text-xs">{t("saltar_zona_campo_corto")}</button>
+            }} className="px-4 py-2 bg-zinc-700 rounded text-xs">{ic(t("saltar_zona_campo_corto"))}</button>
           </div>
         </Paso>
       </ModalShell>
@@ -3005,10 +3087,10 @@ function ModalAccionIndividual(props: {
             props.onDisparo({ resultado: "PUERTA", zonaCampo, zonaPorteria: z })
           } />
           <div className="mt-2 flex justify-between">
-            <button onClick={() => setPaso("disparoCampo")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+            <button onClick={() => setPaso("disparoCampo")} className="px-4 py-2 bg-zinc-700 rounded">{ic(t("atras"))}</button>
             <button onClick={() =>
               props.onDisparo({ resultado: "PUERTA", zonaCampo, zonaPorteria: "" })
-            } className="px-4 py-2 bg-zinc-700 rounded text-xs">{t("saltar_zona_porteria")}</button>
+            } className="px-4 py-2 bg-zinc-700 rounded text-xs">{ic(t("saltar_zona_porteria"))}</button>
           </div>
         </Paso>
       </ModalShell>
@@ -3019,7 +3101,7 @@ function ModalAccionIndividual(props: {
   if (paso === "videoMenu") {
     return (
       <ModalShell titulo={`📹 ${props.jugador}`} onCerrar={props.onCerrar}>
-        <p className="text-sm text-zinc-400 mb-3">{t("vid_menu_intro")}</p>
+        <p className="text-sm text-zinc-400 mb-3">{ic(t("vid_menu_intro"))}</p>
         <div className="grid grid-cols-2 gap-2 mb-3">
           <BotonGrande label={GRUPOS.duelC.label} onClick={() => { setVideoGrupo("duelC"); setPaso("videoResultado"); }} />
           <BotonGrande label={GRUPOS.duelP.label} onClick={() => { setVideoGrupo("duelP"); setPaso("videoResultado"); }} />
@@ -3040,7 +3122,7 @@ function ModalAccionIndividual(props: {
         </div>
         {esPortero && (
           <>
-            <h3 className="text-sm font-semibold text-sky-300 mb-2">{t("vid_portero")}</h3>
+            <h3 className="text-sm font-semibold text-sky-300 mb-2">{ic(t("vid_portero"))}</h3>
             <div className="grid grid-cols-2 gap-2 mb-3">
               <BotonGrande label={GRUPOS.saque.label} color="bg-sky-900" onClick={() => { setVideoGrupo("saque"); setPaso("videoResultado"); }} />
               <BotonGrande label={GRUPOS.pase.label} color="bg-sky-900" onClick={() => { setVideoGrupo("pase"); setPaso("videoResultado"); }} />
@@ -3049,7 +3131,7 @@ function ModalAccionIndividual(props: {
             </div>
           </>
         )}
-        <button onClick={() => setPaso("menu")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+        <button onClick={() => setPaso("menu")} className="px-4 py-2 bg-zinc-700 rounded">{ic(t("atras"))}</button>
       </ModalShell>
     );
   }
@@ -3066,7 +3148,7 @@ function ModalAccionIndividual(props: {
             ))}
           </div>
         </Paso>
-        <button onClick={() => setPaso("videoMenu")} className="px-4 py-2 bg-zinc-700 rounded">{t("atras")}</button>
+        <button onClick={() => setPaso("videoMenu")} className="px-4 py-2 bg-zinc-700 rounded">{ic(t("atras"))}</button>
       </ModalShell>
     );
   }
@@ -3083,12 +3165,12 @@ function ModalAccionIndividual(props: {
           avisoArriba={t("pg_aviso")} />
         <div className="mt-3 flex justify-between gap-3">
           <button onClick={() => { setFlechaPase(null); setPaso(vueltaPaseGol); }}
-            className="px-4 py-3 bg-zinc-700 rounded-lg">{t("atras")}</button>
+            className="px-4 py-3 bg-zinc-700 rounded-lg">{ic(t("atras"))}</button>
           <button disabled={!flechaPase}
             onClick={() => { if (flechaPase) props.onPaseGol(flechaPase); }}
             className="px-6 py-3 rounded-lg text-lg font-bold bg-emerald-700 hover:bg-emerald-600
                        disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed">
-            {t("pg_guardar")}
+            {ic(t("pg_guardar"))}
           </button>
         </div>
       </ModalShell>
@@ -3104,7 +3186,7 @@ function ModalAccionIndividual(props: {
             seleccionado={receptorPendiente}
             onSelect={(n) => irAZona("conexPivot", n)} />
         </Paso>
-        <button onClick={() => setPaso("videoMenu")} className="px-4 py-2 bg-zinc-700 rounded mt-3">{t("atras")}</button>
+        <button onClick={() => setPaso("videoMenu")} className="px-4 py-2 bg-zinc-700 rounded mt-3">{ic(t("atras"))}</button>
       </ModalShell>
     );
   }
@@ -3113,10 +3195,11 @@ function ModalAccionIndividual(props: {
 }
 
 function BotonGrande(props: { label: string; subtitle?: string; onClick: () => void; color?: string }) {
+  const ic = useIc();
   return (
     <button onClick={props.onClick}
       className={`${props.color || "bg-zinc-700"} hover:opacity-90 py-6 rounded-xl font-bold flex flex-col items-center`}>
-      <span className="text-lg">{props.label}</span>
+      <span className="text-lg">{ic(props.label)}</span>
       {props.subtitle && <span className="text-sm opacity-70">{props.subtitle}</span>}
     </button>
   );
@@ -3130,6 +3213,7 @@ function ModalTiempos(props: {
   segundosTurnoActual: (n: string) => number;
   onCerrar: () => void;
 }) {
+  const ic = useIc();
   const { partido, enPista } = props;
   if (!partido.config) return null;
   const partes: ParteId[] = ["1T", "2T", "PR1", "PR2"];
@@ -3172,8 +3256,8 @@ function ModalTiempos(props: {
           </colgroup>
           <thead className="text-sm text-zinc-400 border-b border-zinc-800">
             <tr>
-              <th className="text-left py-2 px-2">{t("mt_jugador")}</th>
-              <th className="text-right px-2">{t("mt_total")}</th>
+              <th className="text-left py-2 px-2">{ic(t("mt_jugador"))}</th>
+              <th className="text-right px-2">{ic(t("mt_total"))}</th>
               {partesActivas.map((p) => (
                 <th key={p} className="text-right px-2">{labelParte(p)}</th>
               ))}
@@ -3187,7 +3271,7 @@ function ModalTiempos(props: {
                   <span className={`${f.esPortero ? "text-yellow-400" : ""} font-bold`}>
                     {f.nombre}
                   </span>
-                  {f.enPista && <span className="ml-2 text-[10px] bg-green-700 px-1.5 py-0.5 rounded align-middle">{t("mt_en_pista")}</span>}
+                  {f.enPista && <span className="ml-2 text-[10px] bg-green-700 px-1.5 py-0.5 rounded align-middle">{ic(t("mt_en_pista"))}</span>}
                 </td>
                 <td className="text-right font-mono tabular-nums px-2 font-bold text-2xl">
                   {formatMMSS(f.total)}
@@ -3203,7 +3287,7 @@ function ModalTiempos(props: {
           </tbody>
           <tfoot className="text-xs text-zinc-500 border-t border-zinc-800">
             <tr>
-              <td className="pt-2 px-2 italic truncate">{t("mt_total_minutos")}</td>
+              <td className="pt-2 px-2 italic truncate">{ic(t("mt_total_minutos"))}</td>
               <td className="text-right font-mono tabular-nums px-2 font-bold pt-2 text-base">
                 {formatMMSS(filas.reduce((s, f) => s + f.total, 0))}
               </td>
@@ -3218,7 +3302,7 @@ function ModalTiempos(props: {
         </table>
       </div>
       <p className="text-xs text-zinc-500 mt-3">
-        {t("mt_nota")}
+        {ic(t("mt_nota"))}
       </p>
     </ModalShell>
   );
@@ -3239,6 +3323,7 @@ function ModalTanda(props: {
   onApuntar: (tiro: Omit<TiroTanda, "id" | "orden" | "timestampReal">) => void;
   onDeshacer: () => void;
 }) {
+  const ic = useIc();
   // Estado del formulario para el siguiente tiro
   const [equipo, setEquipo] = useState<"INTER" | "RIVAL" | null>(null);
   const [tirador, setTirador] = useState("");
@@ -3269,8 +3354,8 @@ function ModalTanda(props: {
 
       {/* Historial de tiros */}
       <div className="mb-4 bg-zinc-950 rounded p-3 max-h-48 overflow-y-auto">
-        <h3 className="text-sm text-zinc-400 mb-2">{t("mta_tiros_realizados", { n: props.tanda.tiros.length })}</h3>
-        {props.tanda.tiros.length === 0 && <p className="text-xs text-zinc-600">{t("mta_ninguno")}</p>}
+        <h3 className="text-sm text-zinc-400 mb-2">{ic(t("mta_tiros_realizados", { n: props.tanda.tiros.length }))}</h3>
+        {props.tanda.tiros.length === 0 && <p className="text-xs text-zinc-600">{ic(t("mta_ninguno"))}</p>}
         <ol className="text-sm space-y-1">
           {props.tanda.tiros.map((ti) => (
             <li key={ti.id} className="flex justify-between items-center">
@@ -3291,14 +3376,14 @@ function ModalTanda(props: {
         {props.tanda.tiros.length > 0 && (
           <button onClick={props.onDeshacer}
             className="mt-2 text-xs px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded">
-            {t("mta_deshacer")}
+            {ic(t("mta_deshacer"))}
           </button>
         )}
       </div>
 
       {/* Form: siguiente tiro */}
       <div className="border-t border-zinc-800 pt-3">
-        <h3 className="text-sm font-bold text-zinc-300 mb-2">{t("mta_apuntar_tiro", { n: props.tanda.tiros.length + 1 })}</h3>
+        <h3 className="text-sm font-bold text-zinc-300 mb-2">{ic(t("mta_apuntar_tiro", { n: props.tanda.tiros.length + 1 }))}</h3>
 
         <Paso n={1} titulo={t("mta_quien_lanza")} activo={!equipo}>
           <div className="grid grid-cols-2 gap-2">
@@ -3347,7 +3432,7 @@ function ModalTanda(props: {
             ) : null}
             <div className="mt-2 flex justify-end gap-2">
               <button onClick={reset}
-                className="px-3 py-1 bg-zinc-700 rounded text-xs">{t("reiniciar")}</button>
+                className="px-3 py-1 bg-zinc-700 rounded text-xs">{ic(t("reiniciar"))}</button>
               <button onClick={() => aplicar(undefined)}
                 className="px-4 py-2 bg-green-700 hover:bg-green-600 rounded font-bold">
                 {resultado === "FUERA" ? t("guardar") : t("saltar_zona_guardar")}
@@ -3359,7 +3444,7 @@ function ModalTanda(props: {
 
       <div className="mt-4 flex justify-end gap-2 border-t border-zinc-800 pt-3">
         <button onClick={props.onCerrar}
-          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded">{t("mta_cerrar")}</button>
+          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded">{ic(t("mta_cerrar"))}</button>
       </div>
     </ModalShell>
   );
@@ -3385,6 +3470,7 @@ function ModalCambioParte(props: {
   onIrATanda: () => void;
   onFinalizar: () => void;
 }) {
+  const ic = useIc();
   const { partido, desde } = props;
   const cfg = partido.config!;
   const [minProrroga, setMinProrroga] = useState(5);
@@ -3466,7 +3552,7 @@ function ModalCambioParte(props: {
         </div>
         {esFinalParte && empate && (
           <div className="text-yellow-400 text-sm mt-1">
-            {t("mcp_empate")}
+            {ic(t("mcp_empate"))}
           </div>
         )}
       </div>
@@ -3487,7 +3573,7 @@ function ModalCambioParte(props: {
           de nombre estrecha para que los tiempos queden pegados y grandes. */}
       <div className="bg-zinc-900 rounded-lg p-3 mb-3">
         <h3 className="text-sm font-bold text-zinc-400 mb-2 uppercase tracking-wide">
-          {t("mcp_tiempos_jugador", { parte: labelParte(desde) })}
+          {ic(t("mcp_tiempos_jugador", { parte: labelParte(desde) }))}
         </h3>
         <table className="w-full table-fixed text-2xl">
           <colgroup>
@@ -3495,9 +3581,9 @@ function ModalCambioParte(props: {
           </colgroup>
           <thead className="text-sm text-zinc-500 border-b border-zinc-800">
             <tr>
-              <th className="text-left py-1 px-2">{t("mt_jugador")}</th>
+              <th className="text-left py-1 px-2">{ic(t("mt_jugador"))}</th>
               <th className="text-right px-2">{labelParte(desde)}</th>
-              <th className="text-right px-2">{t("mcp_total_partido")}</th>
+              <th className="text-right px-2">{ic(t("mcp_total_partido"))}</th>
               <th />
             </tr>
           </thead>
@@ -3505,7 +3591,7 @@ function ModalCambioParte(props: {
             {filasTiempos.map((f) => (
               <tr key={f.nombre} className="border-b border-zinc-900">
                 <td className={`py-1 px-2 truncate ${f.esPortero ? "text-yellow-400" : ""} font-bold`}>
-                  {f.nombre}{f.esPortero ? " 🥅" : ""}
+                  {f.nombre}{f.esPortero ? ic(" 🥅") : ""}
                 </td>
                 <td className="text-right font-mono tabular-nums px-2 font-bold text-3xl">{formatMMSS(f.totalParte)}</td>
                 <td className="text-right font-mono tabular-nums px-2 text-zinc-400">{formatMMSS(f.total)}</td>
@@ -3518,31 +3604,31 @@ function ModalCambioParte(props: {
 
       {/* DISPAROS — compacto (una línea por equipo) */}
       <div className="bg-zinc-900 rounded-lg p-3 mb-3">
-        <h3 className="text-sm font-bold text-zinc-400 mb-2 uppercase tracking-wide">{t("mcp_disparos")}</h3>
+        <h3 className="text-sm font-bold text-zinc-400 mb-2 uppercase tracking-wide">{ic(t("mcp_disparos"))}</h3>
         <div className="grid grid-cols-2 gap-2">
           {/* INTER */}
           <div className="bg-emerald-900/40 rounded-lg px-3 py-2 border border-emerald-700/40">
             <div className="flex items-baseline justify-between mb-1">
               <span className="text-sm text-emerald-300 font-bold uppercase tracking-wide">{CLIENTE.nombreCorto}</span>
               <span><span className="text-2xl font-bold text-white tabular-nums">{totalDispINTER}</span>
-                <span className="text-xs text-emerald-300 ml-1">{t("mcp_total")}</span></span>
+                <span className="text-xs text-emerald-300 ml-1">{ic(t("mcp_total"))}</span></span>
             </div>
             <div className="grid grid-cols-4 gap-1 text-center">
               <div className="bg-emerald-800/40 rounded py-0.5">
                 <div className="text-base font-bold tabular-nums">{tot.dpp}</div>
-                <div className="text-[10px] text-emerald-200 uppercase">{t("mcp_puerta")}</div>
+                <div className="text-[10px] text-emerald-200 uppercase">{ic(t("mcp_puerta"))}</div>
               </div>
               <div className="bg-zinc-800/60 rounded py-0.5">
                 <div className="text-base font-bold tabular-nums">{tot.dpa}</div>
-                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_palo")}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{ic(t("mcp_palo"))}</div>
               </div>
               <div className="bg-zinc-800/60 rounded py-0.5">
                 <div className="text-base font-bold tabular-nums">{tot.dpf}</div>
-                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_fuera")}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{ic(t("mcp_fuera"))}</div>
               </div>
               <div className="bg-zinc-800/60 rounded py-0.5">
                 <div className="text-base font-bold tabular-nums">{tot.dpb}</div>
-                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_bloq")}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{ic(t("mcp_bloq"))}</div>
               </div>
             </div>
           </div>
@@ -3551,24 +3637,24 @@ function ModalCambioParte(props: {
             <div className="flex items-baseline justify-between mb-1">
               <span className="text-sm text-red-300 font-bold uppercase tracking-wide truncate">{cfg.rival}</span>
               <span><span className="text-2xl font-bold text-white tabular-nums">{totalDispRIVAL}</span>
-                <span className="text-xs text-red-300 ml-1">{t("mcp_total")}</span></span>
+                <span className="text-xs text-red-300 ml-1">{ic(t("mcp_total"))}</span></span>
             </div>
             <div className="grid grid-cols-4 gap-1 text-center">
               <div className="bg-red-800/40 rounded py-0.5">
                 <div className="text-base font-bold tabular-nums">{r.puerta}</div>
-                <div className="text-[10px] text-red-200 uppercase">{t("mcp_puerta")}</div>
+                <div className="text-[10px] text-red-200 uppercase">{ic(t("mcp_puerta"))}</div>
               </div>
               <div className="bg-zinc-800/60 rounded py-0.5">
                 <div className="text-base font-bold tabular-nums">{r.palo}</div>
-                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_palo")}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{ic(t("mcp_palo"))}</div>
               </div>
               <div className="bg-zinc-800/60 rounded py-0.5">
                 <div className="text-base font-bold tabular-nums">{r.fuera}</div>
-                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_fuera")}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{ic(t("mcp_fuera"))}</div>
               </div>
               <div className="bg-zinc-800/60 rounded py-0.5">
                 <div className="text-base font-bold tabular-nums">{r.bloqueado}</div>
-                <div className="text-[10px] text-zinc-400 uppercase">{t("mcp_bloq")}</div>
+                <div className="text-[10px] text-zinc-400 uppercase">{ic(t("mcp_bloq"))}</div>
               </div>
             </div>
           </div>
@@ -3578,21 +3664,21 @@ function ModalCambioParte(props: {
       {/* OTROS STATS DEL EQUIPO — Pérdidas / Recuperaciones / Balones divididos (compacto) */}
       <div className="grid grid-cols-3 gap-2 text-sm mb-3">
         <div className="bg-red-900/20 rounded-lg p-2 border border-red-700/20">
-          <div className="text-red-300 font-bold mb-1">{t("mcp_perdidas")}</div>
-          <div className="flex justify-between"><span>{t("mcp_forzada")}</span><strong>{tot.pf}</strong></div>
-          <div className="flex justify-between"><span>{t("mcp_no_forzada")}</span><strong>{tot.pnf}</strong></div>
-          <div className="flex justify-between text-red-300/80"><span>{t("res_de_equipo")}</span><strong>{perdEquipo}</strong></div>
+          <div className="text-red-300 font-bold mb-1">{ic(t("mcp_perdidas"))}</div>
+          <div className="flex justify-between"><span>{ic(t("mcp_forzada"))}</span><strong>{tot.pf}</strong></div>
+          <div className="flex justify-between"><span>{ic(t("mcp_no_forzada"))}</span><strong>{tot.pnf}</strong></div>
+          <div className="flex justify-between text-red-300/80"><span>{ic(t("res_de_equipo"))}</span><strong>{perdEquipo}</strong></div>
           <div className="border-t border-red-700/40 mt-1 pt-1 flex justify-between text-red-200">
-            <span>{t("mcp_total_lbl")}</span><strong>{tot.pf + tot.pnf + perdEquipo}</strong>
+            <span>{ic(t("mcp_total_lbl"))}</span><strong>{tot.pf + tot.pnf + perdEquipo}</strong>
           </div>
         </div>
         <div className="bg-green-900/20 rounded-lg p-2 border border-green-700/20">
-          <div className="text-green-300 font-bold mb-1">{t("mcp_recuperaciones")}</div>
-          <div className="flex justify-between"><span>{t("mcp_robos")}</span><strong>{tot.robos}</strong></div>
-          <div className="flex justify-between"><span>{t("mcp_cortes")}</span><strong>{tot.cortes}</strong></div>
-          <div className="flex justify-between text-green-300/80"><span>{t("res_de_equipo")}</span><strong>{recEquipo}</strong></div>
+          <div className="text-green-300 font-bold mb-1">{ic(t("mcp_recuperaciones"))}</div>
+          <div className="flex justify-between"><span>{ic(t("mcp_robos"))}</span><strong>{tot.robos}</strong></div>
+          <div className="flex justify-between"><span>{ic(t("mcp_cortes"))}</span><strong>{tot.cortes}</strong></div>
+          <div className="flex justify-between text-green-300/80"><span>{ic(t("res_de_equipo"))}</span><strong>{recEquipo}</strong></div>
           <div className="border-t border-green-700/40 mt-1 pt-1 flex justify-between text-green-200">
-            <span>{t("mcp_total_lbl")}</span><strong>{tot.robos + tot.cortes + recEquipo}</strong>
+            <span>{ic(t("mcp_total_lbl"))}</span><strong>{tot.robos + tot.cortes + recEquipo}</strong>
           </div>
         </div>
         {/* En DIRECTO no se cogen balones divididos, así que ese cuadro salía
@@ -3600,20 +3686,20 @@ function ModalCambioParte(props: {
             rival de esta parte, que sí se apuntan (Arkaitz 22/8). */}
         {esDirectoMCP ? (
           <div className="bg-purple-900/20 rounded-lg p-2 border border-purple-700/20">
-            <div className="text-purple-300 font-bold mb-1">{t("mcp_incorporaciones")}</div>
-            <div className="flex justify-between"><span>{t("mcp_inc_con")}</span><strong>{incParte.con}</strong></div>
-            <div className="flex justify-between"><span>{t("mcp_inc_sin")}</span><strong>{incParte.sin}</strong></div>
+            <div className="text-purple-300 font-bold mb-1">{ic(t("mcp_incorporaciones"))}</div>
+            <div className="flex justify-between"><span>{ic(t("mcp_inc_con"))}</span><strong>{incParte.con}</strong></div>
+            <div className="flex justify-between"><span>{ic(t("mcp_inc_sin"))}</span><strong>{incParte.sin}</strong></div>
             <div className="border-t border-purple-700/40 mt-1 pt-1 flex justify-between text-purple-200">
-              <span>{t("mcp_total_lbl")}</span><strong>{incParte.con + incParte.sin}</strong>
+              <span>{ic(t("mcp_total_lbl"))}</span><strong>{incParte.con + incParte.sin}</strong>
             </div>
           </div>
         ) : (
           <div className="bg-purple-900/20 rounded-lg p-2 border border-purple-700/20">
-            <div className="text-purple-300 font-bold mb-1">{t("mcp_divididos")}</div>
-            <div className="flex justify-between"><span>{t("mcp_ganados")}</span><strong>{tot.bdg}</strong></div>
-            <div className="flex justify-between"><span>{t("mcp_no_ganados")}</span><strong>{tot.bdp}</strong></div>
+            <div className="text-purple-300 font-bold mb-1">{ic(t("mcp_divididos"))}</div>
+            <div className="flex justify-between"><span>{ic(t("mcp_ganados"))}</span><strong>{tot.bdg}</strong></div>
+            <div className="flex justify-between"><span>{ic(t("mcp_no_ganados"))}</span><strong>{tot.bdp}</strong></div>
             <div className="border-t border-purple-700/40 mt-1 pt-1 flex justify-between text-purple-200">
-              <span>{t("mcp_ratio")}</span>
+              <span>{ic(t("mcp_ratio"))}</span>
               <strong>{(tot.bdg + tot.bdp) > 0
                 ? `${Math.round(tot.bdg / (tot.bdg + tot.bdp) * 100)}%`
                 : "—"}</strong>
@@ -3624,16 +3710,16 @@ function ModalCambioParte(props: {
 
       {/* INDIVIDUAL — solo top scorers de cada categoría para no saturar */}
       <div className="bg-zinc-900 rounded-lg p-4 mb-4">
-        <h3 className="text-base font-bold text-zinc-300 mb-3">{t("mcp_acciones_indiv")}</h3>
+        <h3 className="text-base font-bold text-zinc-300 mb-3">{ic(t("mcp_acciones_indiv"))}</h3>
         <div className="max-h-72 overflow-y-auto">
           <table className="w-full text-sm">
             <thead className="text-xs text-zinc-500 border-b border-zinc-800">
               <tr>
-                <th className="text-left py-2 px-2">{t("mt_jugador")}</th>
-                <th className="text-right px-2 text-emerald-300">{t("mcp_disp")}</th>
-                <th className="text-right px-2 text-red-300">{t("mcp_perd")}</th>
-                <th className="text-right px-2 text-green-300">{t("mcp_recup")}</th>
-                <th className="text-right px-2 text-purple-300">{t("mcp_divid")}</th>
+                <th className="text-left py-2 px-2">{ic(t("mt_jugador"))}</th>
+                <th className="text-right px-2 text-emerald-300">{ic(t("mcp_disp"))}</th>
+                <th className="text-right px-2 text-red-300">{ic(t("mcp_perd"))}</th>
+                <th className="text-right px-2 text-green-300">{ic(t("mcp_recup"))}</th>
+                <th className="text-right px-2 text-purple-300">{ic(t("mcp_divid"))}</th>
               </tr>
             </thead>
             <tbody>
@@ -3673,20 +3759,20 @@ function ModalCambioParte(props: {
         {/* 2T → tres opciones (prórroga / penaltis / finalizar) */}
         {esFinal2T && (
           <div className="space-y-3">
-            <h3 className="text-base font-bold text-zinc-300">{t("mcp_como_seguimos")}</h3>
+            <h3 className="text-base font-bold text-zinc-300">{ic(t("mcp_como_seguimos"))}</h3>
 
             {/* Prórroga */}
             <div className="bg-zinc-800 rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
-                <label className="text-base font-semibold">{t("mcp_hay_prorroga")}</label>
+                <label className="text-base font-semibold">{ic(t("mcp_hay_prorroga"))}</label>
                 <input type="number" min={1} max={20} value={minProrroga}
                   onChange={(e) => setMinProrroga(Number(e.target.value) || 5)}
                   className="w-16 bg-zinc-950 rounded px-2 py-1 text-center text-base" />
-                <span className="text-base">{t("mcp_min_cada_parte")}</span>
+                <span className="text-base">{ic(t("mcp_min_cada_parte"))}</span>
               </div>
               <button onClick={() => props.onConfigurarProrroga(minProrroga)}
                 className="w-full py-4 bg-purple-700 hover:bg-purple-600 rounded-lg text-lg font-bold">
-                {t("mcp_empezar_prorroga", { a: minProrroga, b: minProrroga })}
+                {ic(t("mcp_empezar_prorroga", { a: minProrroga, b: minProrroga }))}
               </button>
             </div>
 
@@ -3694,14 +3780,14 @@ function ModalCambioParte(props: {
             {cfg.permiteTanda && (
               <button onClick={props.onIrATanda}
                 className="w-full py-4 bg-pink-700 hover:bg-pink-600 rounded-lg text-lg font-bold">
-                {t("mcp_directo_tanda")}
+                {ic(t("mcp_directo_tanda"))}
               </button>
             )}
 
             {/* Finalizar */}
             <button onClick={props.onFinalizar}
               className="w-full py-4 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-lg font-bold">
-              {t("mcp_finalizar_resumen")}
+              {ic(t("mcp_finalizar_resumen"))}
             </button>
           </div>
         )}
@@ -3709,16 +3795,16 @@ function ModalCambioParte(props: {
         {/* PR2 → tanda o finalizar */}
         {esFinalPR2 && (
           <div className="space-y-3">
-            <h3 className="text-base font-bold text-zinc-300">{t("mcp_como_seguimos")}</h3>
+            <h3 className="text-base font-bold text-zinc-300">{ic(t("mcp_como_seguimos"))}</h3>
             {cfg.permiteTanda && (
               <button onClick={props.onIrATanda}
                 className="w-full py-4 bg-pink-700 hover:bg-pink-600 rounded-lg text-lg font-bold">
-                {t("mcp_tanda")}
+                {ic(t("mcp_tanda"))}
               </button>
             )}
             <button onClick={props.onFinalizar}
               className="w-full py-4 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-lg font-bold">
-              {t("mcp_finalizar_resumen")}
+              {ic(t("mcp_finalizar_resumen"))}
             </button>
           </div>
         )}
