@@ -1,2 +1,2 @@
-:HL["/pulso/crono-demo/_next/static/chunks/06ncehvt1z.dw.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"xp9O7bNFOl23SH25HY20I"}
+:HL["/pulso/crono-demo/_next/static/chunks/05rjgrp2bsjsq.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"6cEQ4_EizVsxYKgrq_jMF"}
