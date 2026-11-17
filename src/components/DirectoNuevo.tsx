@@ -11,7 +11,7 @@
  *
  * Estilos en app/tema-nuevo.css (clases pz-*).
  */
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { formatMMSS, formatMSS } from "@/lib/utils";
 
@@ -47,7 +47,134 @@ export const Ico = {
   flechaDer: (p: IcoProps) => <Svg {...p}><path d="M5 12h14M13 6l6 6-6 6" /></Svg>,
   sol: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></Svg>,
   luna: (p: IcoProps) => <Svg {...p}><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></Svg>,
+  cambio: (p: IcoProps) => <Svg {...p}><path d="M17 3l4 4-4 4" /><path d="M21 7H8" /><path d="M7 21l-4-4 4-4" /><path d="M3 17h13" /></Svg>,
+  robo: (p: IcoProps) => <Svg {...p}><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 21v-5h5" /></Svg>,
+  tijeras: (p: IcoProps) => <Svg {...p}><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12" /></Svg>,
+  medalla: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="15" r="6" /><path d="M8.5 10L6 2h4l2 5 2-5h4l-2.5 8" /></Svg>,
+  silla: (p: IcoProps) => <Svg {...p}><path d="M6 3v18M6 12h12v9M6 12V3h10v9" /></Svg>,
+  persona: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></Svg>,
+  balanza: (p: IcoProps) => <Svg {...p}><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z" /></Svg>,
+  video: (p: IcoProps) => <Svg {...p}><rect x="2" y="6" width="14" height="12" rx="2" /><path d="M22 8l-6 4 6 4z" /></Svg>,
+  play: (p: IcoProps) => <Svg {...p}><path d="M6 4l14 8-14 8z" /></Svg>,
+  pausa: (p: IcoProps) => <Svg {...p}><path d="M7 4v16M17 4v16" /></Svg>,
+  circulo: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="12" r="7" fill="currentColor" /></Svg>,
+  info: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5h.01" /></Svg>,
+  mas: (p: IcoProps) => <Svg {...p}><path d="M12 5v14M5 12h14" /></Svg>,
 };
+
+// ──────────────── Aspecto nuevo en las VENTANAS (tanda 2 · 17/11/2026) ────────────────
+
+/** ¿Se está dibujando con el aspecto nuevo? Lo da app/partido/page.tsx a todas
+ *  las ventanas de apuntar. Sin proveedor (cualquier otra pantalla) = clásico. */
+export const NuevoCtx = createContext(false);
+export function useNuevo(): boolean { return useContext(NuevoCtx); }
+
+/** Emoji → icono SVG y su color (la familia de la acción). */
+type DefIcono = { ico: keyof typeof Ico | "amarilla" | "roja"; color?: string };
+const EMOJI_ICONO: Record<string, DefIcono> = {
+  "⚽": { ico: "gol", color: "var(--ok)" },
+  "🎯": { ico: "diana", color: "var(--mal)" },
+  "⚠": { ico: "aviso", color: "var(--aviso)" },
+  "🟨": { ico: "amarilla" },
+  "🟥": { ico: "roja" },
+  "🟩": { ico: "circulo", color: "var(--ok)" },
+  "🟢": { ico: "circulo", color: "var(--ok)" },
+  "🔴": { ico: "circulo", color: "var(--mal)" },
+  "🔵": { ico: "circulo", color: "var(--t0)" },
+  "🟣": { ico: "circulo", color: "var(--tm)" },
+  "🧤": { ico: "guante", color: "var(--aviso)" },
+  "🏁": { ico: "bandera" },
+  "🥇": { ico: "medalla", color: "var(--t2)" },
+  "🥈": { ico: "medalla", color: "var(--texto-3)" },
+  "📊": { ico: "barras" },
+  "🛑": { ico: "reloj", color: "var(--tm)" },
+  "⏱": { ico: "reloj" },
+  "🏠": { ico: "casa" },
+  "🧠": { ico: "persona" },
+  "👤": { ico: "persona" },
+  "🔁": { ico: "robo", color: "var(--ok)" },
+  "✂": { ico: "tijeras", color: "var(--ok)" },
+  "❌": { ico: "cruz", color: "var(--mal)" },
+  "✅": { ico: "check", color: "var(--ok)" },
+  "✔": { ico: "check", color: "var(--ok)" },
+  "➡": { ico: "flechaDer" },
+  "🔄": { ico: "cambio" },
+  "🪑": { ico: "silla" },
+  "⚖": { ico: "balanza" },
+  "📹": { ico: "video" },
+  "🎥": { ico: "video" },
+  "▶": { ico: "play" },
+  "⏸": { ico: "pausa" },
+  "⏭": { ico: "adelante" },
+  "⏮": { ico: "atras" },
+  "🥅": { ico: "porteria", color: "var(--balon)" },
+  "ℹ": { ico: "info" },
+  "➕": { ico: "mas" },
+};
+
+const RE_EMOJI = /(\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)/u;
+
+function dibujaIcono(def: DefIcono | undefined, key: number, pos = ""): ReactNode {
+  if (!def) return null;
+  if (def.ico === "amarilla" || def.ico === "roja") {
+    return <span key={key} className={`pz-ti-tarjeta ${def.ico === "amarilla" ? "am" : "ro"} ${pos}`} aria-hidden="true" />;
+  }
+  const C = Ico[def.ico];
+  return (
+    <span key={key} className={`pz-ti ${pos}`} style={def.color ? { color: def.color } : undefined}>
+      <C className="pz-ico" />
+    </span>
+  );
+}
+
+/** El icono que corresponde al PRIMER emoji de un texto (para la cabecera de
+ *  una ventana), o null. */
+export function iconoDeTexto(txt: string): { nodo: ReactNode; color?: string } | null {
+  const m = txt.match(RE_EMOJI);
+  if (!m) return null;
+  const def = EMOJI_ICONO[m[1].replace(/\uFE0F/g, "")];
+  if (!def) return null;
+  const color = def.ico === "amarilla" ? "var(--amarilla)" : def.ico === "roja" ? "var(--roja)" : def.color;
+  return { nodo: dibujaIcono(def, 0), color };
+}
+
+/** Texto sin emojis (para títulos: el icono va aparte). */
+export function sinEmojis(txt: string): string {
+  return txt.split(RE_EMOJI).filter((_, i) => i % 2 === 0).join("").replace(/\s{2,}/g, " ").trim();
+}
+
+/** Cambia cada emoji del texto por su icono SVG. Sin emojis, devuelve el
+ *  MISMO texto (así se puede usar sin miedo en cualquier sitio). */
+export function conIconos(txt: string): ReactNode {
+  if (typeof txt !== "string" || !RE_EMOJI.test(txt)) return txt;
+  const trozos = txt.split(RE_EMOJI);
+  const out: ReactNode[] = [];
+  trozos.forEach((tr, i) => {
+    if (i % 2 === 1) {
+      // ¿Va al principio o al final del texto? Ahí no lleva margen por fuera.
+      const ini = trozos.slice(0, i).join("").trim() === "";
+      const fin = trozos.slice(i + 1).join("").trim() === "";
+      out.push(dibujaIcono(EMOJI_ICONO[tr.replace(/\uFE0F/g, "")], i,
+        `${ini ? "ini" : ""} ${fin ? "fin" : ""}`));
+    }
+    else {
+      // El hueco entre emoji y palabra lo pone el margen del icono.
+      let limpio = tr;
+      if (i > 0) limpio = limpio.replace(/^\s+/, "");
+      if (i < trozos.length - 1) limpio = limpio.replace(/\s+$/, "");
+      if (limpio) out.push(limpio);
+    }
+  });
+  return <span className="pz-conico">{out}</span>;
+}
+
+/** En una ventana: con el aspecto nuevo cambia emojis por iconos; con el
+ *  clásico devuelve el texto TAL CUAL (la pantalla queda idéntica). */
+export function useIc(): (txt: string) => ReactNode {
+  const nuevo = useNuevo();
+  return nuevo ? conIconos : identidad;
+}
+function identidad(txt: string): ReactNode { return txt; }
 
 /** Tarjetas de un jugador: amarilla(s) con el número si hay 2, y roja si está
  *  expulsado (roja directa o segunda amarilla). */
