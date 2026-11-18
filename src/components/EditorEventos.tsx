@@ -14,7 +14,7 @@
  * Nota minutos (opción D): editar sustituciones aún no recalcula los minutos
  * por jugador; se avisa en la UI. Esa pieza llega aparte.
  */
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import type { Partido, Evento, ParteId, Flecha } from "@/lib/db";
 import { direccionAtaque } from "@/lib/db";
 import { ROSTER, PORTEROS, NOMBRE_CORTO_TC } from "@/lib/clientes";
@@ -33,6 +33,7 @@ import {
   faltaFlechaAsistencia, flechaAsistenciaDe, pideFlechaAsistencia, recuentoFlechasAsistencia,
   sinFlechaAsistencia,
 } from "@/lib/asistencia";
+import { useIcPP, useTPP, prefijo, PostCtx } from "@/components/ResumenNuevo";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 const TIPOS: Evento["tipo"][] = [
@@ -110,12 +111,13 @@ function Campo2<T extends string>(p: {
 }
 
 function ZonaBtn(p: { label: string; valor?: string; onClick: () => void }) {
+  const T = useTPP();
   return (
     <div>
       <span className={lblCls}>{p.label}</span>
       <button onClick={p.onClick}
         className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg px-3 py-2 text-base text-left">
-        {p.valor || <span className="text-zinc-500">{t("ed_sin_zona")}</span>} <span className="text-emerald-400 text-sm">· {t("ed_cambiar")}</span>
+        {p.valor || <span className="text-zinc-500">{T("ed_sin_zona")}</span>} <span className="text-emerald-400 text-sm">· {T("ed_cambiar")}</span>
       </button>
     </div>
   );
@@ -125,6 +127,7 @@ function ZonaBtn(p: { label: string; valor?: string; onClick: () => void }) {
  *  de la zona) y «Flecha de la asistencia» en el gol (22/9/2026). Se marca en
  *  rojo si falta y sin ella no se puede guardar (el pase de gol). */
 function FlechaBtn(p: { etiqueta: string; flecha?: Flecha; falta: boolean; onClick: () => void }) {
+  const T = useTPP();
   const z = p.flecha && flechaSuficiente(p.flecha) ? zonasDeFlecha(p.flecha) : null;
   return (
     <div>
@@ -132,8 +135,8 @@ function FlechaBtn(p: { etiqueta: string; flecha?: Flecha; falta: boolean; onCli
       <button onClick={p.onClick}
         className={`w-full bg-zinc-800 hover:bg-zinc-700 border rounded-lg px-3 py-2 text-base text-left ${
           p.falta ? "border-red-500" : "border-zinc-700"}`}>
-        {z ? `${z.origen} → ${z.destino}` : <span className="text-zinc-500">{t("ed_sin_flecha")}</span>}
-        {" "}<span className="text-emerald-400 text-sm">· {t("ed_cambiar")}</span>
+        {z ? `${z.origen} → ${z.destino}` : <span className="text-zinc-500">{T("ed_sin_flecha")}</span>}
+        {" "}<span className="text-emerald-400 text-sm">· {T("ed_cambiar")}</span>
       </button>
     </div>
   );
@@ -157,6 +160,7 @@ function ModalFlechaAsistencia(p: {
   /** Solo si ya tenía flecha: quitarla. */
   onQuitar?: () => void;
 }) {
+  const T = useTPP();
   const [flecha, setFlecha] = useState<Flecha | null>(p.flechaInicial);
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
@@ -168,14 +172,14 @@ function ModalFlechaAsistencia(p: {
           nombreAtacante={NOMBRE_CORTO_TC} />
         <div className="flex gap-2 mt-3">
           <button onClick={p.onCancelar}
-            className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{t("ed_cancelar")}</button>
+            className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{T("ed_cancelar")}</button>
           {p.onQuitar && (
             <button onClick={p.onQuitar}
-              className="flex-1 py-3 bg-red-900/70 hover:bg-red-800 rounded-lg font-semibold">{t("ed_quitar_flecha")}</button>
+              className="flex-1 py-3 bg-red-900/70 hover:bg-red-800 rounded-lg font-semibold">{T("ed_quitar_flecha")}</button>
           )}
           <button disabled={!flecha} onClick={() => { if (flecha) p.onGuardar(flecha); }}
             className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg font-bold disabled:bg-zinc-800 disabled:text-zinc-500">
-            {t("ed_guardar")}
+            {T("ed_guardar")}
           </button>
         </div>
       </div>
@@ -192,6 +196,9 @@ export function EditorEventos(props: {
   recalcularMinutos: () => void;
   setMinutosJugador: (nombre: string, porParte: Record<ParteId, number>) => void;
 }) {
+  const T = useTPP();
+  const ic = useIcPP();
+  const nuevo = useContext(PostCtx);
   const { partido, partesJugadas } = props;
   const rival = partido.config?.rival ?? "RIVAL";
   const partes = partesJugadas.length ? partesJugadas : (["1T", "2T"] as ParteId[]);
@@ -347,11 +354,11 @@ export function EditorEventos(props: {
   return (
     <div className="space-y-3">
       <div className="bg-zinc-900 rounded-xl p-4">
-        <h3 className="text-lg font-bold mb-1">{t("ed_titulo")}</h3>
-        <p className="text-sm text-zinc-400">{t("ed_nota")}</p>
+        <h3 className="text-lg font-bold mb-1">{T("ed_titulo")}</h3>
+        <p className="text-sm text-zinc-400">{T("ed_nota")}</p>
         <button onClick={abrirNuevo}
           className="mt-3 px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg font-semibold">
-          {t("ed_anadir")}
+          {T("ed_anadir")}
         </button>
         {/* Asistencias sin flecha (solo en vídeo): cuántas quedan y, de un
             toque, la lista con solo esas. */}
@@ -361,9 +368,9 @@ export function EditorEventos(props: {
               ? "border-amber-700/60 bg-amber-950/40 text-amber-200"
               : "border-emerald-800/60 bg-emerald-950/40 text-emerald-300"}`}>
             <span className="flex-1" data-asist-recuento>
-              {recuentoAsist.faltan
+              {ic(recuentoAsist.faltan
                 ? `➡️ ${t("ed_asist_faltan", { n: recuentoAsist.faltan, total: recuentoAsist.total })}`
-                : `✅ ${t("ed_asist_todas", { total: recuentoAsist.total })}`}
+                : `✅ ${t("ed_asist_todas", { total: recuentoAsist.total })}`)}
             </span>
             {recuentoAsist.faltan > 0 && (
               <button onClick={() => setSoloSinFlecha((v) => !v)}
@@ -376,17 +383,17 @@ export function EditorEventos(props: {
       </div>
 
       {eventos.length === 0 && (
-        <p className="text-zinc-500 text-center py-6">{t("ed_sin_acciones")}</p>
+        <p className="text-zinc-500 text-center py-6">{T("ed_sin_acciones")}</p>
       )}
 
       <div className="space-y-1.5">
         {eventosVisibles.map((ev) => (
           <div key={ev.id} className="bg-zinc-900 rounded-lg px-3 py-2 flex items-center gap-2">
-            <span className="text-xl shrink-0">{emoji(ev.tipo)}</span>
+            <span className="text-xl shrink-0">{ic(emoji(ev.tipo))}</span>
             <div className="w-20 shrink-0 text-xs text-zinc-500 tabular-nums">
               {labelParte(ev.parte)} · {formatMMSS(ev.segundosParte || 0)}
             </div>
-            <div className="flex-1 text-sm truncate">{descripcion(ev)}</div>
+            <div className="flex-1 text-sm truncate">{ic(descripcion(ev))}</div>
             {/* La flecha de la asistencia, a un toque: dibujarla (o cambiarla)
                 sin pasar por el formulario entero. Solo en vídeo. */}
             {pideFlechaAsistencia(ev, partido.modo) && (() => {
@@ -397,14 +404,14 @@ export function EditorEventos(props: {
                   className={`shrink-0 px-3 py-1.5 rounded text-sm font-semibold ${
                     z ? "bg-zinc-800 hover:bg-zinc-700 text-yellow-300"
                       : "bg-amber-700 hover:bg-amber-600 text-white"}`}>
-                  ➡️ {z ? `${z.origen} → ${z.destino}` : t("ed_asist_sin_flecha")}
+                  {prefijo(nuevo, "➡️")}{z ? `${z.origen} → ${z.destino}` : t("ed_asist_sin_flecha")}
                 </button>
               );
             })()}
             <button onClick={() => abrirEditar(ev)}
-              className="shrink-0 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-sm">✏️</button>
+              className="shrink-0 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-sm">{ic("✏️")}</button>
             <button onClick={() => setConfirmarBorrar(ev.id)}
-              className="shrink-0 px-2.5 py-1.5 bg-red-900/60 hover:bg-red-800 rounded text-sm">🗑</button>
+              className="shrink-0 px-2.5 py-1.5 bg-red-900/60 hover:bg-red-800 rounded text-sm">{ic("🗑")}</button>
           </div>
         ))}
       </div>
@@ -412,18 +419,18 @@ export function EditorEventos(props: {
       {/* MINUTOS POR JUGADOR (opción D: recálculo aprox. + edición a mano) */}
       <div className="bg-zinc-900 rounded-xl p-4 mt-3">
         <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="text-lg font-bold">{t("ed_min_titulo")}</h3>
+          <h3 className="text-lg font-bold">{T("ed_min_titulo")}</h3>
           <button onClick={() => { props.recalcularMinutos(); setRecalcKey((k) => k + 1); }}
             className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-semibold whitespace-nowrap">
-            {t("ed_min_recalcular")}
+            {T("ed_min_recalcular")}
           </button>
         </div>
-        <p className="text-xs text-zinc-500 mb-3">{t("ed_min_nota")}</p>
+        <p className="text-xs text-zinc-500 mb-3">{T("ed_min_nota")}</p>
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-[11px] text-zinc-500 px-1">
-            <div className="flex-1">{t("ed_jugador")}</div>
+            <div className="flex-1">{T("ed_jugador")}</div>
             {partes.map((p) => <div key={p} className="w-14 text-center">{labelParte(p)}</div>)}
-            <div className="w-14 text-center">{t("ed_min_total")}</div>
+            <div className="w-14 text-center">{T("ed_min_total")}</div>
           </div>
           {convocados.map((n) => (
             <FilaMinutos key={n + ":" + recalcKey} nombre={n} partes={partes}
@@ -448,7 +455,7 @@ export function EditorEventos(props: {
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
-                  <span className={lblCls}>{t("ed_minuto")}</span>
+                  <span className={lblCls}>{T("ed_minuto")}</span>
                   <input className={inputCls} value={minStr} onChange={(e) => setMinStr(e.target.value)}
                     inputMode="numeric" placeholder="mm:ss" />
                 </label>
@@ -525,7 +532,7 @@ export function EditorEventos(props: {
                 <>
                   <Campo2 label={t("ed_sale")} value={draft.sale} onChange={(v) => set("sale", v)} opciones={optJugador(true)} />
                   <Campo2 label={t("ed_entra")} value={draft.entra} onChange={(v) => set("entra", v)} opciones={optJugador(true)} />
-                  <p className="text-xs text-amber-400/80">{t("ed_nota_min_cambio")}</p>
+                  <p className="text-xs text-amber-400/80">{T("ed_nota_min_cambio")}</p>
                 </>
               )}
 
@@ -554,9 +561,9 @@ export function EditorEventos(props: {
 
             <div className="flex gap-2 mt-5">
               <button onClick={() => setDraft(null)}
-                className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{t("ed_cancelar")}</button>
+                className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{T("ed_cancelar")}</button>
               <button onClick={guardar}
-                className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg font-bold">{t("ed_guardar")}</button>
+                className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg font-bold">{T("ed_guardar")}</button>
             </div>
           </div>
 
@@ -569,7 +576,7 @@ export function EditorEventos(props: {
               <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-4xl max-h-[95vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}>
                 <h4 className="text-lg font-bold mb-3 text-center">
-                  {t("pg_titulo", { jugador: draft.jugador || "?" })} · {labelParte(draft.parte)} {minStr}
+                  {T("pg_titulo", { jugador: draft.jugador || "?" })} · {labelParte(draft.parte)} {minStr}
                 </h4>
                 <CampoFlecha flecha={flechaTmp} onChange={setFlechaTmp}
                   direccion={props.partido.config
@@ -579,7 +586,7 @@ export function EditorEventos(props: {
                 {golCercaTxt && <p className="mt-2 text-base text-amber-300">{golCercaTxt}</p>}
                 <div className="flex gap-2 mt-3">
                   <button onClick={() => setZonaPicker(null)}
-                    className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{t("ed_cancelar")}</button>
+                    className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{T("ed_cancelar")}</button>
                   <button disabled={!flechaTmp}
                     onClick={() => {
                       if (!flechaTmp) return;
@@ -589,7 +596,7 @@ export function EditorEventos(props: {
                       setZonaPicker(null);
                     }}
                     className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg font-bold disabled:bg-zinc-800 disabled:text-zinc-500">
-                    {t("ed_guardar")}
+                    {T("ed_guardar")}
                   </button>
                 </div>
               </div>
@@ -622,7 +629,7 @@ export function EditorEventos(props: {
                   ? <Campo seleccionada={draft.zonaCampo} onSelect={(z) => { set("zonaCampo", z); setZonaPicker(null); }} />
                   : <Porteria seleccionada={draft.zonaPorteria} onSelect={(z) => { set("zonaPorteria", z); setZonaPicker(null); }} />}
                 <button onClick={() => setZonaPicker(null)}
-                  className="w-full mt-3 py-2 bg-zinc-800 rounded-lg">{t("ed_cancelar")}</button>
+                  className="w-full mt-3 py-2 bg-zinc-800 rounded-lg">{T("ed_cancelar")}</button>
               </div>
             </div>
           )}
@@ -651,12 +658,12 @@ export function EditorEventos(props: {
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
           onClick={() => setConfirmarBorrar(null)}>
           <div className="bg-zinc-900 rounded-2xl p-5 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <p className="text-base mb-4">{t("ed_borrar_confirm")}</p>
+            <p className="text-base mb-4">{T("ed_borrar_confirm")}</p>
             <div className="flex gap-2">
               <button onClick={() => setConfirmarBorrar(null)}
-                className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{t("ed_cancelar")}</button>
+                className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{T("ed_cancelar")}</button>
               <button onClick={() => { props.borrarEvento(confirmarBorrar); setConfirmarBorrar(null); }}
-                className="flex-1 py-3 bg-red-700 hover:bg-red-600 rounded-lg font-bold">{t("ed_confirmar_borrar")}</button>
+                className="flex-1 py-3 bg-red-700 hover:bg-red-600 rounded-lg font-bold">{T("ed_confirmar_borrar")}</button>
             </div>
           </div>
         </div>
