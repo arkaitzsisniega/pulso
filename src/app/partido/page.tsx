@@ -485,7 +485,7 @@ export default function PartidoPage() {
         return (
           <div className={nuevo
             ? `pz-saca ${esNuestro ? "nos" : "rival"}`
-            : `fixed top-2 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-xl
+            : `fixed top-[calc(0.5rem+env(safe-area-inset-top,0px))] left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-xl
                            text-base font-bold shadow-lg shadow-black/60 border ${
             esNuestro ? "bg-emerald-700 border-emerald-300/50" : "bg-zinc-700 border-zinc-400/50"
           }`}>
@@ -500,7 +500,9 @@ export default function PartidoPage() {
         <BotonTiempoNuevo corriendo={corriendo} onIniciar={iniciarNuevo} onPausar={pausa} />
       )}
       {!nuevo && (
-      <div className="fixed top-2 right-2 z-[60]">
+      // top: el alto de la barra de la hora y la batería del iPad, como en el
+      // aspecto nuevo (87b18b4). En el navegador normal vale 0: queda top-2.
+      <div className="fixed top-[calc(0.5rem+env(safe-area-inset-top,0px))] right-2 z-[60]">
         {!corriendo
           ? <button
               onClick={() => {
