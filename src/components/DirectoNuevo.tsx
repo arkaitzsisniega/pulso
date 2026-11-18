@@ -269,7 +269,7 @@ export function CabeceraNueva(props: {
       </div>
       <div className="pz-marcador">
         <div className="pz-equipo">
-          <div className="nom" style={{ color: p.colorNos }}>{p.nombreNos}</div>
+          <div className="nom" style={{ color: p.colorNos }} title={p.nombreNos}>{p.nombreNos}</div>
           <PuntosFaltas n={p.faltasNos} />
         </div>
         <div className="pz-goles">
