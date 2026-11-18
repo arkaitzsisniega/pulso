@@ -63,7 +63,9 @@ async function precachePaginaYAssets(cache, url) {
     let m;
     while ((m = re.exec(html))) {
       const a = m[1];
-      if (a.includes("/_next/")) urls.add(a);
+      // El escudo del club (public/escudos/) también: lo precarga el layout en
+      // todas las páginas y así sale sin conexión aunque se acabe de publicar.
+      if (a.includes("/_next/") || a.includes("/escudos/")) urls.add(a);
     }
     await Promise.allSettled([...urls].map((a) => cache.add(a).catch(() => {})));
   } catch { /* best-effort */ }

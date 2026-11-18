@@ -19,6 +19,7 @@ import { t, labelCompeticionCorta } from "@/lib/i18n";
 import { Ico, sinEmojis } from "@/components/DirectoNuevo";
 import { BotonSol } from "@/components/InicioNuevo";
 import { estiloPP, icPP } from "@/components/ResumenNuevo";
+import { Escudo } from "@/components/Escudo";
 
 /** «*texto*» del catálogo → negrita (igual que en el clásico). */
 function conNegritas(frase: string) {
@@ -41,7 +42,7 @@ export function TotalesNuevo(props: {
     <div className="pz pz-pp pz-tot" data-tema={props.sol ? "sol" : undefined} style={estiloPP(props.sol)}>
       <div className="pz-res-top">
         <Link href="/" className="pz-ib"><Ico.casa />{sinEmojis(t("inicio"))}</Link>
-        <h1 className="pz-tot-h1"><Ico.barras className="pz-ico" />{sinEmojis(t("tot_titulo"))}</h1>
+        <h1 className="pz-tot-h1"><Escudo className="pz-tot-escudo" />{sinEmojis(t("tot_titulo"))}</h1>
         <div className="der"><BotonSol sol={props.sol} onCambiar={props.onSol} /></div>
       </div>
 

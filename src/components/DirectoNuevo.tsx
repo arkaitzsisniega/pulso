@@ -14,6 +14,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { formatMMSS, formatMSS } from "@/lib/utils";
+import { Escudo } from "@/components/Escudo";
 
 /** Quita el emoji/símbolo de delante de una etiqueta del catálogo
  *  («⚽ GOL» → «GOL»): en el aspecto nuevo el icono es un dibujo SVG. */
@@ -255,6 +256,7 @@ export function CabeceraNueva(props: {
   return (
     <div className="pz-cab pz-capa">
       <div className="pz-reloj">
+        <Escudo className="pz-cab-escudo" />
         {p.reloj}
         <div className="pz-meta">
           <span className="pz-chip">{p.parte}</span>

@@ -17,7 +17,8 @@ import { createContext, useContext, type CSSProperties, type ReactNode } from "r
 import {
   Ico, EMOJI_ICONO, RE_EMOJI, dibujaIcono, sinEmojis, type DefIcono,
 } from "@/components/DirectoNuevo";
-import { LogoPulso, BotonSol } from "@/components/InicioNuevo";
+import { BotonSol } from "@/components/InicioNuevo";
+import { Escudo } from "@/components/Escudo";
 import { variablesEquipos, elegirRival, rgba } from "@/lib/tema";
 import { CLIENTE } from "@/lib/clientes";
 import { t } from "@/lib/i18n";
@@ -132,7 +133,7 @@ export function CabeceraResumen(props: {
       </div>
       <div className="pz-capa pz-res-hero">
         <div className="eq">
-          <span className="esc nos"><LogoPulso className="esc-svg" /></span>
+          <Escudo className="esc-img" />
           <div className="eq-txt">
             <div className="n nos">{CLIENTE.nombreCorto}</div>
             <div className="s">{props.local ? t("inf_local") : t("inf_visitante")}</div>

@@ -20,6 +20,7 @@ import { CLIENTE, VERSION_CRONO } from "@/lib/clientes";
 import { type Aspecto } from "@/lib/aspecto";
 import { variablesEquipos } from "@/lib/tema";
 import { Ico, sinEmojis } from "@/components/DirectoNuevo";
+import { Escudo } from "@/components/Escudo";
 
 /** El logo de PULSO (la línea del pulso). Dibujo, sin imágenes. */
 export function LogoPulso(props: { className?: string; aro?: boolean }) {
@@ -68,7 +69,7 @@ export function InicioNuevo(props: {
         <div className="pz-ini-izq">
           <div className="pz-capa pz-ini-club">
             <div className="pz-ini-club-fila">
-              <span className="pz-ini-escudo"><LogoPulso className="pz-ini-escudo-svg" /></span>
+              <Escudo className="pz-ini-escudo" />
               <div className="pz-ini-club-txt">
                 <h1>{sinEmojis(t("home_titulo", { marca: CLIENTE.marcaTitulo }))}</h1>
                 <p>{t("home_subtitulo", { club: CLIENTE.nombreLargo })}</p>
