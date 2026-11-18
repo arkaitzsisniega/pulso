@@ -523,6 +523,7 @@
 
 /* ── INICIO ───────────────────────────────────────────────────────────── */
 .pz-ini {
+  min-height: calc(100vh - env(safe-area-inset-top, 0px)); /* Safari < 15.4: sin dvh */
   min-height: calc(100dvh - env(safe-area-inset-top, 0px));
   padding: 22px 28px 18px; display: flex; flex-direction: column; gap: 18px;
 }
@@ -611,6 +612,7 @@
 
 /* ── PARTIDO NUEVO ────────────────────────────────────────────────────── */
 .pz-np {
+  min-height: calc(100vh - env(safe-area-inset-top, 0px)); /* Safari < 15.4: sin dvh */
   min-height: calc(100dvh - env(safe-area-inset-top, 0px));
   /* Abajo, sitio para el selector de idioma flotante de la demo: que no tape
      el botón de empezar. */
@@ -843,6 +845,7 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
   --tn-t3: rgba(255,77,77,.20); --tn-t2: rgba(245,183,10,.14); --tn-t1: rgba(34,197,94,.12);
   --am-texto: var(--amarilla);
   color: var(--texto); font-family: var(--f-txt); font-size: 15px;
+  min-height: calc(100vh - env(safe-area-inset-top, 0px)); /* Safari < 15.4: sin dvh */
   min-height: calc(100dvh - env(safe-area-inset-top, 0px));
 }
 .pz-pp[data-tema="sol"] {
