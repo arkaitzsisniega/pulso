@@ -32,20 +32,22 @@ const VERSION = "__VERSION__".startsWith("__") ? "dev" : "__VERSION__";
 const CACHE = `inter-crono-${VERSION}`;
 // Carpeta donde vive la app: "/pulso/crono" en producción, "" en local.
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
-// El informe, también sin conexión, SOLO en la demo de PULSO (9/11/2026). Con
-// este service worker /informe/ no estaba en la caché hasta haberlo abierto
-// una vez con red: sin conexión el botón del resumen caía en la pantalla de
-// «no hay partido». Con /totales/ pasaba lo mismo y sin conexión enseñaba la
-// pantalla del partido. En el Inter y el filial sigue todo como estaba.
-// El juvenil (11/11/2026), igual: su guía les dice que funciona sin red.
-const INFORME_OFFLINE = /\/crono-(demo|juvenil)$/.test(BASE);
+// El informe y los totales, también sin conexión (9/11/2026 en la demo y el
+// juvenil; 18/11/2026 en los CUATRO). Con este service worker /informe/ y
+// /totales/ no estaban en la caché hasta haberlos abierto una vez con red: sin
+// conexión el botón del resumen caía en la pantalla del partido en vez del
+// informe, y Totales también. Al principio se hizo solo en la demo y el juvenil
+// por prudencia; en el repaso offline del rediseño (tanda 6) se comprobó con un
+// navegador sin red que en el Inter y el filial seguía pasando (los dos
+// aspectos enlazan a Totales desde el inicio y el resumen abre el informe).
 const APP_SHELL = [
   `${BASE}/`,
   `${BASE}/partido/`,
   `${BASE}/nuevo/`,
   `${BASE}/resumen/`,
+  `${BASE}/informe/`,
+  `${BASE}/totales/`,
   `${BASE}/manifest.json`,
-  ...(INFORME_OFFLINE ? [`${BASE}/informe/`, `${BASE}/totales/`] : []),
 ];
 
 // Precachea una página HTML Y todos los assets (_next JS/CSS) que referencia.
@@ -81,7 +83,8 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {
       await cache.add(`${BASE}/manifest.json`).catch(() => {});
-      if (INFORME_OFFLINE) await cache.add(`${BASE}/marca.png`).catch(() => {});
+      // La marca del informe: el informe la pinta en la cabecera.
+      await cache.add(`${BASE}/marca.png`).catch(() => {});
       await Promise.allSettled(
         APP_SHELL.filter((u) => !u.endsWith("manifest.json"))
           .map((u) => precachePaginaYAssets(cache, u))
@@ -131,7 +134,7 @@ self.addEventListener("fetch", (event) => {
           caches
             // El botón del resumen abre /informe/?imprimir=1: sin esto no casa
             // con el /informe/ guardado y caería en /partido/.
-            .match(req, INFORME_OFFLINE ? { ignoreSearch: true } : undefined)
+            .match(req, { ignoreSearch: true })
             .then(
               (m) =>
                 m ||
