@@ -13,6 +13,7 @@
  *
  * Estilos en app/tema-nuevo.css (clases pz-np-*).
  */
+import { CONVOCATORIA_HABITUAL } from "@/lib/convocatoria";
 import { type ReactNode } from "react";
 import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
 import { PRESETS_COMPETICION } from "@/lib/db";
@@ -188,11 +189,15 @@ export function NuevoPartidoNuevo(props: { f: FormNuevoPartido; sol: boolean; on
             <input className="pz-in pz-num-in" value={f.partidoId}
               onChange={(e) => f.setPartidoId(e.target.value.toUpperCase())} placeholder={t("nuevo_id_ph")} />
           </Campo>
-          <label className="pz-np-tg dos">
-            <input type="checkbox" className="pz-sw" checked={f.local}
-              onChange={(e) => f.setLocal(e.target.checked)} />
-            <span>{t("nuevo_inter_local", { equipo: NOMBRE_CORTO_TC })}</span>
-          </label>
+          {/* Local / Visitante en dos botones (Arkaitz, 18/11/2026). Mismo dato
+              (f.local) que el interruptor de antes: solo cambia cómo se elige. */}
+          <div className="pz-np-lv dos" role="group" aria-label={t("nuevo_jugamos_como")}>
+            <span className="pz-np-lv-t">{t("nuevo_jugamos_como")}</span>
+            <button type="button" className={f.local ? "on" : ""} aria-pressed={f.local}
+              onClick={() => f.setLocal(true)}>{t("nuevo_local")}</button>
+            <button type="button" className={!f.local ? "on" : ""} aria-pressed={!f.local}
+              onClick={() => f.setLocal(false)}>{t("nuevo_visitante")}</button>
+          </div>
         </div>
 
         <div className="pz-np-fila2">
@@ -262,6 +267,9 @@ export function NuevoPartidoNuevo(props: { f: FormNuevoPartido; sol: boolean; on
             <b className="pz-num">{f.convocados.length}</b>
             {t("nuevo_convocados_count", { n: f.convocados.length }).replace(String(f.convocados.length), "").trim()}
           </p>
+          {f.convocados.length > 0 && f.convocados.length !== CONVOCATORIA_HABITUAL && (
+            <p className="pz-np-aviso14" role="status">⚠ {t("nuevo_aviso_14", { n: f.convocados.length })}</p>
+          )}
         </div>
       </Seccion>
 
