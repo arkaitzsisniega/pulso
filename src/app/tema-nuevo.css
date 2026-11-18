@@ -105,10 +105,9 @@
 
 /* ── Cabecera ─────────────────────────────────────────────────────────── */
 /* En el directo, pequeño y pegado al reloj: la cabecera va justa y lo primero
-   es que el marcador se lea. En pantallas estrechas (iPad de 10,2″ en
-   horizontal) no cabe sin pisar el marcador, y ahí se quita. */
+   es que el marcador se lea. Por debajo de 1100 px (iPad de 10,2″ en
+   horizontal) se quita: ese hueco es el que necesitan los nombres. */
 .pz-cab-escudo { width: 34px; height: 44px; margin-right: -4px; }
-@media (max-width: 1100px) { .pz-cab-escudo { display: none; } }
 .pz-cab {
   flex: none; display: grid; grid-template-columns: auto 1fr auto; align-items: center;
   gap: 16px; height: 74px; padding: 0 214px 0 14px;
@@ -129,14 +128,21 @@
   white-space: nowrap; align-self: flex-start;
 }
 
-.pz-marcador { display: flex; align-items: center; justify-content: center; gap: 16px; min-width: 0; }
-.pz-equipo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.pz-equipo.r { align-items: flex-end; text-align: right; }
+/* Marcador en tres columnas: equipo | goles | equipo. Los goles van siempre
+   en el centro y cada equipo tiene la mitad del hueco que sobra, pegado a los
+   goles; un nombre que no cabe se corta con «…» (el nombre entero, en el
+   title) en vez de montarse encima del marcador. */
+.pz-marcador {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center; gap: 16px; min-width: 0;
+}
+.pz-equipo { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 0; }
+.pz-equipo.r { align-items: flex-start; }
 .pz-equipo .nom {
   font: 700 22px/1 var(--f-num); letter-spacing: .04em; text-transform: uppercase;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: min(100%, 240px);
 }
-.pz-faltas { display: flex; align-items: center; gap: 4px; }
+.pz-faltas { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 .pz-faltas .f { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--texto-3); }
 .pz-faltas .f.on { background: var(--aviso); border-color: var(--aviso); }
 .pz-faltas.limite .f.on { background: var(--t3); border-color: var(--t3); }
@@ -168,6 +174,37 @@
 .pz-play svg { width: 22px; height: 22px; fill: currentColor; }
 .pz-play.iniciar { background: var(--gol); color: #fff; }
 .pz-play.pausar { background: var(--t2); color: #1a1300; }
+
+/* Cabecera en iPad de 10,9-11″ (1180 px) y de 10,2″ (1024 px): todo un poco
+   más compacto para que reloj, marcador, nombres y faltas quepan sin pisarse.
+   Por orden: reloj y goles siguen grandes, luego nombres, luego faltas. */
+@media (max-width: 1279px) {
+  .pz-cab { gap: 12px; padding-right: 190px; }
+  .pz-reloj { gap: 10px; }
+  .pz-reloj-t { font-size: 60px; }
+  .pz-meta { min-width: 84px; }
+  .pz-parte-bar { width: 84px; }
+  .pz-marcador { gap: 10px; }
+  .pz-equipo .nom { font-size: 20px; }
+  .pz-goles { gap: 6px; font-size: 50px; }
+  .pz-goles .g { min-width: 50px; padding: 2px 6px; }
+  .pz-goles .sep { font-size: 30px; }
+  .pz-faltas { gap: 3px; }
+  .pz-faltas .f { width: 10px; height: 10px; }
+  .pz-faltas b { font-size: 10px; letter-spacing: .04em; margin: 0 2px; }
+  .pz-faltas .n { font-size: 20px; }
+  .pz-control { gap: 6px; }
+  .pz-control .pz-btn { min-height: 46px; padding: 0 12px; font-size: 16px; }
+  .pz-control .pz-btn.ico { width: 46px; padding: 0; }
+  .pz-play { right: 16px; min-width: 164px; height: 56px; padding: 0 16px; font-size: 21px; top: calc(17px + env(safe-area-inset-top, 0px)); }
+  .pz-play svg { width: 20px; height: 20px; }
+}
+@media (max-width: 1100px) {
+  .pz-cab-escudo { display: none; }
+  .pz-reloj-t { font-size: 56px; }
+  .pz-meta { min-width: 76px; }
+  .pz-parte-bar { width: 76px; }
+}
 
 /* ── Barra de herramientas ────────────────────────────────────────────── */
 .pz-herr { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-height: 36px; color: var(--texto); }
