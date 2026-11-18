@@ -1,5 +1,6 @@
 "use client";
 
+import { avisoConvocatoria } from "@/lib/convocatoria";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
@@ -331,6 +332,9 @@ export default function NuevoPartido() {
           })}
         </div>
         <p className="text-sm text-zinc-400 mt-2">{t("nuevo_convocados_count", { n: convocados.length })}</p>
+        {avisoConvocatoria(convocados.length) && (
+          <p className="text-sm text-amber-400 mt-1">⚠ {t("nuevo_aviso_14", { n: convocados.length })}</p>
+        )}
       </section>
 
       {/* Pista inicial */}
