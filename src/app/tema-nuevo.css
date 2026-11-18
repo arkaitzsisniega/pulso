@@ -98,7 +98,17 @@
   font: 800 18px/1 var(--f-num); color: var(--texto); margin-left: auto; flex: none;
 }
 
+/* ── Escudo del club (components/Escudo.tsx) ──────────────────────────────
+   Una imagen para los dos modos; se ajusta a la caja sin deformarse, sea un
+   escudo alto (Inter) o un logo apaisado (PULSO). Cada sitio pone el tamaño. */
+.pz-escudo { display: block; flex: none; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+
 /* ── Cabecera ─────────────────────────────────────────────────────────── */
+/* En el directo, pequeño y pegado al reloj: la cabecera va justa y lo primero
+   es que el marcador se lea. En pantallas estrechas (iPad de 10,2″ en
+   horizontal) no cabe sin pisar el marcador, y ahí se quita. */
+.pz-cab-escudo { width: 34px; height: 44px; margin-right: -4px; }
+@media (max-width: 1100px) { .pz-cab-escudo { display: none; } }
 .pz-cab {
   flex: none; display: grid; grid-template-columns: auto 1fr auto; align-items: center;
   gap: 16px; height: 74px; padding: 0 214px 0 14px;
@@ -486,11 +496,7 @@
 .pz-ini-izq { display: flex; flex-direction: column; gap: 12px; }
 .pz-ini-club { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
 .pz-ini-club-fila { display: flex; align-items: flex-start; gap: 14px; }
-.pz-ini-escudo {
-  width: 58px; height: 58px; border-radius: 50%; flex: none; display: inline-flex;
-  align-items: center; justify-content: center; background: #0b2545; border: 3px solid var(--nos);
-}
-.pz-ini-escudo-svg { width: 36px; height: 20px; }
+.pz-ini-escudo { width: 58px; height: 64px; }
 .pz-ini-club-txt { min-width: 0; flex: 1; }
 .pz-ini-club h1 { font: 800 28px/1.02 var(--f-num); letter-spacing: .04em; text-transform: uppercase; }
 .pz-ini-club p { color: var(--texto-2); font-size: 13.5px; line-height: 1.35; margin-top: 5px; }
@@ -574,7 +580,7 @@
   padding: 16px 24px 76px; display: flex; flex-direction: column; gap: 14px;
 }
 .pz-np-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.pz-np-logo { width: 44px; height: 24px; flex: none; color: var(--texto); }
+.pz-np-escudo { width: 40px; height: 44px; }
 .pz-np-top h1 { font: 800 32px/1 var(--f-num); letter-spacing: .02em; text-transform: uppercase; }
 .pz-np-pasos { display: flex; align-items: center; margin-left: 10px; min-width: 0; flex-wrap: wrap; row-gap: 6px; }
 .pz-np-pasos .paso-y-raya { display: inline-flex; align-items: center; }
@@ -837,9 +843,8 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
   width: 60px; height: 60px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center;
   font: 800 22px/1 var(--f-num); color: #fff; letter-spacing: .03em;
 }
-.pz-res-hero .esc.nos { background: #0b2545; border: 3px solid var(--nos); }
 .pz-res-hero .esc.riv { background: var(--rival); }
-.pz-res-hero .esc-svg { width: 38px; height: 21px; }
+.pz-res-hero .esc-img { width: 60px; height: 64px; }
 .pz-res-hero .n {
   font: 800 30px/1 var(--f-num); letter-spacing: .04em; text-transform: uppercase;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1014,6 +1019,7 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
 /* ── TOTALES ── */
 .pz-tot-h1 { display: flex; align-items: center; gap: 10px; font: 800 26px/1 var(--f-num); letter-spacing: .05em; text-transform: uppercase; }
 .pz-tot-h1 .pz-ico { width: 24px; height: 24px; color: var(--texto-3); }
+.pz-tot-escudo { width: 34px; height: 38px; }
 .pz-tot-vacio { color: var(--texto-2); margin: 18px 4px; }
 .pz-tot-aviso {
   display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; padding: 12px 14px; border-radius: 12px;

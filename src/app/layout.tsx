@@ -7,6 +7,7 @@ import AuthGate from "@/components/AuthGate";
 import SWRegister from "@/components/SWRegister";
 import SelectorIdioma from "@/components/SelectorIdioma";
 import { CLIENTE } from "@/lib/clientes";
+import { rutaEscudo } from "@/lib/escudo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -90,6 +91,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${barlow.variable} ${interTexto.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* El escudo del club (cabeceras del aspecto nuevo). Precargado en
+            TODAS las páginas para que el service worker lo guarde al instalarse
+            (busca en el HTML las rutas de /escudos/) y salga sin conexión. React
+            lo sube al <head>. */}
+        <link rel="preload" as="image" href={rutaEscudo(BP, CLIENTE.escudo)} />
         <SWRegister />
         <AuthGate>{children}</AuthGate>
         <SelectorIdioma />

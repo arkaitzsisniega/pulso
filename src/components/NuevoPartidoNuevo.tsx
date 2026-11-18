@@ -20,7 +20,8 @@ import { PRESETS_COMPETICION } from "@/lib/db";
 import { t, labelCompeticion, labelCompeticionCorta } from "@/lib/i18n";
 import { variablesEquipos } from "@/lib/tema";
 import { Ico, sinEmojis, partirTitulo } from "@/components/DirectoNuevo";
-import { BotonSol, LogoPulso } from "@/components/InicioNuevo";
+import { BotonSol } from "@/components/InicioNuevo";
+import { Escudo } from "@/components/Escudo";
 
 type Jugador = (typeof ROSTER)[number];
 
@@ -123,7 +124,7 @@ export function NuevoPartidoNuevo(props: { f: FormNuevoPartido; sol: boolean; on
       style={variablesEquipos(CLIENTE.colorPropio, props.sol) as React.CSSProperties}>
       {/* ── Cabecera: título, pasos, Sol e inicio ── */}
       <div className="pz-np-top">
-        <LogoPulso className="pz-np-logo" aro />
+        <Escudo className="pz-np-escudo" />
         <h1>{sinEmojis(t("nuevo_titulo"))}</h1>
         <nav className="pz-np-pasos">
           {pasos.map(([id, txt, hecho], i) => (
