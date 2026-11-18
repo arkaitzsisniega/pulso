@@ -7,11 +7,15 @@ import { ROSTER, PORTEROS, CAMPO, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/cliente
 import { hoyISO } from "@/lib/utils";
 import { PRESETS_COMPETICION } from "@/lib/db";
 import { t, useIdioma, labelCompeticion, labelCompeticionCorta } from "@/lib/i18n";
+import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import { NuevoPartidoNuevo } from "@/components/NuevoPartidoNuevo";
 
 export default function NuevoPartido() {
   useIdioma();
   const router = useRouter();
   const { iniciarPartido } = usePartido();
+  const aspecto = useAspecto();
+  const modoSol = useModoSol();
 
   const [rival, setRival] = useState("");
   // fecha: se rellena en useEffect tras montar para evitar mismatch SSR/cliente
@@ -155,6 +159,24 @@ export default function NuevoPartido() {
       setEmpezando(false);
     }
   };
+
+  // Aspecto NUEVO (tanda 3 · 18/11/2026): el MISMO estado y el MISMO empezar(),
+  // otro dibujo (components/NuevoPartidoNuevo.tsx). Con el clásico, lo de abajo
+  // tal cual estaba.
+  if (aspecto === "nuevo") {
+    return (
+      <NuevoPartidoNuevo sol={modoSol} onSol={() => setModoSol(!modoSol)} f={{
+        rival, setRival, partidoId, setPartidoId, fecha, setFecha, hora, setHora,
+        lugar, setLugar, competicion, onCompChange, local, setLocal,
+        dur1T, setDur1T, dur2T, setDur2T, durPR1, setDurPR1, durPR2, setDurPR2,
+        permiteTanda, setPermiteTanda, direccionInter1T, setDireccionInter1T,
+        modo, setModo, convocados, toggleConvocado, porterosConv, campoConv,
+        portero, setPortero, pista1, setPista1, pista2, setPista2,
+        pista3, setPista3, pista4, setPista4,
+        empezando, empezar, irInicio: () => router.push("/"),
+      }} />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">

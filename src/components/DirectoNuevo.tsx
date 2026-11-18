@@ -62,6 +62,11 @@ export const Ico = {
   circulo: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="12" r="7" fill="currentColor" /></Svg>,
   info: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5h.01" /></Svg>,
   mas: (p: IcoProps) => <Svg {...p}><path d="M12 5v14M5 12h14" /></Svg>,
+  // Tanda 3 (inicio y partido nuevo)
+  papelera: (p: IcoProps) => <Svg {...p}><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" /></Svg>,
+  chevron: (p: IcoProps) => <Svg {...p}><path d="M9 6l6 6-6 6" /></Svg>,
+  avion: (p: IcoProps) => <Svg {...p}><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></Svg>,
+  directo: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="12" r="3" /><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8" /></Svg>,
 };
 
 // ──────────────── Aspecto nuevo en las VENTANAS (tanda 2 · 17/11/2026) ────────────────
@@ -112,6 +117,7 @@ const EMOJI_ICONO: Record<string, DefIcono> = {
   "🥅": { ico: "guante", color: "var(--texto-2)" },
   "ℹ": { ico: "info" },
   "➕": { ico: "mas" },
+  "✈": { ico: "avion" },
 };
 
 const RE_EMOJI = /(\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)/u;
@@ -466,7 +472,7 @@ export function BanquilloNuevo(props: { fichas: FichaBanquillo[]; columnas: numb
 }
 
 /** «EN PISTA (toca un jugador…)» → ["EN PISTA", "Toca un jugador…"]. */
-function partirTitulo(txt: string): [string, string] {
+export function partirTitulo(txt: string): [string, string] {
   const m = txt.match(/^([^(]+)\((.+)\)\s*$/);
   if (!m) return [txt, ""];
   const ayuda = m[2].trim();
