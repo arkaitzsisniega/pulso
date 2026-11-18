@@ -14,7 +14,7 @@
  * Nota minutos (opción D): editar sustituciones aún no recalcula los minutos
  * por jugador; se avisa en la UI. Esa pieza llega aparte.
  */
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, type ReactNode } from "react";
 import type { Partido, Evento, ParteId, Flecha } from "@/lib/db";
 import { direccionAtaque } from "@/lib/db";
 import { ROSTER, PORTEROS, NOMBRE_CORTO_TC } from "@/lib/clientes";
@@ -34,6 +34,7 @@ import {
   sinFlechaAsistencia,
 } from "@/lib/asistencia";
 import { useIcPP, useTPP, prefijo, PostCtx } from "@/components/ResumenNuevo";
+import { Ico, sinEmojis } from "@/components/DirectoNuevo";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 const TIPOS: Evento["tipo"][] = [
@@ -94,19 +95,41 @@ function Campo2<T extends string>(p: {
   // no conozca, el jugador de equipo…—, se añade arriba tal cual.
   const todas = (p.opciones ?? []).concat(...(p.grupos ?? []).map((g) => g.opciones));
   const falta = valor !== "" && !todas.some((o) => o.v === valor);
+  // Un desplegable no puede pintar iconos: con el aspecto nuevo, las opciones
+  // van sin emoji (con el clásico, tal cual).
+  const nuevo = useContext(PostCtx);
+  const lbl = nuevo ? sinEmojis : (x: string) => x;
   return (
     <label className="block">
       <span className={lblCls}>{p.label}</span>
       <select className={inputCls} value={valor} onChange={(e) => p.onChange(e.target.value)}>
         {falta && <option value={valor}>{valor}</option>}
-        {p.opciones?.map((o) => <option key={o.v} value={o.v}>{o.lbl}</option>)}
+        {p.opciones?.map((o) => <option key={o.v} value={o.v}>{lbl(o.lbl)}</option>)}
         {p.grupos?.map((g) => (
-          <optgroup key={g.titulo} label={g.titulo}>
-            {g.opciones.map((o) => <option key={o.v} value={o.v}>{o.lbl}</option>)}
+          <optgroup key={g.titulo} label={lbl(g.titulo)}>
+            {g.opciones.map((o) => <option key={o.v} value={o.v}>{lbl(o.lbl)}</option>)}
           </optgroup>
         ))}
       </select>
     </label>
+  );
+}
+
+/** Cabecera de una ventana del editor con el aspecto NUEVO (tanda 5): la misma
+ *  de las ventanas del partido (tanda 2) — cerrar a la izquierda, el icono en
+ *  su cuadro de color y el título en letra deportiva. */
+function CabVentana(p: { icono: ReactNode; color?: string; titulo: ReactNode; onCerrar: () => void }) {
+  return (
+    <div className="pz-panel-cab">
+      <button onClick={p.onCerrar} className="pz-btn ico pz-panel-x" aria-label="×">
+        <Ico.cruz />
+      </button>
+      <span className={`pz-panel-ico ${p.color ? "" : "neutro"}`}
+        style={p.color ? { background: p.color } : undefined}>
+        <span className="pz-ti">{p.icono}</span>
+      </span>
+      <h2 className="pz-panel-tit">{p.titulo}</h2>
+    </div>
   );
 }
 
@@ -161,13 +184,14 @@ function ModalFlechaAsistencia(p: {
   onQuitar?: () => void;
 }) {
   const T = useTPP();
+  const nuevo = useContext(PostCtx);
   const [flecha, setFlecha] = useState<Flecha | null>(p.flechaInicial);
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
       onClick={(e) => { e.stopPropagation(); p.onCancelar(); }}>
-      <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-4xl max-h-[95vh] overflow-y-auto"
+      <div className={`bg-zinc-900 rounded-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto ${nuevo ? "pz-panel" : "p-4"}`}
         onClick={(e) => e.stopPropagation()}>
-        <h4 className="text-lg font-bold mb-3 text-center">{p.titulo}</h4>
+        <h4 className={nuevo ? "pz-ed-subtit" : "text-lg font-bold mb-3 text-center"}>{p.titulo}</h4>
         <CampoFlecha flecha={flecha} onChange={setFlecha} direccion={p.direccion}
           nombreAtacante={NOMBRE_CORTO_TC} />
         <div className="flex gap-2 mt-3">
@@ -443,9 +467,14 @@ export function EditorEventos(props: {
       {draft && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-3"
           onClick={() => setDraft(null)}>
-          <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-md max-h-[88vh] overflow-y-auto"
+          <div className={`bg-zinc-900 rounded-2xl w-full max-w-md max-h-[88vh] overflow-y-auto ${nuevo ? "pz-panel" : "p-4"}`}
             onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-3">{esNuevo ? t("ed_nueva_accion") : t("ed_editar_accion")}</h3>
+            {nuevo ? (
+              <CabVentana icono={esNuevo ? <Ico.mas className="pz-ico" /> : <Ico.lapiz className="pz-ico" />}
+                titulo={esNuevo ? t("ed_nueva_accion") : t("ed_editar_accion")} onCerrar={() => setDraft(null)} />
+            ) : (
+              <h3 className="text-lg font-bold mb-3">{esNuevo ? t("ed_nueva_accion") : t("ed_editar_accion")}</h3>
+            )}
             <div className="space-y-3">
               {esNuevo && (
                 <Campo2 label={t("ed_tipo")} value={draft.tipo}
@@ -573,9 +602,9 @@ export function EditorEventos(props: {
           {zonaPicker === "flecha" && (
             <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
               onClick={(e) => { e.stopPropagation(); setZonaPicker(null); }}>
-              <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-4xl max-h-[95vh] overflow-y-auto"
+              <div className={`bg-zinc-900 rounded-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto ${nuevo ? "pz-panel" : "p-4"}`}
                 onClick={(e) => e.stopPropagation()}>
-                <h4 className="text-lg font-bold mb-3 text-center">
+                <h4 className={nuevo ? "pz-ed-subtit" : "text-lg font-bold mb-3 text-center"}>
                   {T("pg_titulo", { jugador: draft.jugador || "?" })} · {labelParte(draft.parte)} {minStr}
                 </h4>
                 <CampoFlecha flecha={flechaTmp} onChange={setFlechaTmp}
@@ -621,8 +650,8 @@ export function EditorEventos(props: {
           {(zonaPicker === "campo" || zonaPicker === "porteria") && (
             <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
               onClick={(e) => { e.stopPropagation(); setZonaPicker(null); }}>
-              <div className="bg-zinc-900 rounded-2xl p-4 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
-                <h4 className="text-base font-bold mb-3 text-center">
+              <div className={`bg-zinc-900 rounded-2xl w-full max-w-lg ${nuevo ? "pz-panel" : "p-4"}`} onClick={(e) => e.stopPropagation()}>
+                <h4 className={nuevo ? "pz-ed-subtit" : "text-base font-bold mb-3 text-center"}>
                   {zonaPicker === "campo" ? t("ed_zona_campo") : t("ed_zona_porteria")}
                 </h4>
                 {zonaPicker === "campo"
@@ -657,8 +686,12 @@ export function EditorEventos(props: {
       {confirmarBorrar && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
           onClick={() => setConfirmarBorrar(null)}>
-          <div className="bg-zinc-900 rounded-2xl p-5 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <p className="text-base mb-4">{T("ed_borrar_confirm")}</p>
+          <div className={`bg-zinc-900 rounded-2xl w-full max-w-sm ${nuevo ? "pz-panel" : "p-5"}`} onClick={(e) => e.stopPropagation()}>
+            {nuevo && (
+              <CabVentana icono={<Ico.papelera className="pz-ico" />} color="var(--mal)"
+                titulo={sinEmojis(t("ed_borrar"))} onCerrar={() => setConfirmarBorrar(null)} />
+            )}
+            <p className={nuevo ? "pz-ed-borrar-txt" : "text-base mb-4"}>{T("ed_borrar_confirm")}</p>
             <div className="flex gap-2">
               <button onClick={() => setConfirmarBorrar(null)}
                 className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold">{T("ed_cancelar")}</button>

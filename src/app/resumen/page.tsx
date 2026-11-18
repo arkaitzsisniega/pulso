@@ -10,7 +10,7 @@ import { CampoConteos } from "@/components/CampoConteos";
 import { EditorEventos } from "@/components/EditorEventos";
 import type { Evento, ParteId, Partido } from "@/lib/db";
 import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
-import { t, useIdioma, labelAccionGol, labelResultadoDisparo, labelParte, labelCompeticionCorta } from "@/lib/i18n";
+import { t, useIdioma, labelAccionGol, labelResultadoDisparo, labelParte, labelCompeticionCorta, labelEstadoPartido } from "@/lib/i18n";
 import { contarPorZona } from "@/lib/zonas";
 import { accionDeLanzamiento, esLanzamiento } from "@/lib/lanzamientos";
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
@@ -295,7 +295,7 @@ export default function ResumenPage() {
           golesRival={partido.marcador.rival}
           local={cfg.local}
           meta={[cfg.partido_id, labelCompeticionCorta(cfg.competicion), `${cfg.fecha} ${cfg.hora}`.trim(), cfg.lugar || "—"]}
-          estado={CLIENTE.demo ? t(`estado_${partido.estado}`) : partido.estado}
+          estado={labelEstadoPartido(partido.estado)}
           enCurso={partido.estado === "en_curso"}
           partes={partesJugadas.map(labelParte).join(", ")}
           tanda={huboTanda ? (
@@ -355,7 +355,7 @@ export default function ResumenPage() {
             </div>
           )}
           <div className="mt-3 text-base text-zinc-500 text-center">
-            {T("res_estado")} <strong className="text-zinc-300">{CLIENTE.demo ? t(`estado_${partido.estado}`) : partido.estado}</strong>
+            {T("res_estado")} <strong className="text-zinc-300">{labelEstadoPartido(partido.estado)}</strong>
             {" · "}
             {T("res_partes_jugadas")} <strong className="text-zinc-300">{partesJugadas.map(labelParte).join(", ")}</strong>
           </div>

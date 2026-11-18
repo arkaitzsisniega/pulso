@@ -107,7 +107,8 @@ function fuentes(dir: string): string[] {
 // 5 · Los textos, en los tres idiomas
 {
   const i18n = leer("lib/i18n.ts");
-  const LINEA = /^  (\w+): \{ es: "((?:[^"\\]|\\.)*)", en: "((?:[^"\\]|\\.)*)", it: "((?:[^"\\]|\\.)*)" \},$/gm;
+  // El emoji de delante va aparte, en «ico» (tanda 5); aquí solo importa el texto.
+  const LINEA = /^  (\w+): \{ (?:ico: "[^"]*", )?es: "((?:[^"\\]|\\.)*)", en: "((?:[^"\\]|\\.)*)", it: "((?:[^"\\]|\\.)*)" \},$/gm;
   const CAT: Record<string, Record<string, string>> = {};
   for (const m of i18n.matchAll(LINEA)) CAT[m[1]] = { es: m[2], en: m[3], it: m[4] };
   for (const k of ["acc_fsb", "mp_fsb", "mp_fsb_nota", "ed_t_fsb"]) {

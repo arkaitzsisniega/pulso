@@ -268,7 +268,7 @@ export function NuevoPartidoNuevo(props: { f: FormNuevoPartido; sol: boolean; on
             {t("nuevo_convocados_count", { n: f.convocados.length }).replace(String(f.convocados.length), "").trim()}
           </p>
           {f.convocados.length > 0 && f.convocados.length !== CONVOCATORIA_HABITUAL && (
-            <p className="pz-np-aviso14" role="status">⚠ {t("nuevo_aviso_14", { n: f.convocados.length })}</p>
+            <p className="pz-np-aviso14" role="status"><Ico.aviso className="pz-ico" />{t("nuevo_aviso_14", { n: f.convocados.length })}</p>
           )}
         </div>
       </Seccion>

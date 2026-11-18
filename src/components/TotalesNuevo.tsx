@@ -82,10 +82,10 @@ export function TotalesNuevo(props: {
                       <tr>
                         <th>{t("tot_th_num")}</th><th className="izq">{t("tot_th_jugador")}</th>
                         <th>{t("tot_th_pj")}</th><th>{t("tot_th_min")}</th>
-                        <th title="⚽">{icPP("⚽")}</th><th>{t("tot_th_asist")}</th>
+                        <th title={t("tot_goles")}>{icPP("⚽")}</th><th>{t("tot_th_asist")}</th>
                         <th>{t("tot_th_disp")}</th><th>{t("tot_th_robos")}</th>
                         <th>{t("tot_th_cortes")}</th><th>{t("tot_th_perd")}</th>
-                        <th title="🟨">{icPP("🟨")}</th>
+                        <th title={t("inf_amarillas")}>{icPP("🟨")}</th>
                       </tr>
                     </thead>
                     <tbody>

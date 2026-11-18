@@ -83,7 +83,8 @@ console.log("── Situaciones de gol ──");
   // (`acc_incorporacion_portero` lo está): por eso no se lee línea a línea.
   const TXT = String.raw`"((?:[^"\\]|\\.)*)"`;
   const ENTRADA = new RegExp(
-    String.raw`^\s{2}(\w+):\s*\{\s*es:\s*` + TXT +
+    // (el emoji de delante, si lo hay, va aparte en «ico»: tanda 5)
+    String.raw`^\s{2}(\w+):\s*\{\s*(?:ico:\s*"[^"]*",\s*)?es:\s*` + TXT +
     String.raw`,\s*en:\s*` + TXT + String.raw`,\s*it:\s*` + TXT + String.raw`,?\s*\}`,
     "gms");
   const CAT: Record<string, Record<string, string>> = {};
