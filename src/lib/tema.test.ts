@@ -6,7 +6,7 @@
  * pasa solo a otro. Aquí se comprueba con los colores reales de los clubes y
  * con clubes inventados rojos, naranjas y coral.
  */
-import { elegirRival, seDistinguen, difTono, deltaE, RIVAL_CANDIDATOS, type ParColor } from "./tema.ts";
+import { elegirRival, seDistinguen, difTono, deltaE, RIVAL_CANDIDATOS, variablesEquipos, type ParColor } from "./tema.ts";
 
 let fallos = 0;
 function ok(cond: boolean, msg: string) {
@@ -45,6 +45,16 @@ ok(difTono("#ff0000", "#00ffff") > 170, "rojo y cian: tonos opuestos");
 ok(difTono("#808080", "#ff7a6b") === 180, "un gris no tiene tono");
 ok(deltaE("#ff7a6b", "#ff7a6b") === 0, "un color consigo mismo: ΔE 0");
 ok(deltaE("#ff7a6b", "#ff6f61") < 35, "coral y casi-coral: ΔE pequeño");
+
+console.log("\nVariables de inicio y partido nuevo (tanda 3)");
+for (const sol of [false, true]) {
+  const v = variablesEquipos(VERDE_INTER, sol);
+  ok(v["--nos"] === (sol ? VERDE_INTER.sol : VERDE_INTER.oscuro), `--nos es el del club (${sol ? "Sol" : "Pabellón"})`);
+  ok(v["--rival"] === (sol ? CORAL.sol : CORAL.oscuro), `--rival es el mismo que en la pantalla del partido (${sol ? "Sol" : "Pabellón"})`);
+  ok(seDistinguen(v["--nos"], v["--rival"]), `nuestro color y el del rival se distinguen (${sol ? "Sol" : "Pabellón"})`);
+}
+const rojo = variablesEquipos({ oscuro: "#e63946", sol: "#b3202c" }, false);
+ok(seDistinguen(rojo["--nos"], rojo["--rival"]), "club rojo: el rival de inicio tampoco se le parece");
 
 console.log(fallos ? `\n❌ ${fallos} fallo(s)` : "\n✅ todo bien");
 if (fallos) process.exit(1);

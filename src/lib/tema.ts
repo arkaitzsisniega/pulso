@@ -101,3 +101,20 @@ export function elegirRival(propio: ParColor, candidatos: ParColor[] = RIVAL_CAN
   }
   return candidatos[0];
 }
+
+/**
+ * Variables CSS de los dos equipos para una pantalla con el aspecto nuevo
+ * (tanda 3 · 18/11/2026: inicio y partido nuevo). --nos y --rival como en la
+ * pantalla del partido; --nos-suave es el tinte de fondo de lo «elegido» y
+ * --sobre-nos el color de la letra encima de un botón relleno con --nos.
+ */
+export function variablesEquipos(propio: ParColor, sol: boolean): Record<string, string> {
+  const nos = sol ? propio.sol : propio.oscuro;
+  const par = elegirRival(propio);
+  return {
+    "--nos": nos,
+    "--nos-suave": rgba(nos, sol ? 0.1 : 0.16),
+    "--rival": sol ? par.sol : par.oscuro,
+    "--sobre-nos": sol ? "#ffffff" : "#04152a",
+  };
+}

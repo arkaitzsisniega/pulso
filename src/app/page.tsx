@@ -9,12 +9,20 @@ import { jugabamosEnCasa } from "@/lib/rehacer";
 import { t, useIdioma, labelCompeticionCorta } from "@/lib/i18n";
 import { ID_PARTIDO_EJEMPLO, sembrarPartidoEjemplo } from "@/lib/partidoEjemplo";
 import { CLIENTE, VERSION_CRONO } from "@/lib/clientes";
-import { useAspecto, setAspecto } from "@/lib/aspecto";
+import { useAspecto, setAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import { InicioNuevo } from "@/components/InicioNuevo";
+import { conIconos } from "@/components/DirectoNuevo";
 
 export default function Home() {
   useIdioma();
   const router = useRouter();
   const aspecto = useAspecto();
+  const modoSol = useModoSol();
+  // Aspecto NUEVO (tanda 3 · 18/11/2026): misma lista y mismos manejadores,
+  // otro dibujo (components/InicioNuevo.tsx). En la ventana de rehacer, con el
+  // nuevo los emojis pasan a iconos; con el clásico el texto llega tal cual.
+  const nuevo = aspecto === "nuevo";
+  const ic = (txt: string): React.ReactNode => (nuevo ? conIconos(txt) : txt);
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [cargado, setCargado] = useState(false);
 
@@ -64,6 +72,66 @@ export default function Home() {
     p.estado === "finalizado"
       ? { txt: t("home_estado_fin"), cls: "bg-zinc-700 text-zinc-200" }
       : { txt: t("home_estado_curso"), cls: "bg-emerald-800 text-emerald-100" };
+
+  const ventanaRehacer = (
+    <>
+      {aRehacer && aRehacer.config && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => { if (!rehaciendo) setARehacer(null); }}>
+          <div className="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-2xl font-bold mb-1">{ic(t("home_rehacer"))}</h3>
+            <p className="text-lg font-bold text-white">
+              {aRehacer.config.partido_id}
+              <span className="font-normal text-zinc-400"> · {aRehacer.config.rival} · {aRehacer.config.fecha}</span>
+            </p>
+            <p className="text-sm text-zinc-400 mt-2 mb-5">{t("home_rehacer_explica")}</p>
+
+            <p className="text-base font-semibold text-zinc-200 mb-2">{t("home_rehacer_donde")}</p>
+            <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label={t("home_rehacer_donde")}>
+              {[true, false].map((casa) => {
+                const elegido = enCasa === casa;
+                return (
+                  <button key={String(casa)} type="button" role="radio" aria-checked={elegido}
+                    data-rehacer-local={casa ? "casa" : "fuera"}
+                    onClick={() => setEnCasa(casa)}
+                    style={{ touchAction: "manipulation" }}
+                    className={`py-5 rounded-xl text-xl font-bold border-2 ${
+                      elegido ? "bg-emerald-700 border-emerald-300 text-white"
+                              : "bg-zinc-800 border-zinc-700 text-zinc-400"}`}>
+                    {ic(casa ? t("home_rehacer_casa") : t("home_rehacer_fuera"))}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-zinc-500 mt-2">{t("home_rehacer_nota")}</p>
+
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <button type="button" onClick={() => setARehacer(null)} disabled={rehaciendo}
+                className="py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-base font-semibold">
+                {t("cancelar")}
+              </button>
+              <button type="button" onClick={confirmarRehacer} disabled={rehaciendo}
+                style={{ touchAction: "manipulation" }}
+                className={`py-3 rounded-xl text-base font-bold ${
+                  rehaciendo ? "bg-zinc-700 opacity-60" : "bg-sky-700 hover:bg-sky-600"}`}>
+                {rehaciendo ? t("home_rehacer_creando") : ic(t("home_rehacer_ok"))}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  if (nuevo) {
+    return (
+      <InicioNuevo partidos={partidos} cargado={cargado} aspecto={aspecto}
+        sol={modoSol} onSol={() => setModoSol(!modoSol)} onAspecto={setAspecto}
+        onContinuar={continuar} onStats={verStats} onRehacer={abrirRehacer} onBorrar={borrar}
+        ventana={ventanaRehacer} />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
@@ -172,52 +240,7 @@ export default function Home() {
         </div>
       </div>
 
-      {aRehacer && aRehacer.config && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-          onClick={() => { if (!rehaciendo) setARehacer(null); }}>
-          <div className="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg"
-            onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-2xl font-bold mb-1">{t("home_rehacer")}</h3>
-            <p className="text-lg font-bold text-white">
-              {aRehacer.config.partido_id}
-              <span className="font-normal text-zinc-400"> · {aRehacer.config.rival} · {aRehacer.config.fecha}</span>
-            </p>
-            <p className="text-sm text-zinc-400 mt-2 mb-5">{t("home_rehacer_explica")}</p>
-
-            <p className="text-base font-semibold text-zinc-200 mb-2">{t("home_rehacer_donde")}</p>
-            <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label={t("home_rehacer_donde")}>
-              {[true, false].map((casa) => {
-                const elegido = enCasa === casa;
-                return (
-                  <button key={String(casa)} type="button" role="radio" aria-checked={elegido}
-                    data-rehacer-local={casa ? "casa" : "fuera"}
-                    onClick={() => setEnCasa(casa)}
-                    style={{ touchAction: "manipulation" }}
-                    className={`py-5 rounded-xl text-xl font-bold border-2 ${
-                      elegido ? "bg-emerald-700 border-emerald-300 text-white"
-                              : "bg-zinc-800 border-zinc-700 text-zinc-400"}`}>
-                    {casa ? t("home_rehacer_casa") : t("home_rehacer_fuera")}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-xs text-zinc-500 mt-2">{t("home_rehacer_nota")}</p>
-
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <button type="button" onClick={() => setARehacer(null)} disabled={rehaciendo}
-                className="py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-base font-semibold">
-                {t("cancelar")}
-              </button>
-              <button type="button" onClick={confirmarRehacer} disabled={rehaciendo}
-                style={{ touchAction: "manipulation" }}
-                className={`py-3 rounded-xl text-base font-bold ${
-                  rehaciendo ? "bg-zinc-700 opacity-60" : "bg-sky-700 hover:bg-sky-600"}`}>
-                {rehaciendo ? t("home_rehacer_creando") : t("home_rehacer_ok")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {ventanaRehacer}
     </div>
   );
 }
