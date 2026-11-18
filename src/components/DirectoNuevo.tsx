@@ -282,7 +282,7 @@ export function CabeceraNueva(props: {
       </div>
       <div className="pz-control">
         <button className="pz-btn ico" onClick={p.onRetroceder} disabled={!p.puedeRetroceder}
-          title={t("part_volver_parte_title")} aria-label={t("part_volver_parte_title")}>
+          title={sinEmojis(t("part_volver_parte_title"))} aria-label={sinEmojis(t("part_volver_parte_title"))}>
           <Ico.atras />
         </button>
         <button className="pz-btn" onClick={p.onParte}>
@@ -296,12 +296,12 @@ export function CabeceraNueva(props: {
 /** Iniciar / pausar: flotante, siempre por encima de los modales (z-60). */
 export function BotonTiempoNuevo(props: { corriendo: boolean; onIniciar: () => void; onPausar: () => void }) {
   return props.corriendo ? (
-    <button className="pz-play pausar" onClick={props.onPausar} aria-label={t("part_pausar")}>
+    <button className="pz-play pausar" onClick={props.onPausar} aria-label={sinEmojis(t("part_pausar"))}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.5" /><rect x="14" y="4" width="5" height="16" rx="1.5" /></svg>
       {sinIcono(t("part_pausar"))}
     </button>
   ) : (
-    <button className="pz-play iniciar" onClick={props.onIniciar} aria-label={t("part_iniciar")}>
+    <button className="pz-play iniciar" onClick={props.onIniciar} aria-label={sinEmojis(t("part_iniciar"))}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z" /></svg>
       {sinIcono(t("part_iniciar"))}
     </button>

@@ -776,6 +776,7 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
   background: transparent; color: var(--texto-2); font: 700 18px/1 var(--f-num); letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
 .pz-np-lv button.on { border-color: var(--ok); color: var(--texto); box-shadow: inset 0 0 0 1px var(--ok); background: rgba(34,197,94,.12); }
 .pz-np-aviso14 { margin: 8px 0 0; color: var(--aviso); font: 600 15px/1.3 var(--f-txt); }
+.pz-np-aviso14 .pz-ico { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    RESUMEN, TIEMPOS y TOTALES con el aspecto nuevo (tanda 4 · 18/11/2026)
@@ -1064,3 +1065,13 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
 .pz-res-k .det.filas .l { white-space: nowrap; }
 .pz-res-k .det.filas b { text-align: right; }
 .pz-res-k .det.filas b small { display: block; font-family: var(--f-txt); margin-top: 2px; }
+
+/* ── Editor de acciones del resumen (tanda 5 · 18/11/2026) ──────────────────
+   Las ventanas de editar / añadir / borrar una acción llevan la cabecera de
+   las del partido (CabVentana en components/EditorEventos.tsx); los títulos
+   de las ventanitas de dentro (zona, flecha), la misma letra en pequeño. */
+.pz-ed-subtit {
+  font: 800 20px/1.1 var(--f-num); letter-spacing: .04em; text-transform: uppercase;
+  text-align: center; margin-bottom: 12px;
+}
+.pz-ed-borrar-txt { font: 500 17px/1.4 var(--f-txt); color: var(--texto-2); margin: 4px 0 16px; }

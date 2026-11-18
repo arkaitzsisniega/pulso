@@ -27,8 +27,12 @@ const union = db.slice(db.indexOf("export type AccionIndTipo ="));
 const TIPOS = [...union.slice(0, union.indexOf(";")).matchAll(/"(\w+)"/g)].map((m) => m[1]);
 
 const CATALOGO: Record<string, Record<string, string>> = {};
-const LINEA = /^  (\w+): \{ es: "((?:[^"\\]|\\.)*)", en: "((?:[^"\\]|\\.)*)", it: "((?:[^"\\]|\\.)*)" \},$/gm;
-for (const m of leer("./i18n.ts").matchAll(LINEA)) CATALOGO[m[1]] = { es: m[2], en: m[3], it: m[4] };
+// El emoji de delante va aparte, en «ico» (tanda 5): t() lo vuelve a poner.
+const LINEA = /^  (\w+): \{ (?:ico: "([^"]*)", )?es: "((?:[^"\\]|\\.)*)", en: "((?:[^"\\]|\\.)*)", it: "((?:[^"\\]|\\.)*)" \},$/gm;
+const con = (ico: string | undefined, tx: string) => (ico ? `${ico} ${tx}` : tx);
+for (const m of leer("./i18n.ts").matchAll(LINEA)) {
+  CATALOGO[m[1]] = { es: con(m[2], m[3]), en: con(m[2], m[4]), it: con(m[2], m[5]) };
+}
 const traductor = (idioma: string) => (clave: string) => CATALOGO[clave]?.[idioma] ?? clave;
 const es = traductor("es");
 
