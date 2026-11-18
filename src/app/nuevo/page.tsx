@@ -132,6 +132,13 @@ export default function NuevoPartido() {
       return;
     }
 
+    // Convocatoria distinta de 14 (Arkaitz, 18/11/2026): al pulsar «Empezar»
+    // se avisa y se elige: seguir así (Aceptar) o volver a corregirla (Cancelar).
+    if (avisoConvocatoria(convocados.length)
+        && !confirm(t("nuevo_confirm_14", { n: convocados.length }))) {
+      return;
+    }
+
     setEmpezando(true);
     try {
       // iniciarPartido ahora persiste a Dexie ANTES de resolver. Así

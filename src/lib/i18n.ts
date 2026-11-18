@@ -456,6 +456,7 @@ export const CATALOGO: Record<string, Entrada> = {
   nuevo_convocados: { es: "Convocados (toca para conmutar)", en: "Squad (tap to toggle)", it: "Convocati (tocca per cambiare)" },
   nuevo_convocados_count: { es: "{n} convocados", en: "{n} called up", it: "{n} convocati" },
   nuevo_aviso_14: { es: "Hay {n} convocados: lo habitual son 14.", en: "{n} players called up: the usual squad is 14.", it: "{n} convocati: di solito sono 14." },
+  nuevo_confirm_14: { es: "Hay {n} convocados y lo habitual son 14.\n\nAceptar: empezar el partido así.\nCancelar: volver para corregir la convocatoria.", en: "{n} players are called up and the usual squad is 14.\n\nOK: start the match like this.\nCancel: go back and fix the squad.", it: "Ci sono {n} convocati e di solito sono 14.\n\nOK: inizia la partita così.\nAnnulla: torna a correggere i convocati." },
   nuevo_jugamos_como: { es: "Jugamos como", en: "We play", it: "Giochiamo" },
   nuevo_local: { es: "Local", en: "Home", it: "In casa" },
   nuevo_visitante: { es: "Visitante", en: "Away", it: "In trasferta" },
