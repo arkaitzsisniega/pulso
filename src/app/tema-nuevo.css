@@ -435,6 +435,10 @@
   justify-content: center; color: #fff; flex: none;
 }
 .pz-panel-ico.neutro { background: var(--capa-3); }
+/* En Sol el cuadro neutro (lápiz de «Editar acción», etc.) era #e3e9f2 con el
+   icono en blanco: casi no se veía. Va relleno como los de color, en el gris
+   azulado de los textos secundarios del Sol, y el icono blanco se lee. */
+.pz[data-tema="sol"] .pz-panel-ico.neutro { background: var(--texto-3); }
 .pz-panel-ico .pz-ti { color: #fff !important; margin: 0; }
 .pz-panel-ico .pz-ti .pz-ico { width: 24px; height: 24px; }
 .pz-panel-ico .pz-ti-tarjeta { width: 18px; height: 24px; margin: 0; }
