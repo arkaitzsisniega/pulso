@@ -776,3 +776,291 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
   background: transparent; color: var(--texto-2); font: 700 18px/1 var(--f-num); letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
 .pz-np-lv button.on { border-color: var(--ok); color: var(--texto); box-shadow: inset 0 0 0 1px var(--ok); background: rgba(34,197,94,.12); }
 .pz-np-aviso14 { margin: 8px 0 0; color: var(--aviso); font: 600 15px/1.3 var(--f-txt); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESUMEN, TIEMPOS y TOTALES con el aspecto nuevo (tanda 4 · 18/11/2026)
+
+   Maqueta: PULSO/comercial/crono/maquetas/resumen.html. La página lleva
+   .pz.pz-pp SOLO con el aspecto nuevo; con el clásico ninguna de estas reglas
+   se aplica. La cabecera, las pestañas, los dos paneles de arriba de «General»
+   y los totales son piezas nuevas (components/ResumenNuevo.tsx y
+   TotalesNuevo.tsx); el resto de cada pestaña es el MISMO contenido, al que
+   aquí se le cambian los colores de Tailwind por los del tema, igual que en las
+   ventanas (tanda 2). Las ventanas que se abran encima siguen con sus reglas
+   (.pz .fixed.inset-0, más específicas). El INFORME para imprimir (/informe)
+   no lleva .pz: sale igual que siempre.
+   ══════════════════════════════════════════════════════════════════════════ */
+.pz-pp {
+  --tn-ok: rgba(34,197,94,.13);  --tn-ok-f: rgba(34,197,94,.06);
+  --tn-mal: rgba(255,77,77,.13); --tn-mal-f: rgba(255,77,77,.06);
+  --tn-tm: rgba(167,139,250,.15); --tn-tm-f: rgba(167,139,250,.07);
+  --tn-am: rgba(255,212,0,.10);  --tn-am-f: rgba(255,212,0,.05);
+  --tn-av: rgba(255,159,28,.14);
+  --tn-t3: rgba(255,77,77,.20); --tn-t2: rgba(245,183,10,.14); --tn-t1: rgba(34,197,94,.12);
+  --am-texto: var(--amarilla);
+  color: var(--texto); font-family: var(--f-txt); font-size: 15px;
+  min-height: calc(100dvh - env(safe-area-inset-top, 0px));
+}
+.pz-pp[data-tema="sol"] {
+  --tn-ok: rgba(18,145,63,.10);  --tn-ok-f: rgba(18,145,63,.05);
+  --tn-mal: rgba(214,31,31,.09); --tn-mal-f: rgba(214,31,31,.04);
+  --tn-tm: rgba(109,78,216,.10); --tn-tm-f: rgba(109,78,216,.05);
+  --tn-am: rgba(201,138,0,.12);  --tn-am-f: rgba(201,138,0,.06);
+  --tn-av: rgba(217,112,10,.10);
+  --tn-t3: rgba(214,31,31,.13); --tn-t2: rgba(201,138,0,.14); --tn-t1: rgba(18,145,63,.10);
+  --am-texto: #8a6a00;
+}
+.pz-res { padding: 16px 22px 28px; }
+/* Fondo a todo el ancho; el contenido, como mucho a 1056 px y centrado. */
+.pz-tot { padding: 16px max(22px, calc((100% - 1056px) / 2)) 28px; }
+
+/* ── Barra de arriba ── */
+.pz-res-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.pz-res-top .der { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.pz-res-top .pz-ib { height: 46px; }
+.pz-res-titulo { margin-left: 4px; font-size: 13px; }
+
+/* ── Marcador grande ── */
+.pz-res-hero {
+  position: relative; overflow: hidden; padding: 18px 22px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 20px;
+}
+.pz-res-hero::before, .pz-res-hero::after { content: ""; position: absolute; top: 0; bottom: 0; width: 50%; pointer-events: none; }
+.pz-res-hero::before { left: 0; background: linear-gradient(90deg, var(--nos-suave), transparent); }
+.pz-res-hero::after { right: 0; background: linear-gradient(270deg, var(--rival-suave), transparent); }
+.pz-res-hero > * { position: relative; z-index: 1; }
+.pz-res-hero .eq { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.pz-res-hero .eq.r { flex-direction: row-reverse; text-align: right; }
+.pz-res-hero .eq-txt { min-width: 0; }
+.pz-res-hero .esc {
+  width: 60px; height: 60px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  font: 800 22px/1 var(--f-num); color: #fff; letter-spacing: .03em;
+}
+.pz-res-hero .esc.nos { background: #0b2545; border: 3px solid var(--nos); }
+.pz-res-hero .esc.riv { background: var(--rival); }
+.pz-res-hero .esc-svg { width: 38px; height: 21px; }
+.pz-res-hero .n {
+  font: 800 30px/1 var(--f-num); letter-spacing: .04em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pz-res-hero .n.nos, .pz-res-hero .g .nos { color: var(--nos); }
+.pz-res-hero .n.riv, .pz-res-hero .g .riv { color: var(--rival); }
+.pz-res-hero .s { color: var(--texto-2); font-size: 13px; margin-top: 6px; }
+.pz-res-hero .res { text-align: center; }
+.pz-res-hero .g { font: 800 82px/.95 var(--f-num); display: flex; gap: 16px; align-items: center; justify-content: center; }
+.pz-res-hero .g .sep { color: var(--texto-3); font-size: 48px; }
+.pz-res-hero .tanda { color: var(--balon); font: 600 14px/1.3 var(--f-txt); margin-top: 4px; }
+.pz-res-hero .meta { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+.pz-res-hero .meta .pz-chip { align-self: auto; font-family: var(--f-num); font-size: 13px; text-transform: none; letter-spacing: .03em; }
+.pz-chip.fin { background: rgba(34,197,94,.14); color: var(--ok); }
+.pz-res-hero .partes { color: var(--texto-3); font-size: 13px; margin-top: 8px; }
+.pz-res-hero .partes b { color: var(--texto-2); }
+
+/* ── Pestañas ── */
+.pz-res-tabs {
+  display: flex; gap: 4px; margin: 12px 0; padding: 4px; overflow-x: auto;
+  background: var(--capa); border: 1px solid var(--linea); border-radius: 12px;
+}
+.pz-res-tabs button {
+  flex: 1 0 auto; height: 44px; padding: 0 14px; border-radius: 9px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: 700 15px/1 var(--f-txt); color: var(--texto-2); white-space: nowrap;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer;
+}
+.pz-res-tabs button .pz-ico { width: 18px; height: 18px; }
+.pz-res-tabs button.on { background: var(--capa-3); color: var(--texto); box-shadow: inset 0 -3px 0 var(--marca-rojo); }
+.pz-res-tabs button:active { filter: brightness(1.15); }
+
+/* ── General: disparos y balón ── */
+.pz-res-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 12px; align-items: stretch; }
+@media (max-width: 899px) { .pz-res-cols { grid-template-columns: minmax(0, 1fr); } }
+.pz-res-panel { padding: 16px 18px; }
+.pz-res-h3 {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  font: 700 17px/1.1 var(--f-num); letter-spacing: .06em; text-transform: uppercase; color: var(--texto);
+}
+.pz-res-h3 > .pz-ico { width: 20px; height: 20px; color: var(--texto-3); }
+.pz-res-h3 .ley { margin-left: auto; display: flex; gap: 12px; font: 600 12px/1 var(--f-txt); letter-spacing: 0; text-transform: none; color: var(--texto-2); }
+.pz-res-h3 .ley i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.pz-res-h3 .ley i.nos { background: var(--nos); }
+.pz-res-h3 .ley i.riv { background: var(--rival); }
+.pz-res-cmp { display: grid; grid-template-columns: 48px minmax(0, 1fr) 120px minmax(0, 1fr) 48px; align-items: center; gap: 10px; height: 40px; }
+.pz-res-cmp .v { font: 800 24px/1 var(--f-num); }
+.pz-res-cmp .v.l { text-align: right; color: var(--nos); }
+.pz-res-cmp .v.r { color: var(--rival); }
+.pz-res-cmp .lab { text-align: center; font: 600 13px/1.1 var(--f-txt); color: var(--texto-2); }
+.pz-res-cmp .barra { height: 12px; border-radius: 6px; background: var(--capa-3); overflow: hidden; display: flex; }
+.pz-res-cmp .barra.l { justify-content: flex-end; }
+.pz-res-cmp .barra i { display: block; height: 100%; border-radius: 6px; }
+.pz-res-cmp .barra.l i { background: var(--nos); }
+.pz-res-cmp .barra.r i { background: var(--rival); }
+.pz-res-cmp.tot { border-top: 1px solid var(--linea); margin-top: 6px; padding-top: 6px; height: 50px; }
+.pz-res-cmp.tot .v { font-size: 32px; }
+.pz-res-cmp.tot .lab { font-weight: 800; color: var(--texto); text-transform: uppercase; letter-spacing: .05em; }
+.pz-res-pie { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--linea); color: var(--texto-2); font-size: 14px; }
+.pz-res-pie .suave { color: var(--texto-3); }
+.pz-res-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.pz-res-k { background: var(--capa-2); border: 1px solid var(--linea); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.pz-res-k .t { display: flex; align-items: center; gap: 8px; font: 700 13px/1.15 var(--f-txt); color: var(--texto-2); }
+.pz-res-k .t i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.pz-res-k .big { font: 800 40px/1 var(--f-num); margin-top: 8px; color: var(--texto); }
+.pz-res-k .big small { font-size: 16px; color: var(--texto-3); font-weight: 700; }
+.pz-res-k .det { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font: 500 13px/1.3 var(--f-txt); color: var(--texto-2); margin-top: 10px; }
+.pz-res-k .det.filas { flex-direction: column; }
+.pz-res-k .det.filas > span { display: flex; justify-content: space-between; gap: 8px; }
+.pz-res-k .det b { color: var(--texto); font-size: 15px; }
+.pz-res-k .det small { color: var(--texto-3); font-weight: 600; font-size: 12px; }
+
+/* ── El contenido de siempre, con los colores del tema ──────────────────── */
+.pz-pp .font-mono, .pz-pp .tabular-nums { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.pz-pp h3, .pz-pp h4 { font-family: var(--f-num); letter-spacing: .05em; text-transform: uppercase; }
+.pz-pp h3.text-2xl, .pz-pp h3.text-xl, .pz-pp h3.text-lg { font-size: 19px; line-height: 1.2; }
+.pz-pp h3.text-base { font-size: 17px; }
+.pz-pp .rounded, .pz-pp .rounded-lg { border-radius: 10px; }
+.pz-pp .rounded-xl { border-radius: 14px; }
+
+/* Grises → capas */
+.pz-pp .bg-zinc-950, .pz-pp .bg-zinc-950\/60, .pz-pp .bg-zinc-950\/40 { background: var(--capa-2); }
+.pz-pp .bg-zinc-900 { background: var(--capa); box-shadow: inset 0 0 0 1px var(--linea); }
+.pz-pp .bg-zinc-900\/50 { background: var(--capa); }
+.pz-pp .bg-zinc-800 { background: var(--capa-2); box-shadow: inset 0 0 0 1px var(--linea); }
+.pz-pp .bg-zinc-800\/50, .pz-pp .bg-zinc-800\/40, .pz-pp .bg-zinc-800\/30 { background: var(--capa-2); }
+.pz-pp .bg-zinc-700, .pz-pp .bg-zinc-600 { background: var(--capa-3); box-shadow: inset 0 0 0 1px var(--linea); }
+.pz-pp .bg-zinc-600 { box-shadow: inset 0 0 0 2px var(--texto-3); }
+.pz-pp .bg-zinc-700\/80, .pz-pp .bg-zinc-700\/60, .pz-pp .bg-zinc-700\/50 { background: var(--linea); }
+.pz-pp .bg-zinc-500 { background: var(--texto-3); }
+.pz-pp [class*="border-zinc-"], .pz-pp .border-white\/10, .pz-pp .border-white\/20 { border-color: var(--linea); }
+.pz-pp .border-white\/80 { border-color: var(--texto-2); }
+.pz-pp [class*="border-emerald-7"], .pz-pp [class*="border-emerald-8"], .pz-pp [class*="border-green-7"],
+.pz-pp [class*="border-red-7"], .pz-pp [class*="border-purple-7"] { border-color: var(--linea); }
+.pz-pp [class*="border-amber-"] { border-color: var(--aviso); }
+.pz-pp input, .pz-pp select, .pz-pp textarea {
+  background: var(--capa-2); color: var(--texto); box-shadow: inset 0 0 0 1px var(--linea); border-color: var(--linea);
+}
+
+/* Textos */
+.pz-pp .text-white, .pz-pp .text-zinc-100, .pz-pp .text-zinc-200 { color: var(--texto); }
+.pz-pp .text-zinc-300, .pz-pp .text-zinc-400 { color: var(--texto-2); }
+.pz-pp .text-zinc-500, .pz-pp .text-zinc-600, .pz-pp .text-zinc-700 { color: var(--texto-3); }
+.pz-pp .text-zinc-900 { color: #08162b; }
+.pz-pp [class*="text-emerald-"] { color: var(--nos); }
+.pz-pp [class*="text-green-"] { color: var(--ok); }
+.pz-pp [class*="text-red-"] { color: var(--mal); }
+.pz-pp [class*="text-yellow-"] { color: var(--am-texto); }
+.pz-pp [class*="text-amber-"], .pz-pp [class*="text-orange-"] { color: var(--aviso); }
+.pz-pp [class*="text-purple-"] { color: var(--tm); }
+.pz-pp [class*="text-sky-"] { color: var(--t0); }
+.pz-pp [class*="text-pink-"] { color: var(--balon); }
+
+/* Tintes de fondo (paneles y columnas) */
+.pz-pp .bg-emerald-900\/30, .pz-pp .bg-emerald-900\/20 { background: var(--nos-suave); }
+.pz-pp .bg-emerald-900\/10 { background: var(--nos-flojo); }
+.pz-pp .bg-green-900\/30, .pz-pp .bg-green-900\/25, .pz-pp .bg-emerald-950\/40 { background: var(--tn-ok); }
+.pz-pp .bg-green-900\/10 { background: var(--tn-ok-f); }
+.pz-pp .bg-red-900\/30, .pz-pp .bg-red-900\/25 { background: var(--tn-mal); }
+.pz-pp .bg-red-900\/10 { background: var(--tn-mal-f); }
+.pz-pp .bg-purple-900\/30 { background: var(--tn-tm); }
+.pz-pp .bg-purple-900\/10 { background: var(--tn-tm-f); }
+.pz-pp .bg-yellow-900\/30 { background: var(--tn-am); }
+.pz-pp .bg-yellow-900\/10 { background: var(--tn-am-f); }
+.pz-pp .bg-amber-950\/40 { background: var(--tn-av); }
+
+/* Botones y chips de color → sobrios: lo elegido, teñido y con borde */
+.pz-pp .bg-emerald-700, .pz-pp .bg-emerald-800 {
+  background: var(--nos-suave); box-shadow: inset 0 0 0 2px var(--nos); color: var(--texto);
+}
+.pz-pp .bg-emerald-600 { background: var(--nos); color: var(--sobre-nos); }
+.pz-pp .bg-green-700 { background: var(--tn-ok); box-shadow: inset 0 0 0 1.5px var(--ok); color: var(--texto); }
+.pz-pp .bg-red-700 { background: var(--rival-suave); box-shadow: inset 0 0 0 2px var(--rival); color: var(--texto); }
+.pz-pp .bg-red-800, .pz-pp .bg-red-900\/60, .pz-pp .bg-red-900\/70 {
+  background: var(--tn-mal); box-shadow: inset 0 0 0 2px var(--mal); color: var(--texto);
+}
+.pz-pp .bg-yellow-700 { background: var(--tn-am); box-shadow: inset 0 0 0 2px var(--amarilla); color: var(--texto); }
+.pz-pp .bg-amber-700 { background: var(--tn-av); box-shadow: inset 0 0 0 2px var(--aviso); color: var(--texto); }
+
+/* Marcas pequeñas (cronograma, leyendas, mapa de portería) */
+.pz-pp .bg-emerald-500 { background: var(--nos); }
+.pz-pp .bg-red-500 { background: var(--rival); }
+.pz-pp .bg-emerald-600\/70 { background: var(--nos); opacity: .72; }
+.pz-pp .bg-yellow-600\/70 { background: var(--amarilla); opacity: .72; }
+.pz-pp .bg-yellow-500 { background: var(--amarilla); }
+.pz-pp .bg-red-600 { background: var(--roja); }
+.pz-pp .bg-orange-500 { background: var(--aviso); }
+.pz-pp .bg-red-500\/70 { background: var(--mal); }
+.pz-pp .bg-emerald-500\/40 { background: var(--nos); opacity: .45; }
+.pz-pp .bg-red-500\/40 { background: var(--rival); opacity: .45; }
+.pz-pp .ring-white\/50 { --tw-ring-color: var(--capa); }
+
+/* Goles del partido: lo nuestro con el color del club, lo del rival con el suyo */
+.pz-pp li.bg-green-900\/25 { background: var(--nos-suave); box-shadow: inset 4px 0 0 var(--nos); }
+.pz-pp li.bg-red-900\/25 { background: var(--rival-suave); box-shadow: inset 4px 0 0 var(--rival); }
+.pz-pp li.bg-green-900\/25 .text-green-300 { color: var(--nos); }
+.pz-pp li.bg-red-900\/25 .text-red-300 { color: var(--rival); }
+
+/* Tiempos: el MISMO semáforo de minutos (85/65/40/20 %), con la raya de su color */
+.pz-pp tr.bg-red-700\/40 { background: var(--tn-t3); }
+.pz-pp tr.bg-orange-600\/40 { background: var(--tn-av); }
+.pz-pp tr.bg-yellow-600\/30 { background: var(--tn-t2); }
+.pz-pp tr.bg-green-700\/30 { background: var(--tn-t1); }
+.pz-pp tr.bg-green-900\/30 { background: var(--tn-ok-f); }
+.pz-pp tr.bg-red-700\/40 > td:first-child { box-shadow: inset 4px 0 0 var(--t3); }
+.pz-pp tr.bg-orange-600\/40 > td:first-child { box-shadow: inset 4px 0 0 var(--aviso); }
+.pz-pp tr.bg-yellow-600\/30 > td:first-child { box-shadow: inset 4px 0 0 var(--t2); }
+.pz-pp tr.bg-green-700\/30 > td:first-child { box-shadow: inset 4px 0 0 var(--t1); }
+.pz-pp tr.bg-green-900\/30 > td:first-child { box-shadow: inset 4px 0 0 var(--t0); }
+.pz-pp tr.bg-zinc-800\/30 > td:first-child { box-shadow: inset 4px 0 0 var(--texto-3); }
+
+/* ── TOTALES ── */
+.pz-tot-h1 { display: flex; align-items: center; gap: 10px; font: 800 26px/1 var(--f-num); letter-spacing: .05em; text-transform: uppercase; }
+.pz-tot-h1 .pz-ico { width: 24px; height: 24px; color: var(--texto-3); }
+.pz-tot-vacio { color: var(--texto-2); margin: 18px 4px; }
+.pz-tot-aviso {
+  display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; padding: 12px 14px; border-radius: 12px;
+  background: var(--tn-av); box-shadow: inset 0 0 0 1.5px var(--aviso); color: var(--texto); font-size: 14px; line-height: 1.4;
+}
+.pz-tot-aviso .pz-ico { color: var(--aviso); }
+.pz-tot-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+@media (max-width: 699px) { .pz-tot-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pz-tot-k { padding: 12px 14px; }
+.pz-tot-k .v { font: 800 24px/1.1 var(--f-num); margin-top: 8px; letter-spacing: .02em; }
+.pz-tot-sec { padding: 16px 18px; margin-bottom: 12px; }
+.pz-tot-scroll { overflow-x: auto; }
+.pz-tot-tabla { width: 100%; border-collapse: collapse; font-size: 15px; }
+.pz-tot-tabla th {
+  font: 700 11px/1 var(--f-txt); color: var(--texto-3); text-transform: uppercase; letter-spacing: .07em;
+  text-align: right; padding: 8px 8px; border-bottom: 1px solid var(--linea); white-space: nowrap;
+}
+.pz-tot-tabla th .pz-ti .pz-ico { width: 15px; height: 15px; }
+.pz-tot-tabla td { text-align: right; padding: 8px 8px; border-bottom: 1px solid var(--linea); font-size: 17px; }
+.pz-tot-tabla tbody tr:last-child td { border-bottom: none; }
+.pz-tot-tabla .izq { text-align: left; }
+.pz-tot-tabla td.nombre { font: 700 16px/1.1 var(--f-txt); }
+.pz-tot-tabla td.dorsal { color: var(--nos); text-align: left; width: 44px; }
+.pz-tot-tabla th:first-child { text-align: left; }
+.pz-tot-tabla td.fuerte { font-weight: 800; }
+.pz-tot-nota { color: var(--texto-3); font-size: 12px; margin-top: 8px; }
+.pz-tot-partidos { list-style: none; }
+.pz-tot-partidos li { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--linea); }
+.pz-tot-partidos li:last-child { border-bottom: none; }
+.pz-tot-partidos .res {
+  width: 28px; height: 28px; border-radius: 8px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  font: 800 15px/1 var(--f-num); background: var(--capa-3); color: var(--texto-2);
+}
+.pz-tot-partidos .res.G { background: var(--tn-ok); color: var(--ok); box-shadow: inset 0 0 0 1.5px var(--ok); }
+.pz-tot-partidos .res.P { background: var(--tn-mal); color: var(--mal); box-shadow: inset 0 0 0 1.5px var(--mal); }
+.pz-tot-partidos .fecha { color: var(--texto-3); font-size: 15px; }
+.pz-tot-partidos .marc { flex: 1; min-width: 0; font: 700 17px/1.2 var(--f-num); letter-spacing: .03em; text-transform: uppercase; }
+.pz-tot-partidos .pz-chip { align-self: auto; }
+.pz-tot-copia .txt { color: var(--texto-2); font-size: 14px; line-height: 1.4; }
+.pz-tot-copia .txt b { color: var(--texto); }
+.pz-tot-copia .acc { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.pz-tot-msg { margin-top: 10px; color: var(--aviso); font-size: 14px; }
+
+/* Iconos dentro de las marcas redondas del cronograma: en blanco, sobre su color */
+.pz-pp .rounded-full .pz-ti { color: #fff !important; margin: 0; }
+/* Incorporaciones del portero rival, parte a parte: etiqueta a la izquierda,
+   número a la derecha y el desglose debajo, sin partir líneas. */
+.pz-res-k .det.filas > span { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+.pz-res-k .det.filas .l { white-space: nowrap; }
+.pz-res-k .det.filas b { text-align: right; }
+.pz-res-k .det.filas b small { display: block; font-family: var(--f-txt); margin-top: 2px; }

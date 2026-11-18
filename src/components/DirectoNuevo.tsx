@@ -67,6 +67,21 @@ export const Ico = {
   chevron: (p: IcoProps) => <Svg {...p}><path d="M9 6l6 6-6 6" /></Svg>,
   avion: (p: IcoProps) => <Svg {...p}><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></Svg>,
   directo: (p: IcoProps) => <Svg {...p}><circle cx="12" cy="12" r="3" /><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8" /></Svg>,
+  // Tanda 4 (resumen, tiempos y totales)
+  doc: (p: IcoProps) => <Svg {...p}><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6M9 15h6" /></Svg>,
+  lapiz: (p: IcoProps) => <Svg {...p}><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></Svg>,
+  linea: (p: IcoProps) => <Svg {...p}><path d="M3 12h4l3-8 4 16 3-8h4" /></Svg>,
+  bombilla: (p: IcoProps) => <Svg {...p}><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" /></Svg>,
+  calendario: (p: IcoProps) => <Svg {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></Svg>,
+  subir: (p: IcoProps) => <Svg {...p}><path d="M12 15V3M7 8l5-5 5 5" /><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" /></Svg>,
+  bajar: (p: IcoProps) => <Svg {...p}><path d="M12 3v12M7 10l5 5 5-5" /><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" /></Svg>,
+  carpeta: (p: IcoProps) => <Svg {...p}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></Svg>,
+  pin: (p: IcoProps) => <Svg {...p}><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></Svg>,
+  rayo: (p: IcoProps) => <Svg {...p}><path d="M13 2L4 14h7l-1 8 9-12h-7z" /></Svg>,
+  espadas: (p: IcoProps) => <Svg {...p}><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2" /><path d="M9.5 6.5L13 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2" /></Svg>,
+  escudo: (p: IcoProps) => <Svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Svg>,
+  subeDer: (p: IcoProps) => <Svg {...p}><path d="M7 17L17 7M8 7h9v9" /></Svg>,
+  bajaDer: (p: IcoProps) => <Svg {...p}><path d="M7 7l10 10M17 8v9H8" /></Svg>,
 };
 
 // ──────────────── Aspecto nuevo en las VENTANAS (tanda 2 · 17/11/2026) ────────────────
@@ -77,8 +92,8 @@ export const NuevoCtx = createContext(false);
 export function useNuevo(): boolean { return useContext(NuevoCtx); }
 
 /** Emoji → icono SVG y su color (la familia de la acción). */
-type DefIcono = { ico: keyof typeof Ico | "amarilla" | "roja"; color?: string };
-const EMOJI_ICONO: Record<string, DefIcono> = {
+export type DefIcono = { ico: keyof typeof Ico | "amarilla" | "roja"; color?: string };
+export const EMOJI_ICONO: Record<string, DefIcono> = {
   "⚽": { ico: "gol", color: "var(--ok)" },
   "🎯": { ico: "diana", color: "var(--mal)" },
   "⚠": { ico: "aviso", color: "var(--aviso)" },
@@ -120,9 +135,9 @@ const EMOJI_ICONO: Record<string, DefIcono> = {
   "✈": { ico: "avion" },
 };
 
-const RE_EMOJI = /(\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)/u;
+export const RE_EMOJI = /(\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)/u;
 
-function dibujaIcono(def: DefIcono | undefined, key: number, pos = ""): ReactNode {
+export function dibujaIcono(def: DefIcono | undefined, key: number, pos = ""): ReactNode {
   if (!def) return null;
   if (def.ico === "amarilla" || def.ico === "roja") {
     return <span key={key} className={`pz-ti-tarjeta ${def.ico === "amarilla" ? "am" : "ro"} ${pos}`} aria-hidden="true" />;

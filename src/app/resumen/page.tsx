@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { usePartido } from "@/lib/store";
 import { ROSTER, CLIENTE, NOMBRE_CORTO_TC } from "@/lib/clientes";
 import { formatMMSS } from "@/lib/utils";
@@ -13,6 +13,12 @@ import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelAccionGol, labelResultadoDisparo, labelParte, labelCompeticionCorta } from "@/lib/i18n";
 import { contarPorZona } from "@/lib/zonas";
 import { accionDeLanzamiento, esLanzamiento } from "@/lib/lanzamientos";
+import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import {
+  PostCtx, icPP, useIcPP, useTPP, estiloPP, CabeceraResumen, PestanasResumen,
+  DisparosNuevo, BalonNuevo, prefijo,
+} from "@/components/ResumenNuevo";
+import { Ico } from "@/components/DirectoNuevo";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 
@@ -146,6 +152,12 @@ function colorSemaforoMin(seg: number, max: number): string {
   return "bg-green-900/30";
 }
 
+/** «← Volver al partido» / «Inicio →» / «🏠 Inicio» sin flechas ni emoji: en
+ *  el aspecto nuevo el icono va dibujado aparte. */
+function sinFlecha(txt: string): string {
+  return txt.replace(/[←→]/g, "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
+}
+
 // ─── Página resumen ─────────────────────────────────────────────────────
 
 export default function ResumenPage() {
@@ -154,15 +166,23 @@ export default function ResumenPage() {
   const { partido, cargado, editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
           finalizarPartido } = usePartido();
   const [tab, setTab] = useState<"general" | "tiempos" | "individual" | "cronograma" | "disparos" | "analisis" | "editar">("general");
+  // Aspecto NUEVO (tanda 4 · 18/11/2026): mismas cuentas y mismos botones,
+  // otro dibujo (components/ResumenNuevo.tsx + tema-nuevo.css, clases pz-pp).
+  // Con el clásico, `ic` y `T` devuelven el texto tal cual: nada cambia.
+  const aspecto = useAspecto();
+  const modoSol = useModoSol();
+  const nuevo = aspecto === "nuevo";
+  const ic = (txt: string): React.ReactNode => (nuevo ? icPP(txt) : txt);
+  const T = (clave: string, params?: Record<string, string | number>) => ic(t(clave, params));
 
   if (!cargado) {
-    return <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">{t("cargando")}</div>;
+    return <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">{T("cargando")}</div>;
   }
   if (!partido.config) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center gap-4">
-        <p>{t("res_no_partido")}</p>
-        <Link href="/" className="px-6 py-3 bg-zinc-800 rounded-lg">{t("inicio")}</Link>
+        <p>{T("res_no_partido")}</p>
+        <Link href="/" className="px-6 py-3 bg-zinc-800 rounded-lg">{T("inicio")}</Link>
       </div>
     );
   }
@@ -253,25 +273,68 @@ export default function ResumenPage() {
   const tanda = partido.tanda;
   const huboTanda = tanda && tanda.tiros.length > 0;
 
+  const pestanas = [
+    { id: "general",    lbl: t("res_tab_general") },
+    { id: "tiempos",    lbl: t("res_tab_tiempos") },
+    { id: "individual", lbl: t("res_tab_individual") },
+    { id: "cronograma", lbl: t("res_tab_cronograma") },
+    ...(esDirecto ? [] : [{ id: "disparos", lbl: t("res_tab_disparos") }]),
+    { id: "analisis",   lbl: t("res_tab_analisis") },
+    { id: "editar",     lbl: t("res_tab_editar") },
+  ];
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4">
-      {/* HEADER */}
+    <PostCtx.Provider value={nuevo}>
+    <div className={nuevo ? "pz pz-pp pz-res min-h-screen" : "min-h-screen bg-zinc-950 text-zinc-100 p-4"}
+      data-tema={nuevo && modoSol ? "sol" : undefined}
+      style={nuevo ? estiloPP(modoSol) : undefined}>
+      {nuevo ? (
+        <CabeceraResumen
+          rival={cfg.rival}
+          golesNos={partido.marcador.inter}
+          golesRival={partido.marcador.rival}
+          local={cfg.local}
+          meta={[cfg.partido_id, labelCompeticionCorta(cfg.competicion), `${cfg.fecha} ${cfg.hora}`.trim(), cfg.lugar || "—"]}
+          estado={CLIENTE.demo ? t(`estado_${partido.estado}`) : partido.estado}
+          enCurso={partido.estado === "en_curso"}
+          partes={partesJugadas.map(labelParte).join(", ")}
+          tanda={huboTanda ? (
+            <>
+              {T("res_tanda_penaltis")} <strong>{tanda.marcador.inter} - {tanda.marcador.rival}</strong>
+              {" "}{T("res_tiros", { n: tanda.tiros.length })}
+            </>
+          ) : undefined}
+          sol={modoSol}
+          onSol={() => setModoSol(!modoSol)}
+          izquierda={partido.estado === "en_curso" ? (
+            <button type="button" onClick={() => router.push("/partido")} className="pz-ib">
+              <Ico.flechaIzq />{sinFlecha(t("res_volver_partido"))}
+            </button>
+          ) : (
+            <Link href="/" className="pz-ib"><Ico.casa />{sinFlecha(t("inicio"))}</Link>
+          )}
+          derecha={partido.estado === "en_curso" ? (
+            <Link href="/" className="pz-ib"><Ico.casa />{sinFlecha(t("res_inicio_flecha"))}</Link>
+          ) : undefined}
+        />
+      ) : (
+      /* HEADER */
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
           {partido.estado === "en_curso" ? (
             <button onClick={() => router.push("/partido")}
               className="text-base text-zinc-400 hover:text-zinc-200">
-              {t("res_volver_partido")}
+              {T("res_volver_partido")}
             </button>
           ) : (
             <Link href="/"
               className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base">
-              {t("inicio")}
+              {T("inicio")}
             </Link>
           )}
-          <h1 className="text-3xl font-bold">{t("res_titulo")}</h1>
+          <h1 className="text-3xl font-bold">{T("res_titulo")}</h1>
           <Link href="/" className="text-base text-zinc-400 hover:text-zinc-200">
-            {t("res_inicio_flecha")}
+            {T("res_inicio_flecha")}
           </Link>
         </div>
         <div className="bg-zinc-900 rounded-xl p-4">
@@ -287,29 +350,25 @@ export default function ResumenPage() {
           </div>
           {huboTanda && (
             <div className="text-center mt-2 text-pink-400 text-base">
-              {t("res_tanda_penaltis")} <strong>{tanda.marcador.inter} - {tanda.marcador.rival}</strong>
-              {" "}{t("res_tiros", { n: tanda.tiros.length })}
+              {T("res_tanda_penaltis")} <strong>{tanda.marcador.inter} - {tanda.marcador.rival}</strong>
+              {" "}{T("res_tiros", { n: tanda.tiros.length })}
             </div>
           )}
           <div className="mt-3 text-base text-zinc-500 text-center">
-            {t("res_estado")} <strong className="text-zinc-300">{CLIENTE.demo ? t(`estado_${partido.estado}`) : partido.estado}</strong>
+            {T("res_estado")} <strong className="text-zinc-300">{CLIENTE.demo ? t(`estado_${partido.estado}`) : partido.estado}</strong>
             {" · "}
-            {t("res_partes_jugadas")} <strong className="text-zinc-300">{partesJugadas.map(labelParte).join(", ")}</strong>
+            {T("res_partes_jugadas")} <strong className="text-zinc-300">{partesJugadas.map(labelParte).join(", ")}</strong>
           </div>
         </div>
       </div>
+      )}
 
       {/* TABS */}
+      {nuevo ? (
+        <PestanasResumen pestanas={pestanas} actual={tab} onElegir={(id) => setTab(id as any)} />
+      ) : (
       <div className="flex gap-1 mb-4 overflow-x-auto">
-        {[
-          { id: "general",    lbl: t("res_tab_general") },
-          { id: "tiempos",    lbl: t("res_tab_tiempos") },
-          { id: "individual", lbl: t("res_tab_individual") },
-          { id: "cronograma", lbl: t("res_tab_cronograma") },
-          ...(esDirecto ? [] : [{ id: "disparos", lbl: t("res_tab_disparos") }]),
-          { id: "analisis",   lbl: t("res_tab_analisis") },
-          { id: "editar",     lbl: t("res_tab_editar") },
-        ].map((tabItem) => (
+        {pestanas.map((tabItem) => (
           <button key={tabItem.id}
             onClick={() => setTab(tabItem.id as any)}
             className={`px-4 py-2 rounded-lg text-base font-semibold whitespace-nowrap ${
@@ -317,25 +376,104 @@ export default function ResumenPage() {
             }`}>{tabItem.lbl}</button>
         ))}
       </div>
+      )}
 
       {/* TAB: GENERAL */}
       {tab === "general" && (
         <div className="space-y-4">
+          {nuevo ? (
+            /* Aspecto nuevo: los MISMOS números, en dos paneles (disparos
+               nuestros contra los del rival con barras, y el balón). */
+            <div className="pz-res-cols">
+              <DisparosNuevo
+                titulo={t("res_disparos")}
+                rival={cfg.rival}
+                filas={[
+                  { lbl: t("res_puerta"), nos: totalesEquipo.dpp, riv: partido.disparosRival.puerta },
+                  { lbl: t("res_palo"), nos: totalesEquipo.dpa, riv: partido.disparosRival.palo },
+                  { lbl: t("res_fuera"), nos: totalesEquipo.dpf, riv: partido.disparosRival.fuera },
+                  { lbl: t("res_bloqueados"), nos: totalesEquipo.dpb, riv: partido.disparosRival.bloqueado },
+                  { lbl: t("res_total"), total: true,
+                    nos: totalesEquipo.dpp+totalesEquipo.dpa+totalesEquipo.dpf+totalesEquipo.dpb,
+                    riv: partido.disparosRival.puerta+partido.disparosRival.palo+partido.disparosRival.fuera+partido.disparosRival.bloqueado },
+                ]}
+                pie={(partido.incorporacionesRival?.conDisparo ?? 0) > 0 ? (
+                  <>
+                    {ic("🧤")} {t("res_disparos_de_incorporacion", {
+                      n: partido.incorporacionesRival!.conDisparo,
+                      total: partido.disparosRival.puerta + partido.disparosRival.palo
+                             + partido.disparosRival.fuera + partido.disparosRival.bloqueado,
+                    })}
+                    <span className="suave">
+                      {" "}({t("res_incorporaciones_total", { n: partido.incorporacionesRival!.total })})
+                    </span>
+                  </>
+                ) : undefined}
+              />
+              <BalonNuevo
+                titulo={t("res_stats_inter", { corto: CLIENTE.nombreCorto })}
+                kpis={[
+                  { lbl: t("res_perdidas"), color: "var(--mal)",
+                    grande: totalesEquipo.pf+totalesEquipo.pnf+perdEquipo,
+                    detalle: [
+                      { lbl: t("res_forzada"), val: totalesEquipo.pf },
+                      { lbl: t("res_no_forzada"), val: totalesEquipo.pnf },
+                      { lbl: t("res_de_equipo"), val: perdEquipo },
+                    ] },
+                  { lbl: t("res_recuperaciones"), color: "var(--ok)",
+                    grande: totalesEquipo.robos+totalesEquipo.cortes+recEquipo,
+                    detalle: [
+                      { lbl: t("res_robos"), val: totalesEquipo.robos },
+                      { lbl: t("res_cortes"), val: totalesEquipo.cortes },
+                      { lbl: t("res_de_equipo"), val: recEquipo },
+                    ] },
+                  esDirecto ? (
+                    hayEventosIncorporacion || (partido.incorporacionesRival?.total ?? 0) === 0 ? {
+                      lbl: t("res_incorporaciones_titulo"), color: "var(--tm)", enFilas: true,
+                      grande: <>
+                        {partesJugadas.reduce((a, p) => a + incorporacionesDe(p).con + incorporacionesDe(p).sin, 0)}
+                        <small> ({partesJugadas.reduce((a, p) => a + incorporacionesDe(p).con, 0)} {t("res_inc_con")})</small>
+                      </>,
+                      detalle: partesJugadas.map((p) => {
+                        const inc = incorporacionesDe(p);
+                        return { lbl: nombreParte(p),
+                          val: <>{inc.con + inc.sin} <small>({inc.con} {t("res_inc_con")} · {inc.sin} {t("res_inc_sin")})</small></> };
+                      }),
+                    } : {
+                      lbl: t("res_incorporaciones_titulo"), color: "var(--tm)",
+                      grande: partido.incorporacionesRival!.total,
+                      detalle: [{ lbl: t("res_inc_con"), val: partido.incorporacionesRival!.conDisparo }],
+                    }
+                  ) : {
+                    lbl: t("res_divididos"), color: "var(--tm)",
+                    grande: (totalesEquipo.bdg + totalesEquipo.bdp) > 0
+                      ? `${Math.round(totalesEquipo.bdg / (totalesEquipo.bdg + totalesEquipo.bdp) * 100)}%`
+                      : "—",
+                    detalle: [
+                      { lbl: t("res_ganados"), val: totalesEquipo.bdg },
+                      { lbl: t("res_no_ganados"), val: totalesEquipo.bdp },
+                    ],
+                  },
+                ]}
+              />
+            </div>
+          ) : (
+          <>
           {/* CABECERA: Disparos NUESTROS vs RIVAL */}
           <div className="bg-zinc-900 rounded-xl p-6">
-            <h3 className="text-2xl font-bold text-zinc-300 mb-4">{t("res_disparos")}</h3>
+            <h3 className="text-2xl font-bold text-zinc-300 mb-4">{T("res_disparos")}</h3>
             <div className="grid grid-cols-2 gap-5">
               {/* INTER */}
               <div className="bg-emerald-900/30 rounded-lg p-5">
                 <div className="text-xl text-emerald-300 font-bold mb-3">{CLIENTE.nombreCorto}</div>
                 <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-lg">
-                  <div className="flex justify-between"><span>{t("res_puerta")}</span><strong>{totalesEquipo.dpp}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_palo")}</span><strong>{totalesEquipo.dpa}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_fuera")}</span><strong>{totalesEquipo.dpf}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_bloqueados")}</span><strong>{totalesEquipo.dpb}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_puerta")}</span><strong>{totalesEquipo.dpp}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_palo")}</span><strong>{totalesEquipo.dpa}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_fuera")}</span><strong>{totalesEquipo.dpf}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_bloqueados")}</span><strong>{totalesEquipo.dpb}</strong></div>
                 </div>
                 <div className="border-t border-emerald-700/50 mt-4 pt-3 flex justify-between text-emerald-200 text-2xl font-bold">
-                  <span>{t("res_total")}</span>
+                  <span>{T("res_total")}</span>
                   <strong>{totalesEquipo.dpp+totalesEquipo.dpa+totalesEquipo.dpf+totalesEquipo.dpb}</strong>
                 </div>
               </div>
@@ -343,13 +481,13 @@ export default function ResumenPage() {
               <div className="bg-red-900/30 rounded-lg p-5">
                 <div className="text-xl text-red-300 font-bold mb-3">{cfg.rival}</div>
                 <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-lg">
-                  <div className="flex justify-between"><span>{t("res_puerta")}</span><strong>{partido.disparosRival.puerta}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_palo")}</span><strong>{partido.disparosRival.palo}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_fuera")}</span><strong>{partido.disparosRival.fuera}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_bloqueados")}</span><strong>{partido.disparosRival.bloqueado}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_puerta")}</span><strong>{partido.disparosRival.puerta}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_palo")}</span><strong>{partido.disparosRival.palo}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_fuera")}</span><strong>{partido.disparosRival.fuera}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_bloqueados")}</span><strong>{partido.disparosRival.bloqueado}</strong></div>
                 </div>
                 <div className="border-t border-red-700/50 mt-4 pt-3 flex justify-between text-red-200 text-2xl font-bold">
-                  <span>{t("res_total")}</span>
+                  <span>{T("res_total")}</span>
                   <strong>{partido.disparosRival.puerta+partido.disparosRival.palo+partido.disparosRival.fuera+partido.disparosRival.bloqueado}</strong>
                 </div>
                 {/* De los disparos en contra, cuántos salieron de una
@@ -359,13 +497,13 @@ export default function ResumenPage() {
                 {(partido.incorporacionesRival?.conDisparo ?? 0) > 0 && (
                   <div className="mt-3 pt-2 border-t border-red-700/30
                                   text-sm text-red-300/90">
-                    🧤 {t("res_disparos_de_incorporacion", {
+                    {prefijo(nuevo, "🧤")}{T("res_disparos_de_incorporacion", {
                       n: partido.incorporacionesRival!.conDisparo,
                       total: partido.disparosRival.puerta + partido.disparosRival.palo
                              + partido.disparosRival.fuera + partido.disparosRival.bloqueado,
                     })}
                     <span className="text-red-400/70">
-                      {" "}({t("res_incorporaciones_total", {
+                      {" "}({T("res_incorporaciones_total", {
                         n: partido.incorporacionesRival!.total,
                       })})
                     </span>
@@ -377,29 +515,29 @@ export default function ResumenPage() {
 
           {/* SEGUNDA FILA — Pérdidas, Recuperaciones, Divididos del INTER */}
           <div className="bg-zinc-900 rounded-xl p-6">
-            <h3 className="text-2xl font-bold text-zinc-300 mb-4">{t("res_stats_inter", { corto: CLIENTE.nombreCorto })}</h3>
+            <h3 className="text-2xl font-bold text-zinc-300 mb-4">{T("res_stats_inter", { corto: CLIENTE.nombreCorto })}</h3>
             <div className="grid grid-cols-3 gap-4">
               {/* Pérdidas */}
               <div className="bg-red-900/30 rounded-lg p-5">
-                <div className="text-xl text-red-300 font-bold mb-3">{t("res_perdidas")}</div>
+                <div className="text-xl text-red-300 font-bold mb-3">{T("res_perdidas")}</div>
                 <div className="text-lg space-y-2">
-                  <div className="flex justify-between"><span>{t("res_forzada")}</span><strong>{totalesEquipo.pf}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_no_forzada")}</span><strong>{totalesEquipo.pnf}</strong></div>
-                  <div className="flex justify-between text-red-300/90"><span>{t("res_de_equipo")}</span><strong>{perdEquipo}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_forzada")}</span><strong>{totalesEquipo.pf}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_no_forzada")}</span><strong>{totalesEquipo.pnf}</strong></div>
+                  <div className="flex justify-between text-red-300/90"><span>{T("res_de_equipo")}</span><strong>{perdEquipo}</strong></div>
                   <div className="border-t border-red-700/50 mt-3 pt-3 flex justify-between text-red-200 text-xl font-bold">
-                    <span>{t("res_total")}</span><strong>{totalesEquipo.pf+totalesEquipo.pnf+perdEquipo}</strong>
+                    <span>{T("res_total")}</span><strong>{totalesEquipo.pf+totalesEquipo.pnf+perdEquipo}</strong>
                   </div>
                 </div>
               </div>
               {/* Recuperaciones */}
               <div className="bg-green-900/30 rounded-lg p-5">
-                <div className="text-xl text-green-300 font-bold mb-3">{t("res_recuperaciones")}</div>
+                <div className="text-xl text-green-300 font-bold mb-3">{T("res_recuperaciones")}</div>
                 <div className="text-lg space-y-2">
-                  <div className="flex justify-between"><span>{t("res_robos")}</span><strong>{totalesEquipo.robos}</strong></div>
-                  <div className="flex justify-between"><span>{t("res_cortes")}</span><strong>{totalesEquipo.cortes}</strong></div>
-                  <div className="flex justify-between text-green-300/90"><span>{t("res_de_equipo")}</span><strong>{recEquipo}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_robos")}</span><strong>{totalesEquipo.robos}</strong></div>
+                  <div className="flex justify-between"><span>{T("res_cortes")}</span><strong>{totalesEquipo.cortes}</strong></div>
+                  <div className="flex justify-between text-green-300/90"><span>{T("res_de_equipo")}</span><strong>{recEquipo}</strong></div>
                   <div className="border-t border-green-700/50 mt-3 pt-3 flex justify-between text-green-200 text-xl font-bold">
-                    <span>{t("res_total")}</span><strong>{totalesEquipo.robos+totalesEquipo.cortes+recEquipo}</strong>
+                    <span>{T("res_total")}</span><strong>{totalesEquipo.robos+totalesEquipo.cortes+recEquipo}</strong>
                   </div>
                 </div>
               </div>
@@ -408,7 +546,7 @@ export default function ResumenPage() {
                   del portero rival, parte por parte. */}
               {esDirecto ? (
                 <div className="bg-purple-900/30 rounded-lg p-5">
-                  <div className="text-xl text-purple-300 font-bold mb-3">{t("res_incorporaciones_titulo")}</div>
+                  <div className="text-xl text-purple-300 font-bold mb-3">{T("res_incorporaciones_titulo")}</div>
                   <div className="text-lg space-y-2">
                     {hayEventosIncorporacion || (partido.incorporacionesRival?.total ?? 0) === 0 ? (
                       <>
@@ -420,18 +558,18 @@ export default function ResumenPage() {
                               <strong className="tabular-nums">
                                 {inc.con + inc.sin}
                                 <span className="text-purple-300 font-normal text-base">
-                                  {" "}({inc.con} {t("res_inc_con")} · {inc.sin} {t("res_inc_sin")})
+                                  {" "}({inc.con} {T("res_inc_con")} · {inc.sin} {T("res_inc_sin")})
                                 </span>
                               </strong>
                             </div>
                           );
                         })}
                         <div className="border-t border-purple-700/50 mt-3 pt-3 flex justify-between text-purple-200 text-xl font-bold">
-                          <span>{t("res_total")}</span>
+                          <span>{T("res_total")}</span>
                           <strong className="tabular-nums">
                             {partesJugadas.reduce((a, p) => a + incorporacionesDe(p).con + incorporacionesDe(p).sin, 0)}
                             <span className="font-normal text-base">
-                              {" "}({partesJugadas.reduce((a, p) => a + incorporacionesDe(p).con, 0)} {t("res_inc_con")})
+                              {" "}({partesJugadas.reduce((a, p) => a + incorporacionesDe(p).con, 0)} {T("res_inc_con")})
                             </span>
                           </strong>
                         </div>
@@ -439,11 +577,11 @@ export default function ResumenPage() {
                     ) : (
                       /* Partidos anteriores al desglose: solo hay el total. */
                       <div className="flex justify-between">
-                        <span>{t("res_total")}</span>
+                        <span>{T("res_total")}</span>
                         <strong className="tabular-nums">
                           {partido.incorporacionesRival!.total}
                           <span className="text-purple-300 font-normal text-base">
-                            {" "}({partido.incorporacionesRival!.conDisparo} {t("res_inc_con")})
+                            {" "}({partido.incorporacionesRival!.conDisparo} {T("res_inc_con")})
                           </span>
                         </strong>
                       </div>
@@ -452,12 +590,12 @@ export default function ResumenPage() {
                 </div>
               ) : (
                 <div className="bg-purple-900/30 rounded-lg p-5">
-                  <div className="text-xl text-purple-300 font-bold mb-3">{t("res_divididos")}</div>
+                  <div className="text-xl text-purple-300 font-bold mb-3">{T("res_divididos")}</div>
                   <div className="text-lg space-y-2">
-                    <div className="flex justify-between"><span>{t("res_ganados")}</span><strong>{totalesEquipo.bdg}</strong></div>
-                    <div className="flex justify-between"><span>{t("res_no_ganados")}</span><strong>{totalesEquipo.bdp}</strong></div>
+                    <div className="flex justify-between"><span>{T("res_ganados")}</span><strong>{totalesEquipo.bdg}</strong></div>
+                    <div className="flex justify-between"><span>{T("res_no_ganados")}</span><strong>{totalesEquipo.bdp}</strong></div>
                     <div className="border-t border-purple-700/50 mt-3 pt-3 flex justify-between text-purple-200 text-xl font-bold">
-                      <span>{t("res_ratio")}</span>
+                      <span>{T("res_ratio")}</span>
                       <strong>{(totalesEquipo.bdg + totalesEquipo.bdp) > 0
                         ? `${Math.round(totalesEquipo.bdg / (totalesEquipo.bdg + totalesEquipo.bdp) * 100)}%`
                         : "—"}</strong>
@@ -468,18 +606,21 @@ export default function ResumenPage() {
             </div>
           </div>
 
+          </>
+          )}
+
           {/* ORDEN DE FALTAS DEL EQUIPO — quién comete la 1ª, 2ª, 3ª... falta
               de cada parte, para detectar tendencias (¿siempre el mismo hace la
               5ª?). El nº de orden se deriva ordenando las faltas INTER de la
               parte por tiempo. Pedido Arkaitz 10/8/2026. */}
           <div className="bg-zinc-900 rounded-xl p-5">
-            <h3 className="text-lg font-bold text-zinc-300 mb-4">{t("res_orden_faltas")}</h3>
+            <h3 className="text-lg font-bold text-zinc-300 mb-4">{T("res_orden_faltas")}</h3>
             {(() => {
               const partesConFaltas = partesJugadas.filter((p) =>
                 partido.eventos.some((e) => e.tipo === "falta" && e.equipo === "INTER" && e.parte === p)
               );
               if (partesConFaltas.length === 0) {
-                return <p className="text-base text-zinc-500">{t("res_sin_faltas")}</p>;
+                return <p className="text-base text-zinc-500">{T("res_sin_faltas")}</p>;
               }
               return (
                 <div className="space-y-3">
@@ -532,23 +673,23 @@ export default function ResumenPage() {
             const gp = (g?: number, p?: number) => `${g||0}-${p||0}`;
             return (
               <div className="bg-zinc-900 rounded-xl p-5">
-                <h3 className="text-lg font-bold text-sky-300 mb-1">📹 {t("res_stats_video")}</h3>
-                <p className="text-xs text-zinc-500 mb-4">{t("res_video_leyenda")}</p>
+                <h3 className="text-lg font-bold text-sky-300 mb-1">{prefijo(nuevo, "📹")}{T("res_stats_video")}</h3>
+                <p className="text-xs text-zinc-500 mb-4">{T("res_video_leyenda")}</p>
                 {conDatosCampo.length > 0 && (
                   <div className="overflow-x-auto mb-5">
                     <table className="w-full text-base">
                       <thead className="text-xs text-zinc-400 border-b border-zinc-800">
                         <tr>
-                          <th className="text-left py-2 px-2">{t("res_jugador")}</th>
-                          <th className="px-2">{t("vid_duelC")}</th>
-                          <th className="px-2">{t("vid_duelP")}</th>
-                          <th className="px-2">{t("vid_unoAtq")}</th>
-                          <th className="px-2">{t("vid_unoDef")}</th>
-                          <th className="px-2">{t("vid_anticipacion")}</th>
-                          <th className="px-2" title={t("vid_pase_gol")}>{t("inf_pase_gol")}</th>
-                          <th className="px-2">{t("res_video_conex")}</th>
-                          <th className="px-2">✂️</th>
-                          <th className="px-2">🛡️</th>
+                          <th className="text-left py-2 px-2">{T("res_jugador")}</th>
+                          <th className="px-2">{T("vid_duelC")}</th>
+                          <th className="px-2">{T("vid_duelP")}</th>
+                          <th className="px-2">{T("vid_unoAtq")}</th>
+                          <th className="px-2">{T("vid_unoDef")}</th>
+                          <th className="px-2">{T("vid_anticipacion")}</th>
+                          <th className="px-2" title={t("vid_pase_gol")}>{T("inf_pase_gol")}</th>
+                          <th className="px-2">{T("res_video_conex")}</th>
+                          <th className="px-2">{ic("✂️")}</th>
+                          <th className="px-2">{ic("🛡️")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -572,17 +713,17 @@ export default function ResumenPage() {
                 )}
                 {conDatosPort.length > 0 && (
                   <div className="overflow-x-auto">
-                    <h4 className="text-sm font-bold text-yellow-300 mb-2">🥅 {t("vid_portero")}</h4>
+                    <h4 className="text-sm font-bold text-yellow-300 mb-2">{prefijo(nuevo, "🥅")}{T("vid_portero")}</h4>
                     <table className="w-full text-base">
                       <thead className="text-xs text-zinc-400 border-b border-zinc-800">
                         <tr>
-                          <th className="text-left py-2 px-2">{t("res_jugador")}</th>
-                          <th className="px-2">{t("vid_saque")}</th>
-                          <th className="px-2">{t("vid_pase")}</th>
-                          <th className="px-2">{t("vid_achique")}</th>
-                          <th className="px-2">{t("vid_cob")} {t("res_cob_abbr")}</th>
-                          <th className="px-2">{t("vid_anticipacion")}</th>
-                          <th className="px-2" title={t("vid_pase_gol")}>{t("inf_pase_gol")}</th>
+                          <th className="text-left py-2 px-2">{T("res_jugador")}</th>
+                          <th className="px-2">{T("vid_saque")}</th>
+                          <th className="px-2">{T("vid_pase")}</th>
+                          <th className="px-2">{T("vid_achique")}</th>
+                          <th className="px-2">{T("vid_cob")} {T("res_cob_abbr")}</th>
+                          <th className="px-2">{T("vid_anticipacion")}</th>
+                          <th className="px-2" title={t("vid_pase_gol")}>{T("inf_pase_gol")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -607,7 +748,7 @@ export default function ResumenPage() {
 
           {/* CRONOLOGÍA DE GOLES */}
           <div className="bg-zinc-900 rounded-xl p-5">
-            <h3 className="text-lg font-bold text-zinc-300 mb-4">{t("res_goles_partido")}</h3>
+            <h3 className="text-lg font-bold text-zinc-300 mb-4">{T("res_goles_partido")}</h3>
             {(() => {
               // Incluye goles normales (tipo "gol") Y los penaltis/10 m/FSB
               // que acabaron en GOL metidos por el botón PEN/10M/FSB (eventos
@@ -623,7 +764,7 @@ export default function ResumenPage() {
                   accion: accionDeLanzamiento(ev.tipo),
                 });
               if (goles.length === 0) {
-                return <p className="text-base text-zinc-500">{t("res_sin_goles")}</p>;
+                return <p className="text-base text-zinc-500">{T("res_sin_goles")}</p>;
               }
               return (
                 <ol className="space-y-2">
@@ -662,30 +803,30 @@ export default function ResumenPage() {
                         </div>
                         {esInter && (
                           <div className="text-xl">
-                            <strong className="text-white">⚽ {ev.goleador}</strong>
+                            <strong className="text-white">{prefijo(nuevo, "⚽")}{ev.goleador}</strong>
                             {ev.asistente && (
-                              <span className="text-zinc-300"> · {t("res_asist")} <strong>{ev.asistente}</strong></span>
+                              <span className="text-zinc-300"> · {T("res_asist")} <strong>{ev.asistente}</strong></span>
                             )}
                             {(ev.zonaCampo || ev.zonaPorteria) && (
                               <div className="text-base text-zinc-400 mt-1">
-                                {ev.zonaCampo && <span>{t("res_desde", { zona: ev.zonaCampo })}</span>}
+                                {ev.zonaCampo && <span>{T("res_desde", { zona: ev.zonaCampo })}</span>}
                                 {ev.zonaCampo && ev.zonaPorteria && " → "}
-                                {ev.zonaPorteria && <span>{t("res_a_zona", { zona: ev.zonaPorteria })}</span>}
+                                {ev.zonaPorteria && <span>{T("res_a_zona", { zona: ev.zonaPorteria })}</span>}
                               </div>
                             )}
                           </div>
                         )}
                         {!esInter && (
                           <div className="text-xl text-zinc-300">
-                            {t("res_gol_rival")}
+                            {T("res_gol_rival")}
                             {ev.zonaPorteria && (
-                              <span className="text-base text-zinc-400"> · {t("res_a_zona", { zona: ev.zonaPorteria })}</span>
+                              <span className="text-base text-zinc-400"> · {T("res_a_zona", { zona: ev.zonaPorteria })}</span>
                             )}
                           </div>
                         )}
                         {cuarteto.length > 0 && (
                           <div className="text-base text-zinc-300 mt-2 pt-2 border-t border-white/10">
-                            <span className="text-base text-zinc-500 uppercase tracking-wide">{t("res_en_pista")}</span>
+                            <span className="text-base text-zinc-500 uppercase tracking-wide">{T("res_en_pista")}</span>
                             {" "}
                             {cuarteto.join(", ")}
                           </div>
@@ -701,7 +842,7 @@ export default function ResumenPage() {
           {/* Tanda (si hubo) */}
           {huboTanda && (
             <div className="bg-zinc-900 rounded-xl p-4">
-              <h3 className="text-base font-bold text-zinc-300 mb-2">{t("res_tanda_titulo")}</h3>
+              <h3 className="text-base font-bold text-zinc-300 mb-2">{T("res_tanda_titulo")}</h3>
               <div className="text-base space-y-1">
                 {tanda.tiros.map((ti) => (
                   <div key={ti.id} className="flex items-center gap-2">
@@ -725,9 +866,9 @@ export default function ResumenPage() {
       {/* TAB: TIEMPOS */}
       {tab === "tiempos" && (
         <div className="bg-zinc-900 rounded-xl p-5 overflow-x-auto">
-          <h3 className="text-lg font-bold text-zinc-300 mb-2">{t("res_tiempo_jugado")}</h3>
+          <h3 className="text-lg font-bold text-zinc-300 mb-2">{T("res_tiempo_jugado")}</h3>
           <p className="text-base text-zinc-500 mb-4">
-            {t("res_tiempo_nota")}
+            {T("res_tiempo_nota")}
           </p>
           {/* Tabla con anchos FIJOS: la columna del nombre estrecha (antes se
               comía todo el ancho y los tiempos quedaban lejos, a la derecha) y
@@ -743,8 +884,8 @@ export default function ResumenPage() {
             </colgroup>
             <thead className="text-base text-zinc-400 border-b border-zinc-800">
               <tr>
-                <th className="text-left py-2 px-2">{t("res_jugador")}</th>
-                <th className="text-right px-2">{t("res_tiempos_total")}</th>
+                <th className="text-left py-2 px-2">{T("res_jugador")}</th>
+                <th className="text-right px-2">{T("res_tiempos_total")}</th>
                 {partesJugadas.map((p) => (
                   <th key={p} className="text-right px-2">{labelParte(p)}</th>
                 ))}
@@ -762,8 +903,8 @@ export default function ResumenPage() {
                       <span className={`${f.esPortero ? "text-yellow-400" : ""} font-bold`}>
                         {f.nombre}
                       </span>
-                      {f.enPista && <span className="ml-2 text-sm bg-green-700 px-2 py-0.5 rounded align-middle">{t("res_en_pista_badge")}</span>}
-                      {f.esPortero && <span className="ml-2 text-base text-zinc-500">🥅</span>}
+                      {f.enPista && <span className="ml-2 text-sm bg-green-700 px-2 py-0.5 rounded align-middle">{T("res_en_pista_badge")}</span>}
+                      {f.esPortero && <span className="ml-2 text-base text-zinc-500">{ic("🥅")}</span>}
                     </td>
                     <td className="text-right font-mono tabular-nums px-2 font-bold text-3xl">
                       {formatMMSS(f.total)}
@@ -780,7 +921,7 @@ export default function ResumenPage() {
             </tbody>
             <tfoot className="text-base text-zinc-500 border-t border-zinc-800">
               <tr>
-                <td className="pt-3 px-2 italic truncate">{t("res_total_acumulado")}</td>
+                <td className="pt-3 px-2 italic truncate">{T("res_total_acumulado")}</td>
                 <td className="text-right font-mono tabular-nums px-2 font-bold pt-3 text-xl">
                   {formatMMSS(filasTiempos.reduce((s, f) => s + f.total, 0))}
                 </td>
@@ -799,9 +940,9 @@ export default function ResumenPage() {
       {/* TAB: INDIVIDUAL — bloques de colores */}
       {tab === "individual" && (
         <div className="bg-zinc-900 rounded-xl p-4 overflow-x-auto">
-          <h3 className="text-lg font-bold text-zinc-300 mb-3">{t("res_stats_indiv")}</h3>
+          <h3 className="text-lg font-bold text-zinc-300 mb-3">{T("res_stats_indiv")}</h3>
           <p className="text-base text-zinc-500 mb-4">
-            {t("res_indiv_nota")}
+            {T("res_indiv_nota")}
           </p>
           {/* table-fixed + colgroup para que TODAS las columnas de números
               midan lo mismo (pedido Arkaitz 22/8: "por un tema visual").
@@ -816,35 +957,35 @@ export default function ResumenPage() {
             </colgroup>
             <thead className="text-base border-b border-zinc-700">
               <tr className="text-zinc-400">
-                <th rowSpan={2} className="text-left py-2 px-2 align-bottom border-r border-zinc-800">{t("res_col_jug")}</th>
-                <th colSpan={5} className="text-center px-1 bg-emerald-900/30 text-emerald-300 text-base font-bold">{t("res_col_disparos")}</th>
-                <th colSpan={2} className="text-center px-1 bg-red-900/30 text-red-300 text-base font-bold">{t("res_col_perd")}</th>
-                <th colSpan={2} className="text-center px-1 bg-green-900/30 text-green-300 text-base font-bold">{t("res_col_recup")}</th>
+                <th rowSpan={2} className="text-left py-2 px-2 align-bottom border-r border-zinc-800">{T("res_col_jug")}</th>
+                <th colSpan={5} className="text-center px-1 bg-emerald-900/30 text-emerald-300 text-base font-bold">{T("res_col_disparos")}</th>
+                <th colSpan={2} className="text-center px-1 bg-red-900/30 text-red-300 text-base font-bold">{T("res_col_perd")}</th>
+                <th colSpan={2} className="text-center px-1 bg-green-900/30 text-green-300 text-base font-bold">{T("res_col_recup")}</th>
                 {!esDirecto && (
-                  <th colSpan={2} className="text-center px-1 bg-purple-900/30 text-purple-300 text-base font-bold">{t("res_col_div")}</th>
+                  <th colSpan={2} className="text-center px-1 bg-purple-900/30 text-purple-300 text-base font-bold">{T("res_col_div")}</th>
                 )}
-                <th colSpan={4} className="text-center px-1 bg-yellow-900/30 text-yellow-300 text-base font-bold">{t("res_col_goles")}</th>
+                <th colSpan={4} className="text-center px-1 bg-yellow-900/30 text-yellow-300 text-base font-bold">{T("res_col_goles")}</th>
               </tr>
               <tr className="text-zinc-500 text-base">
-                <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_puerta")}>{t("res_th_puer")}</th>
-                <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_palo")}>{t("res_th_palo")}</th>
-                <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_fuera")}>{t("res_th_fuera")}</th>
-                <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_bloqueado")}>{t("res_th_bloq")}</th>
+                <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_puerta")}>{T("res_th_puer")}</th>
+                <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_palo")}>{T("res_th_palo")}</th>
+                <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_fuera")}>{T("res_th_fuera")}</th>
+                <th className="text-center px-1 bg-emerald-900/10" title={t("res_title_bloqueado")}>{T("res_th_bloq")}</th>
                 <th className="text-center px-1 bg-emerald-900/20 font-bold" title={t("res_title_total_disp")}>Σ</th>
-                <th className="text-center px-1 bg-red-900/10" title={t("res_title_forzada")}>{t("ic_c_pf")}</th>
-                <th className="text-center px-1 bg-red-900/10" title={t("res_title_no_forzada")}>{t("ic_c_pnf")}</th>
-                <th className="text-center px-1 bg-green-900/10">{t("res_th_robos")}</th>
-                <th className="text-center px-1 bg-green-900/10">{t("res_th_cortes")}</th>
+                <th className="text-center px-1 bg-red-900/10" title={t("res_title_forzada")}>{T("ic_c_pf")}</th>
+                <th className="text-center px-1 bg-red-900/10" title={t("res_title_no_forzada")}>{T("ic_c_pnf")}</th>
+                <th className="text-center px-1 bg-green-900/10">{T("res_th_robos")}</th>
+                <th className="text-center px-1 bg-green-900/10">{T("res_th_cortes")}</th>
                 {!esDirecto && (
                   <>
-                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_ganados")}>{t("ic_c_bdg")}</th>
-                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_perdidos")}>{t("ic_c_bdp")}</th>
+                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_ganados")}>{T("ic_c_bdg")}</th>
+                    <th className="text-center px-1 bg-purple-900/10" title={t("res_title_perdidos")}>{T("ic_c_bdp")}</th>
                   </>
                 )}
-                <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_goles_marcados")}>{t("res_abbr_g")}</th>
-                <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_asistencias")}>{t("res_abbr_a")}</th>
-                <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_gf")}>{t("res_abbr_gf")}</th>
-                <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_gc")}>{t("res_abbr_gc")}</th>
+                <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_goles_marcados")}>{T("res_abbr_g")}</th>
+                <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_asistencias")}>{T("res_abbr_a")}</th>
+                <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_gf")}>{T("res_abbr_gf")}</th>
+                <th className="text-center px-1 bg-yellow-900/10" title={t("res_title_gc")}>{T("res_abbr_gc")}</th>
               </tr>
             </thead>
             <tbody>
@@ -853,7 +994,7 @@ export default function ResumenPage() {
                 return (
                   <tr key={nombre} className="border-b border-zinc-800">
                     <td className={`py-2 px-2 border-r border-zinc-800 ${esPortero ? "text-yellow-400" : ""} font-bold text-lg`}>
-                      {nombre}{esPortero ? " 🥅" : ""}
+                      {nombre}{esPortero ? (nuevo ? <>{" "}{ic("🥅")}</> : " 🥅") : ""}
                     </td>
                     {/* Disparos */}
                     <td className="text-center font-mono tabular-nums px-1 bg-emerald-900/10">{c?.dpp ?? 0}</td>
@@ -885,7 +1026,7 @@ export default function ResumenPage() {
             </tbody>
           </table>
           <div className="mt-3 text-base text-zinc-500">
-            {t("res_indiv_leyenda")}
+            {T("res_indiv_leyenda")}
           </div>
         </div>
       )}
@@ -925,7 +1066,7 @@ export default function ResumenPage() {
             if (confirm(t("res_finalizar_confirm"))) finalizarPartido();
           }}
           className="mt-6 w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-lg font-bold">
-          {t("res_finalizar")}
+          {T("res_finalizar")}
         </button>
       )}
 
@@ -934,26 +1075,27 @@ export default function ResumenPage() {
         {partido.estado === "en_curso" && (
           <button onClick={() => router.push("/partido")}
             className="py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base">
-            {t("res_volver_partido")}
+            {T("res_volver_partido")}
           </button>
         )}
         <button onClick={() => router.push("/informe?imprimir=1")}
           className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-bold mr-2">
-          {t("res_informe_pdf")}
+          {T("res_informe_pdf")}
         </button>
         <button onClick={() => exportarJSON(partido)}
           className="py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-base font-bold">
-          {t("res_exportar_json")}
+          {T("res_exportar_json")}
         </button>
         <Link href="/"
           className="py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-base text-center">
-          {t("inicio")}
+          {T("inicio")}
         </Link>
       </div>
       <p className="text-[11px] text-zinc-600 mt-2 text-center">
-        {t("res_footer_json")}
+        {T("res_footer_json")}
       </p>
     </div>
+    </PostCtx.Provider>
   );
 }
 
@@ -968,6 +1110,10 @@ function nombreParte(p: ParteId): string {
 }
 
 function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
+  // Aspecto nuevo: emojis → iconos (con el clásico, el texto tal cual).
+  const T = useTPP();
+  const ic = useIcPP();
+  const nuevoPP = useContext(PostCtx);
   const { partido, partesJugadas } = props;
   const cfg = partido.config!;
 
@@ -988,7 +1134,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
   if (totalAbs === 0) {
     return (
       <div className="bg-zinc-900 rounded-xl p-6 text-zinc-400 text-center">
-        {t("res_crono_sin_partes")}
+        {T("res_crono_sin_partes")}
       </div>
     );
   }
@@ -1126,7 +1272,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
   return (
     <div className="bg-zinc-900 rounded-xl p-3">
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-        <h3 className="text-base font-bold text-zinc-300">{t("res_crono_titulo")}</h3>
+        <h3 className="text-base font-bold text-zinc-300">{T("res_crono_titulo")}</h3>
         <div className="flex gap-1 flex-wrap">
           {opcionesFiltro.map((o) => (
             <button key={o.id}
@@ -1142,8 +1288,8 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       <div className="flex flex-wrap gap-3 text-[11px] mb-2 text-zinc-400">
         <span><span className="inline-block w-3 h-3 bg-emerald-500 rounded-sm align-middle mr-1"></span>{NOMBRE_CORTO_TC}</span>
         <span><span className="inline-block w-3 h-3 bg-red-500 rounded-sm align-middle mr-1"></span>{cfg.rival}</span>
-        <span><span className="inline-block w-3 h-3 bg-emerald-600/70 rounded-sm align-middle mr-1"></span>{t("res_crono_tramo_pista")}</span>
-        <span className="text-zinc-600">{t("res_crono_leyenda_iconos")}</span>
+        <span><span className="inline-block w-3 h-3 bg-emerald-600/70 rounded-sm align-middle mr-1"></span>{T("res_crono_tramo_pista")}</span>
+        <span className="text-zinc-600">{T("res_crono_leyenda_iconos")}</span>
       </div>
 
       <div className="overflow-x-auto">
@@ -1173,7 +1319,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
 
           {/* ── Carril de EVENTOS ── */}
           <div className="flex items-center gap-2">
-            <div className="w-28 shrink-0 text-[10px] text-zinc-500 text-right pr-1">{t("res_crono_eventos")}</div>
+            <div className="w-28 shrink-0 text-[10px] text-zinc-500 text-right pr-1">{T("res_crono_eventos")}</div>
             <div className="relative flex-1 h-24 bg-zinc-950/60 border border-zinc-800 rounded">
             {/* divisores entre partes */}
             {partesVisibles.slice(1).map((p) => (
@@ -1204,7 +1350,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
                   title={m.tooltip}
                   className={`absolute -translate-x-1/2 rounded-full flex items-center justify-center font-bold text-white ${tamano} ${m.clase}`}
                   style={{ left: `${xPct(m.x)}%`, top }}>
-                  {m.etiqueta}
+                  {ic(m.etiqueta)}
                 </div>
               );
             })}
@@ -1222,7 +1368,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
                 <div key={j} className="flex items-center gap-2 text-[11px]">
                   <div className={`w-28 shrink-0 truncate ${esPortero ? "text-yellow-300" : "text-zinc-300"}`}>
                     {dorsal && <span className="text-zinc-500 mr-1">#{dorsal}</span>}
-                    {j}{esPortero ? " 🥅" : ""}
+                    {j}{esPortero ? (nuevoPP ? <>{" "}{ic("🥅")}</> : " 🥅") : ""}
                   </div>
                   <div className="relative flex-1 h-4 bg-zinc-950/40 border border-zinc-800 rounded">
                     {/* divisores partes (solo entre partes visibles) */}
@@ -1285,7 +1431,7 @@ function Cronograma(props: { partido: Partido; partesJugadas: ParteId[] }) {
       </div>
 
       <div className="mt-3 text-[11px] text-zinc-500">
-        {t("res_crono_nota")}
+        {T("res_crono_nota")}
       </div>
     </div>
   );
@@ -1327,6 +1473,8 @@ const ZONAS_PORT: string[][] = [
 ];
 
 function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) {
+  // Aspecto nuevo: emojis → iconos (con el clásico, el texto tal cual).
+  const T = useTPP();
   const { partido, partesJugadas } = props;
   const cfg = partido.config!;
 
@@ -1457,7 +1605,7 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
         <div className="text-zinc-500 text-base">·</div>
         <div className="flex gap-1 flex-wrap">
           <button onClick={() => setFiltroParte("todo")}
-            className={`px-3 py-1.5 rounded text-base font-semibold ${filtroParte === "todo" ? "bg-zinc-600" : "bg-zinc-800 hover:bg-zinc-700"}`}>{t("res_crono_todo")}</button>
+            className={`px-3 py-1.5 rounded text-base font-semibold ${filtroParte === "todo" ? "bg-zinc-600" : "bg-zinc-800 hover:bg-zinc-700"}`}>{T("res_crono_todo")}</button>
           {partesJugadas.map((p) => (
             <button key={p} onClick={() => setFiltroParte(p)}
               className={`px-3 py-1.5 rounded text-base font-semibold ${filtroParte === p ? "bg-zinc-600" : "bg-zinc-800 hover:bg-zinc-700"}`}>
@@ -1466,23 +1614,23 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
           ))}
         </div>
         <div className="ml-auto text-base text-zinc-400">
-          <strong className="text-xl text-white tabular-nums">{totalTiros}</strong> {t("resd_disparos_lbl")}
+          <strong className="text-xl text-white tabular-nums">{totalTiros}</strong> {T("resd_disparos_lbl")}
         </div>
       </div>
 
       {/* Resumen por parte */}
       <div className="bg-zinc-900 rounded-xl p-3">
-        <h3 className="text-base font-bold text-zinc-300 mb-2">{t("resd_resumen_parte")}</h3>
+        <h3 className="text-base font-bold text-zinc-300 mb-2">{T("resd_resumen_parte")}</h3>
         <table className="text-base w-full">
           <thead className="border-b border-zinc-800 text-zinc-400">
             <tr>
-              <th className="text-left py-1 px-2">{t("resd_parte")}</th>
+              <th className="text-left py-1 px-2">{T("resd_parte")}</th>
               {ORDEN_RES.map((r) => (
                 <th key={r} className={`text-center px-2 py-1 ${COLOR_RES[r].replace("bg-", "text-").replace("text-zinc-900", "text-zinc-300")}`}>
                   {labelRes(r)}
                 </th>
               ))}
-              <th className="text-right px-2 py-1">{t("resd_total")}</th>
+              <th className="text-right px-2 py-1">{T("resd_total")}</th>
             </tr>
           </thead>
           <tbody>
@@ -1500,15 +1648,15 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
           </tbody>
         </table>
         <p className="text-[10px] text-zinc-500 mt-2">
-          {t("resd_leyenda")}
+          {T("resd_leyenda")}
         </p>
       </div>
 
       {/* Mapa campo (SVG real) */}
       <div className="bg-zinc-900 rounded-xl p-3">
-        <h3 className="text-base font-bold text-zinc-300 mb-2">{t("resd_mapa_campo")}</h3>
+        <h3 className="text-base font-bold text-zinc-300 mb-2">{T("resd_mapa_campo")}</h3>
         <p className="text-[11px] text-zinc-500 mb-2">
-          {t("resd_mapa_campo_nota")}
+          {T("resd_mapa_campo_nota")}
         </p>
         <div className="max-w-3xl mx-auto">
           <CampoConteos
@@ -1518,16 +1666,16 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
         </div>
         {sinZonaCampo > 0 && (
           <p className="text-[10px] text-zinc-500 mt-2 italic text-center">
-            {t("resd_sin_zona_campo", { n: sinZonaCampo })}
+            {T("resd_sin_zona_campo", { n: sinZonaCampo })}
           </p>
         )}
       </div>
 
       {/* Mapa portería 3x3 */}
       <div className="bg-zinc-900 rounded-xl p-3">
-        <h3 className="text-base font-bold text-zinc-300 mb-2">{t("resd_mapa_porteria")}</h3>
+        <h3 className="text-base font-bold text-zinc-300 mb-2">{T("resd_mapa_porteria")}</h3>
         <p className="text-[11px] text-zinc-500 mb-2">
-          {t("resd_mapa_porteria_nota")}
+          {T("resd_mapa_porteria_nota")}
         </p>
         <div className="mx-auto max-w-md">
           <div className="aspect-[5/3] border-4 border-white/80 rounded-md p-1 bg-zinc-800/50">
@@ -1569,7 +1717,7 @@ function PestanaDisparos(props: { partido: Partido; partesJugadas: ParteId[] }) 
         </div>
         {sinZonaPort > 0 && (
           <p className="text-[10px] text-zinc-500 mt-2 italic text-center">
-            {t("resd_sin_zona_porteria", {
+            {T("resd_sin_zona_porteria", {
               n: sinZonaPort,
               extra: equipo === "RIVAL" ? t("resd_sin_zona_porteria_rival") : "",
             })}
@@ -1590,6 +1738,8 @@ type ResultadoDisparoLocal = "PUERTA" | "PALO" | "FUERA" | "BLOQUEADO";
 // ────────────────────────────────────────────────────────────────
 
 function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) {
+  // Aspecto nuevo: emojis → iconos (con el clásico, el texto tal cual).
+  const T = useTPP();
   const { partido, partesJugadas } = props;
   const cfg = partido.config!;
   const evs = partido.eventos;
@@ -1741,9 +1891,9 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
     <div className="space-y-4">
       {/* 1) Quintetos iniciales */}
       <div className="bg-zinc-900 rounded-xl p-5">
-        <h3 className="text-xl font-bold text-zinc-300 mb-3">{t("resa_quintetos")}</h3>
+        <h3 className="text-xl font-bold text-zinc-300 mb-3">{T("resa_quintetos")}</h3>
         <p className="text-base text-zinc-500 mb-3">
-          {t("resa_quintetos_nota")}
+          {T("resa_quintetos_nota")}
         </p>
         <div className="grid grid-cols-1 gap-3">
           {partesJugadas.map((p) => {
@@ -1753,7 +1903,7 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
                 <div className="text-base text-emerald-300 font-bold mb-2">{labelParte(p)}</div>
                 <div className="flex flex-wrap gap-2">
                   {q.length === 0 ? (
-                    <span className="text-zinc-500 text-base italic">{t("resa_sin_datos")}</span>
+                    <span className="text-zinc-500 text-base italic">{T("resa_sin_datos")}</span>
                   ) : (
                     q.map((n, i) => (
                       <span key={`${n}-${i}`}
@@ -1773,9 +1923,9 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
 
       {/* 2) Asistencias */}
       <div className="bg-zinc-900 rounded-xl p-5">
-        <h3 className="text-xl font-bold text-zinc-300 mb-3">{t("resa_asistencias")}</h3>
+        <h3 className="text-xl font-bold text-zinc-300 mb-3">{T("resa_asistencias")}</h3>
         {topAsistentes.length === 0 ? (
-          <p className="text-base text-zinc-500 italic">{t("resa_sin_asistencias")}</p>
+          <p className="text-base text-zinc-500 italic">{T("resa_sin_asistencias")}</p>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 mb-3">
@@ -1788,7 +1938,7 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
             </div>
             {topParejas.length > 0 && (
               <>
-                <h4 className="text-base font-bold text-zinc-400 mt-3 mb-2">{t("resa_parejas")}</h4>
+                <h4 className="text-base font-bold text-zinc-400 mt-3 mb-2">{T("resa_parejas")}</h4>
                 <ul className="space-y-1 text-base">
                   {topParejas.map(([k, n]) => (
                     <li key={k} className="flex justify-between bg-zinc-950 rounded px-3 py-1">
@@ -1804,19 +1954,19 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
 
       {/* 3) Eficiencia ofensiva */}
       <div className="bg-zinc-900 rounded-xl p-5">
-        <h3 className="text-xl font-bold text-zinc-300 mb-3">{t("resa_eficiencia")}</h3>
+        <h3 className="text-xl font-bold text-zinc-300 mb-3">{T("resa_eficiencia")}</h3>
         {efic.length === 0 ? (
-          <p className="text-base text-zinc-500 italic">{t("resa_sin_disparos")}</p>
+          <p className="text-base text-zinc-500 italic">{T("resa_sin_disparos")}</p>
         ) : (
           <table className="w-full text-base">
             <thead className="text-base text-zinc-500 border-b border-zinc-800">
               <tr>
-                <th className="text-left py-2 px-2">{t("res_jugador")}</th>
-                <th className="text-right px-2">{t("resa_disparos")}</th>
-                <th className="text-right px-2">{t("resa_a_puerta")}</th>
-                <th className="text-right px-2">{t("resa_goles")}</th>
-                <th className="text-right px-2" title={t("resa_title_pct_gol")}>{t("resa_pct_gol")}</th>
-                <th className="text-right px-2" title={t("resa_title_pct_puerta")}>{t("resa_pct_puerta")}</th>
+                <th className="text-left py-2 px-2">{T("res_jugador")}</th>
+                <th className="text-right px-2">{T("resa_disparos")}</th>
+                <th className="text-right px-2">{T("resa_a_puerta")}</th>
+                <th className="text-right px-2">{T("resa_goles")}</th>
+                <th className="text-right px-2" title={t("resa_title_pct_gol")}>{T("resa_pct_gol")}</th>
+                <th className="text-right px-2" title={t("resa_title_pct_puerta")}>{T("resa_pct_puerta")}</th>
               </tr>
             </thead>
             <tbody>
@@ -1837,10 +1987,10 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
 
       {/* 4) Cuartetos */}
       <div className="bg-zinc-900 rounded-xl p-5">
-        <h3 className="text-xl font-bold text-zinc-300 mb-3">{t("resa_cuartetos")}</h3>
+        <h3 className="text-xl font-bold text-zinc-300 mb-3">{T("resa_cuartetos")}</h3>
         {topCuartetos.length === 0 ? (
           <p className="text-base text-zinc-500 italic">
-            {t("resa_sin_cuartetos")}
+            {T("resa_sin_cuartetos")}
           </p>
         ) : (
           <div className="space-y-2">
@@ -1867,27 +2017,27 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
 
       {/* 5) Transiciones */}
       <div className="bg-zinc-900 rounded-xl p-5">
-        <h3 className="text-xl font-bold text-zinc-300 mb-3">{t("resa_transiciones")}</h3>
+        <h3 className="text-xl font-bold text-zinc-300 mb-3">{T("resa_transiciones")}</h3>
         <p className="text-base text-zinc-500 mb-3">
-          {t("resa_transiciones_nota")}
+          {T("resa_transiciones_nota")}
         </p>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-green-900/30 rounded-lg p-4">
-            <div className="text-base text-green-300 mb-1">{t("resa_recup_gol")}</div>
+            <div className="text-base text-green-300 mb-1">{T("resa_recup_gol")}</div>
             <div className="text-4xl font-bold tabular-nums">
               {recuperaciones === 0 ? "—" : `${Math.round((recupAGol / recuperaciones) * 100)}%`}
             </div>
             <div className="text-base text-zinc-400 mt-1">
-              {t("resa_recup_de", { a: recupAGol, b: recuperaciones })}
+              {T("resa_recup_de", { a: recupAGol, b: recuperaciones })}
             </div>
           </div>
           <div className="bg-red-900/30 rounded-lg p-4">
-            <div className="text-base text-red-300 mb-1">{t("resa_perdida_gol")}</div>
+            <div className="text-base text-red-300 mb-1">{T("resa_perdida_gol")}</div>
             <div className="text-4xl font-bold tabular-nums">
               {perdidas === 0 ? "—" : `${Math.round((perdidasAGol / perdidas) * 100)}%`}
             </div>
             <div className="text-base text-zinc-400 mt-1">
-              {t("resa_perdidas_de", { a: perdidasAGol, b: perdidas })}
+              {T("resa_perdidas_de", { a: perdidasAGol, b: perdidas })}
             </div>
           </div>
         </div>

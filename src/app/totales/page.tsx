@@ -19,6 +19,8 @@ import { db, type Partido } from "@/lib/db";
 import { CLIENTE } from "@/lib/clientes";
 import { calcularTotales, formatMinutos, type Totales } from "@/lib/totales";
 import { t, useIdioma, labelCompeticionCorta } from "@/lib/i18n";
+import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import { TotalesNuevo } from "@/components/TotalesNuevo";
 
 /** «*texto*» del catálogo → negrita. */
 function conNegritas(frase: string) {
@@ -35,6 +37,8 @@ export default function TotalesPage() {
   // día estaban así: quien mirara la temporada la vería vacía sin saber por qué.
   const [sinCerrar, setSinCerrar] = useState(0);
   const fichero = useRef<HTMLInputElement>(null);
+  const aspecto = useAspecto();
+  const modoSol = useModoSol();
 
   const recargar = async () => {
     const todos = await listarPartidos();
@@ -95,6 +99,25 @@ export default function TotalesPage() {
       setAviso(t("tot_error_fichero", { detalle: (e as Error).message }));
     }
   };
+
+  // Aspecto NUEVO (tanda 4 · 18/11/2026): los MISMOS totales y la MISMA copia
+  // de seguridad (guardarCopia / restaurar), otro dibujo.
+  if (aspecto === "nuevo") {
+    return (
+      <TotalesNuevo tot={tot} sinCerrar={sinCerrar} aviso={aviso}
+        sol={modoSol} onSol={() => setModoSol(!modoSol)}
+        onGuardar={guardarCopia} onRestaurar={() => fichero.current?.click()}
+        fichero={
+          <input ref={fichero} type="file" accept=".json,application/json"
+                 className="hidden"
+                 onChange={(e) => {
+                   const f = e.target.files?.[0];
+                   if (f) void restaurar(f);
+                   e.target.value = "";
+                 }} />
+        } />
+    );
+  }
 
   if (!tot) return (
     <div className="min-h-screen bg-zinc-950 p-6 text-zinc-400">{t("cargando")}</div>
