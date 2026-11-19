@@ -519,9 +519,9 @@ export default function PartidoPage() {
                 play();
               }}
               aria-label={t("part_iniciar")}
-              className="px-5 py-3 bg-green-700 hover:bg-green-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-green-300/40">▶ {ic(t("part_iniciar"))}</button>
+              className="px-5 py-3 bg-green-700 hover:bg-green-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-green-300/40">{ic(t("part_iniciar"))}</button>
           : <button onClick={pausa} aria-label={t("part_pausar")}
-              className="px-5 py-3 bg-orange-700 hover:bg-orange-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-orange-200/40">⏸ {ic(t("part_pausar"))}</button>}
+              className="px-5 py-3 bg-orange-700 hover:bg-orange-600 rounded-xl text-lg font-bold shadow-lg shadow-black/60 border border-orange-200/40">{ic(t("part_pausar"))}</button>}
       </div>
       )}
 
