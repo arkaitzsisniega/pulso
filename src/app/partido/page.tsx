@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
 import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
@@ -20,6 +20,7 @@ import { golNuestroCerca, pasesGolCerca } from "@/lib/paseGol";
 import { camposFlechaAsistencia, pideFlechaAsistencia } from "@/lib/asistencia";
 import { esAccionLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "@/lib/lanzamientos";
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import { huecoFlotante, MARGEN_CAPA } from "@/lib/huecoFlotante";
 import { elegirRival, rgba } from "@/lib/tema";
 import {
   CabeceraNueva, BotonTiempoNuevo, HerramientasNueva, PistaNueva, BanquilloNuevo,
@@ -1696,6 +1697,40 @@ function BotonAccion(props: { label: string; color: string; onClick: () => void 
 
 function ModalShell(props: { titulo: string; onCerrar: () => void; children: React.ReactNode; maxW?: string; tituloClass?: string; clase?: string }) {
   const nuevo = useNuevo();
+  // Aspecto nuevo: el botón flotante de iniciar/pausar sigue POR ENCIMA de
+  // las ventanas (se para el reloj sin cerrar nada, pedido 10/8/2026), pero
+  // una ventana alta caía debajo de él y le tapaba la esquina. El botón no se
+  // mueve (se pulsa de memoria): es la ventana la que se aparta, a su
+  // izquierda o por debajo (src/lib/huecoFlotante.ts). El clásico no cambia.
+  const capaRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!nuevo) return;
+    const capa = capaRef.current, panel = panelRef.current;
+    if (!capa || !panel) return;
+    const medir = () => {
+      // Se mide la ventana colocada como siempre y luego se aparta.
+      capa.style.paddingRight = ""; capa.style.paddingTop = ""; panel.style.maxHeight = "";
+      const boton = document.querySelector(".pz-play");
+      const pantalla = capa.getBoundingClientRect();
+      const h = huecoFlotante(panel.getBoundingClientRect(),
+        boton ? boton.getBoundingClientRect() : null, pantalla.width);
+      if (h.lado === "derecha") capa.style.paddingRight = `${h.px}px`;
+      if (h.lado === "arriba") {
+        capa.style.paddingTop = `${h.px}px`;
+        panel.style.maxHeight = `${Math.floor(pantalla.height - h.px - MARGEN_CAPA)}px`;
+      }
+    };
+    medir();
+    // La ventana cambia de alto al avanzar pasos (gol: equipo → goleador →
+    // asistente…), al girar el iPad, y el botón cambia de ancho con el idioma.
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(medir) : null;
+    ro?.observe(panel);
+    const boton = document.querySelector(".pz-play");
+    if (boton) ro?.observe(boton);
+    window.addEventListener("resize", medir);
+    return () => { ro?.disconnect(); window.removeEventListener("resize", medir); };
+  }, [nuevo]);
   if (nuevo) {
     // Aspecto nuevo (tanda 2): cabecera con el icono de la acción en su
     // color, título en letra deportiva y un botón de cerrar de 48 px. El
@@ -1703,12 +1738,12 @@ function ModalShell(props: { titulo: string; onCerrar: () => void; children: Rea
     const icono = iconoDeTexto(props.titulo);
     const titulo = icono ? props.titulo.replace(/^\s*\S+\s*/u, "") : props.titulo;
     return (
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+      <div ref={capaRef} className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
         onClick={props.onCerrar}>
-        <div className={`bg-zinc-900 pz-panel w-full ${props.maxW || "max-w-4xl"} max-h-[95vh] overflow-y-auto`}
+        <div ref={panelRef} className={`bg-zinc-900 pz-panel w-full ${props.maxW || "max-w-4xl"} max-h-[95vh] overflow-y-auto`}
           onClick={(e) => e.stopPropagation()}>
           {/* La X va a la IZQUIERDA: arriba a la derecha está el botón
-              flotante de iniciar/pausar (siempre por encima) y la tapaba. */}
+              flotante de iniciar/pausar (siempre por encima). */}
           <div className="pz-panel-cab">
             <button onClick={props.onCerrar} className="pz-btn ico pz-panel-x" aria-label="×">
               <Ico.cruz />
