@@ -441,6 +441,19 @@ export interface Partido {
   tanda: TandaPenaltis;
   /** ms del último cambio (para auto-save / recuperación). */
   actualizado: number;
+  /** Solo si entró por «Importar partido» (19/11/2026, lib/importarPartido.ts).
+   *  Los apuntados en el aparato no lo llevan. */
+  importado?: MarcaImportado;
+}
+
+/** Marca de un partido que entró por «Importar partido». */
+export interface MarcaImportado {
+  /** ms del momento de importar. */
+  el: number;
+  /** id con el que venía en el fichero (si se guardó como copia, distinto). */
+  idOriginal: string;
+  /** true = se guardó junto al que ya había («guardar los dos»). */
+  copia?: boolean;
 }
 
 /**
