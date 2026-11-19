@@ -529,6 +529,9 @@
 .pz-chip.curso { background: rgba(245,183,10,.15); color: var(--t2); }
 .pz-chip.ejemplo { background: rgba(255,159,28,.14); color: var(--aviso); }
 .pz-chip .pz-ico.mini { width: 14px; height: 14px; }
+/* Partido que entró por «Importar partido» (19/11/2026). */
+.pz-chip.importado { background: rgba(155,120,255,.16); color: #b9a2ff; }
+.pz[data-tema="sol"] .pz-chip.importado { color: #5b3bc4; background: rgba(110,70,220,.10); }
 .pz-sol-ini { flex: none; width: 44px; min-height: 44px; height: 44px; }
 
 /* ── INICIO ───────────────────────────────────────────────────────────── */
@@ -571,6 +574,8 @@
   font: 700 18px/1.1 var(--f-num); letter-spacing: .06em; text-transform: uppercase;
 }
 .pz-ini-sec > .pz-ico { color: var(--texto-2); }
+/* «Importar partido» es un botón (los otros dos son enlaces): mismo dibujo. */
+button.pz-ini-sec { width: 100%; text-align: left; cursor: pointer; }
 .pz-ini-sec .fl { color: var(--texto-3); }
 .pz-ini-nuevo:active, .pz-ini-sec:active { transform: scale(.98); filter: brightness(1.1); }
 .pz-ini-offline {

@@ -57,6 +57,8 @@ export function InicioNuevo(props: {
   onStats: (id: string) => void;
   onRehacer: (p: Partido) => void;
   onBorrar: (id: string) => void;
+  /** «Importar partido»: abre el selector de archivo (19/11/2026). */
+  onImportar: () => void;
   /** La ventana de «rehacer con vídeo» (la misma del clásico). */
   ventana: ReactNode;
 }) {
@@ -93,6 +95,12 @@ export function InicioNuevo(props: {
             <Ico.chevron className="pz-ico fl" />
           </Link>
 
+          <button type="button" className="pz-ini-sec" onClick={props.onImportar} data-importar-boton="">
+            <Ico.bajar />
+            <span>{sinEmojis(t("home_importar"))}</span>
+            <Ico.chevron className="pz-ico fl" />
+          </button>
+
           <p className="pz-ini-offline">
             <LogoPulso className="pz-ini-logo" aro />
             <span>{t("home_offline")}</span>
@@ -126,6 +134,12 @@ export function InicioNuevo(props: {
                         </span>
                         {CLIENTE.partidoEjemplo && p.id === ID_PARTIDO_EJEMPLO && (
                           <span className="pz-chip ejemplo">{t("home_ejemplo")}</span>
+                        )}
+                        {p.importado && (
+                          <span className="pz-chip importado" data-importado="">
+                            <Ico.bajar className="pz-ico mini" />
+                            {p.importado.copia ? t("home_importado_copia") : t("home_importado")}
+                          </span>
                         )}
                       </div>
                       <div className="pz-ini-marc pz-num">
