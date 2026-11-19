@@ -67,7 +67,11 @@ async function precachePaginaYAssets(cache, url) {
       const a = m[1];
       // El escudo del club (public/escudos/) también: lo precarga el layout en
       // todas las páginas y así sale sin conexión aunque se acabe de publicar.
-      if (a.includes("/_next/") || a.includes("/escudos/")) urls.add(a);
+      // Y el manifest DE ESTE CLIENTE (manifest-filial.json, -juvenil, -pulso):
+      // APP_SHELL solo lleva el manifest.json del Inter, que este fichero no
+      // sabe qué cliente es; el que de verdad pide la página sale de su <link>.
+      if (a.includes("/_next/") || a.includes("/escudos/") ||
+          /\/manifest[^/]*\.json$/.test(a)) urls.add(a);
     }
     await Promise.allSettled([...urls].map((a) => cache.add(a).catch(() => {})));
   } catch { /* best-effort */ }
