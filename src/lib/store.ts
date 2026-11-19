@@ -49,6 +49,7 @@ import { reconstruirAgregados, recomputarMinutos } from "./reconstruir";
 import { segundosVivos } from "./reloj";
 import { esLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "./lanzamientos";
 import { configParaRehacer, type CambiosRehacer } from "./rehacer";
+import { aplicarDecision } from "./importarPartido";
 
 const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
 const TICK_MS = 250;
@@ -136,6 +137,20 @@ export function idPartidoActivo(): string { return leerActivoId(); }
 export async function borrarPartido(id: string): Promise<void> {
   await db.partidos.delete(id);
   try { if (localStorage.getItem(ACTIVO_KEY) === id) localStorage.removeItem(ACTIVO_KEY); } catch { /* ignore */ }
+}
+/** «Importar partido» (19/11/2026): el que ya hay con ese id, si lo hay. La
+ *  pantalla lo usa para PREGUNTAR antes de pisar nada (lib/importarPartido.ts). */
+export async function partidoGuardado(id: string): Promise<Partido | undefined> {
+  return db.partidos.get(id);
+}
+/** Guarda un partido importado ya validado. `copia` = id nuevo (guardar los
+ *  dos); sin `copia` se guarda con su id, que solo llega aquí si no había
+ *  ninguno con ese id o si se ha elegido reemplazarlo. No lo marca activo:
+ *  lo que se estaba apuntando sigue siendo lo que se abre. Devuelve el id. */
+export async function guardarPartidoImportado(p: Partido, copia: boolean): Promise<string> {
+  const final = copia ? aplicarDecision(p, "ambos", nuevoIdPartido()) : p;
+  await db.partidos.put(final);
+  return final.id;
 }
 /** Rehace un partido: crea uno NUEVO desde cero (crono a 0, sin eventos) con la
  *  MISMA config, en modo VÍDEO. Lo marca activo y devuelve su id (o null).

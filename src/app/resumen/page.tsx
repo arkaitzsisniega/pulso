@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useContext, useState } from "react";
 import { usePartido } from "@/lib/store";
-import { ROSTER, CLIENTE, NOMBRE_CORTO_TC } from "@/lib/clientes";
+import { ROSTER, CLIENTE, NOMBRE_CORTO_TC, VERSION_CRONO } from "@/lib/clientes";
+import { paraExportar } from "@/lib/importarPartido";
 import { formatMMSS } from "@/lib/utils";
 import { CampoConteos } from "@/components/CampoConteos";
 import { EditorEventos } from "@/components/EditorEventos";
@@ -2049,7 +2050,10 @@ function PestanaAnalisis(props: { partido: Partido; partesJugadas: ParteId[] }) 
 
 function exportarJSON(partido: any) {
   try {
-    const blob = new Blob([JSON.stringify(partido, null, 2)], {
+    // Con la etiqueta de la exportación (club, formato, versión y hora), que
+    // es lo que mira «Importar partido» en la pantalla de inicio.
+    const fichero = paraExportar(partido, { cliente: CLIENTE.id, version: VERSION_CRONO });
+    const blob = new Blob([JSON.stringify(fichero, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);

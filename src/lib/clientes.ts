@@ -219,6 +219,12 @@ const _ID = (process.env.NEXT_PUBLIC_CLIENTE || "inter").toLowerCase();
 /** id del cliente activo (fijado en build). */
 export const CLIENTE_ID: string = CLIENTES[_ID] ? _ID : "inter";
 
+/** Nombre largo de un club por su id (o el id tal cual si no es de aquí).
+ *  Para decir de quién es un fichero que no se puede abrir en este crono. */
+export function nombreClub(id: string): string {
+  return CLIENTES[id]?.nombreLargo ?? id;
+}
+
 /** Configuración del cliente activo. Fallback a Inter si el id no existe. */
 export const CLIENTE: ConfigCliente = CLIENTES[_ID] ?? CLIENTES.inter;
 
