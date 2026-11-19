@@ -12,6 +12,7 @@ import { CLIENTE, VERSION_CRONO } from "@/lib/clientes";
 import { useAspecto, setAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { InicioNuevo } from "@/components/InicioNuevo";
 import { conIconos } from "@/components/DirectoNuevo";
+import { useImportarPartido } from "@/components/ImportarPartido";
 
 export default function Home() {
   useIdioma();
@@ -37,6 +38,10 @@ export default function Home() {
 
   const verStats = (id: string) => { marcarPartidoActivo(id); router.push("/resumen"); };
   const continuar = (id: string) => { marcarPartidoActivo(id); router.push("/partido"); };
+
+  // «Importar partido» (19/11/2026): el JSON de «Exportar JSON» de otro
+  // aparato entra como un partido más (components/ImportarPartido.tsx).
+  const importar = useImportarPartido({ nuevo, onHecho: () => { void recargar(); }, onVer: verStats });
 
   // Rehacer con vídeo (26/9/2026): antes era un confirm() que copiaba la
   // cabecera tal cual, y si el partido estaba apuntado en casa siendo fuera no
@@ -129,7 +134,8 @@ export default function Home() {
       <InicioNuevo partidos={partidos} cargado={cargado} aspecto={aspecto}
         sol={modoSol} onSol={() => setModoSol(!modoSol)} onAspecto={setAspecto}
         onContinuar={continuar} onStats={verStats} onRehacer={abrirRehacer} onBorrar={borrar}
-        ventana={ventanaRehacer} />
+        onImportar={importar.abrir}
+        ventana={<>{ventanaRehacer}{importar.selector}{importar.ventana}</>} />
     );
   }
 
@@ -154,6 +160,11 @@ export default function Home() {
           {t("home_totales")}
         </Link>
 
+        <button type="button" onClick={importar.abrir} data-importar-boton=""
+          className="block w-full py-3 mb-8 -mt-6 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-center font-bold text-zinc-200">
+          {t("home_importar")}
+        </button>
+
         <h2 className="text-lg font-bold text-zinc-300 mb-3">{t("home_guardados")}</h2>
 
         {!cargado ? (
@@ -176,6 +187,11 @@ export default function Home() {
                         <span className={`text-xs px-2 py-0.5 rounded-full ${be.cls}`}>{be.txt}</span>
                         {CLIENTE.partidoEjemplo && p.id === ID_PARTIDO_EJEMPLO && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-700 text-amber-100">{t("home_ejemplo")}</span>
+                        )}
+                        {p.importado && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-violet-800 text-violet-100" data-importado="">
+                            {p.importado.copia ? t("home_importado_copia") : t("home_importado")}
+                          </span>
                         )}
                       </div>
                       <div className="text-base text-zinc-300">
@@ -241,6 +257,8 @@ export default function Home() {
       </div>
 
       {ventanaRehacer}
+      {importar.selector}
+      {importar.ventana}
     </div>
   );
 }

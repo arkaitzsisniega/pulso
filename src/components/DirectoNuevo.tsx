@@ -134,6 +134,7 @@ export const EMOJI_ICONO: Record<string, DefIcono> = {
   "ℹ": { ico: "info" },
   "➕": { ico: "mas" },
   "✈": { ico: "avion" },
+  "📥": { ico: "bajar" },
 };
 
 export const RE_EMOJI = /(\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)/u;
