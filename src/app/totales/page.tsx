@@ -14,7 +14,9 @@
  */
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { listarPartidos } from "@/lib/store";
+import { listarPartidos, cerrarTerminados } from "@/lib/store";
+import { repasarSinCerrar } from "@/lib/finPartido";
+import { BloqueCerrarTerminados, textoMotivoFin, nombrePartido, type InformeCierre } from "@/components/FinPartido";
 import { db, type Partido } from "@/lib/db";
 import { CLIENTE } from "@/lib/clientes";
 import { calcularTotales, formatMinutos, type Totales } from "@/lib/totales";
@@ -36,6 +38,11 @@ export default function TotalesPage() {
   // 31/8/2026 desaparecían sin decir nada, y los dos amistosos revisados ese
   // día estaban así: quien mirara la temporada la vería vacía sin saber por qué.
   const [sinCerrar, setSinCerrar] = useState(0);
+  // De los sin finalizar, los que YA acabaron según el reloj (20/11/2026,
+  // lib/finPartido.ts): se pueden cerrar de una vez con el botón.
+  const [cerrables, setCerrables] = useState(0);
+  const [cerrando, setCerrando] = useState(false);
+  const [informe, setInforme] = useState<InformeCierre | null>(null);
   const fichero = useRef<HTMLInputElement>(null);
   const aspecto = useAspecto();
   const modoSol = useModoSol();
@@ -44,7 +51,29 @@ export default function TotalesPage() {
     const todos = await listarPartidos();
     setTot(calcularTotales(todos));
     setSinCerrar(todos.filter((p) => p.estado !== "finalizado" && p.config).length);
+    setCerrables(repasarSinCerrar(todos).cerrar.length);
   };
+
+  const cerrarLosAcabados = async () => {
+    if (cerrando) return;                       // anti-doble-toque en el iPad
+    setCerrando(true);
+    try {
+      const r = await cerrarTerminados();
+      setInforme({
+        hechos: r.cerrar.length,
+        abiertos: r.abiertos.map((a) => ({ nombre: nombrePartido(a.partido), motivo: textoMotivoFin(a.fin) })),
+      });
+      await recargar();
+    } catch (e) {
+      setAviso(t("tot_error_fichero", { detalle: (e as Error).message }));
+    } finally {
+      setCerrando(false);
+    }
+  };
+  const bloqueCerrar = (nuevo: boolean) => (
+    <BloqueCerrarTerminados nuevo={nuevo} cerrables={cerrables} cerrando={cerrando}
+      informe={informe} onCerrar={() => { void cerrarLosAcabados(); }} />
+  );
   useEffect(() => { void recargar(); }, []);
 
   const guardarCopia = async () => {
@@ -104,7 +133,7 @@ export default function TotalesPage() {
   // de seguridad (guardarCopia / restaurar), otro dibujo.
   if (aspecto === "nuevo") {
     return (
-      <TotalesNuevo tot={tot} sinCerrar={sinCerrar} aviso={aviso}
+      <TotalesNuevo tot={tot} sinCerrar={sinCerrar} aviso={aviso} cerrar={bloqueCerrar(true)}
         sol={modoSol} onSol={() => setModoSol(!modoSol)}
         onGuardar={guardarCopia} onRestaurar={() => fichero.current?.click()}
         fichero={
@@ -140,6 +169,7 @@ export default function TotalesPage() {
           {conNegritas(sinCerrar > 1 ? t("tot_sin_cerrar_n", { n: sinCerrar }) : t("tot_sin_cerrar_1"))}
         </p>
       )}
+      {bloqueCerrar(false)}
 
       {eq.partidos === 0 ? (
         <p className="text-zinc-400">

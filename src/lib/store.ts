@@ -52,6 +52,7 @@ import { configParaRehacer, type CambiosRehacer } from "./rehacer";
 import { aplicarDecision } from "./importarPartido";
 import { GuardadoDiferido } from "./guardadoDiferido";
 import { ordenarPartidos } from "./ordenPartidos";
+import { estadoFin, marcarFinalizado, repasarSinCerrar, type ComoCierre, type RepasoCierre } from "./finPartido";
 
 const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
 const TICK_MS = 250;
@@ -140,6 +141,37 @@ export function idPartidoActivo(): string { return leerActivoId(); }
 export async function borrarPartido(id: string): Promise<void> {
   await db.partidos.delete(id);
   try { if (localStorage.getItem(ACTIVO_KEY) === id) localStorage.removeItem(ACTIVO_KEY); } catch { /* ignore */ }
+}
+/** Da por terminado un partido GUARDADO (sin abrirlo): «Finalizar» del
+ *  inicio. Si el reloj se quedó corriendo, se para donde se guardó por última
+ *  vez. No borra nada. Devuelve el partido como queda (o null si no está). */
+export async function finalizarGuardado(id: string, como: ComoCierre): Promise<Partido | null> {
+  const p = await db.partidos.get(id);
+  if (!p) return null;
+  if (p.estado === "finalizado") return p;
+  const f = marcarFinalizado(p, como, Date.now(), p.actualizado);
+  await db.partidos.put(f);
+  return f;
+}
+/** Totales, «Dar por terminados los que ya acabaron»: cierra SOLO los que
+ *  tienen la última parte completa (lib/finPartido.ts) y devuelve el repaso
+ *  (cuáles se cerraron y cuáles siguen abiertos y por qué). */
+export async function cerrarTerminados(): Promise<RepasoCierre> {
+  const repaso = repasarSinCerrar(await listarPartidos());
+  const ahora = Date.now();
+  for (const p of repaso.cerrar) await db.partidos.put(marcarFinalizado(p, "lote", ahora));
+  return repaso;
+}
+/** Al volver al inicio: si el partido que se estaba apuntando (el activo) ya
+ *  tiene la última parte completa y nadie le dio a «Finalizar», salir de él
+ *  cuenta como terminado. Uno interrumpido se queda abierto. Devuelve el
+ *  partido cerrado, o null si no había que cerrar nada. */
+export async function cerrarActivoSiTerminado(): Promise<Partido | null> {
+  const p = await db.partidos.get(leerActivoId());
+  if (!p || p.estado === "finalizado" || !estadoFin(p).terminado) return null;
+  const f = marcarFinalizado(p, "inicio", Date.now());
+  await db.partidos.put(f);
+  return f;
 }
 /** «Importar partido» (19/11/2026): el que ya hay con ese id, si lo hay. La
  *  pantalla lo usa para PREGUNTAR antes de pisar nada (lib/importarPartido.ts). */
@@ -1316,8 +1348,9 @@ export function usePartido() {
     });
   }
 
-  /** Marca el partido como finalizado (estado="finalizado"). */
-  function finalizarPartido() {
+  /** Marca el partido como finalizado (estado="finalizado"). `como` queda
+   *  anotado en `cierre` (botón Finalizar o la ventana de fin de partido). */
+  function finalizarPartido(como: ComoCierre = "boton") {
     setPartido((prev) => {
       // Pausar reloj si corre
       let p = prev;
@@ -1345,7 +1378,7 @@ export function usePartido() {
           tiempos,
         };
       }
-      return { ...p, estado: "finalizado" };
+      return { ...p, estado: "finalizado", cierre: { el: Date.now(), como } };
     });
   }
 

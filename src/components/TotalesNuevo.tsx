@@ -30,6 +30,8 @@ export function TotalesNuevo(props: {
   tot: Totales | null;
   sinCerrar: number;
   aviso: string;
+  /** «Dar por terminados los que ya acabaron» + su informe (20/11/2026). */
+  cerrar?: ReactNode;
   sol: boolean;
   onSol: () => void;
   onGuardar: () => void;
@@ -56,6 +58,7 @@ export function TotalesNuevo(props: {
               <span>{conNegritas(sinEmojis(sinCerrar > 1 ? t("tot_sin_cerrar_n", { n: sinCerrar }) : t("tot_sin_cerrar_1")))}</span>
             </p>
           )}
+          {props.cerrar}
 
           {tot.equipo.partidos === 0 ? (
             <p className="pz-tot-vacio">{t("tot_vacio")}</p>

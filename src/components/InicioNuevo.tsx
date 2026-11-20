@@ -57,6 +57,8 @@ export function InicioNuevo(props: {
   onStats: (id: string) => void;
   onRehacer: (p: Partido) => void;
   onBorrar: (id: string) => void;
+  /** «Finalizar» un partido abierto (con confirmación; 20/11/2026). */
+  onFinalizar: (p: Partido) => void;
   /** «Importar partido»: abre el selector de archivo (19/11/2026). */
   onImportar: () => void;
   /** La ventana de «rehacer con vídeo» (la misma del clásico). */
@@ -157,6 +159,12 @@ export function InicioNuevo(props: {
                       {enCurso && (
                         <button type="button" onClick={() => props.onContinuar(p.id)} className="pz-ib lleno">
                           <Ico.play className="pz-ico relleno" />{sinEmojis(t("home_continuar"))}
+                        </button>
+                      )}
+                      {enCurso && (
+                        <button type="button" onClick={() => props.onFinalizar(p)} className="pz-ib"
+                          data-finalizar-partido="">
+                          <Ico.bandera />{sinEmojis(t("home_finalizar"))}
                         </button>
                       )}
                       <button type="button" onClick={() => props.onStats(p.id)} className={`pz-ib ${enCurso ? "" : "nos"}`}>
