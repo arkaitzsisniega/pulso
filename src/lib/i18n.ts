@@ -1669,7 +1669,7 @@ export const CATALOGO: Record<string, Entrada> = {
   ic_tm_txt: { es: "Minuto de cada parte en que se pidió y cómo iba el marcador en ese momento.", en: "Minute of each half when it was called and the score at that moment.", it: "Minuto di ogni tempo in cui è stato chiesto e il risultato in quel momento." },
   ic_tm_pide: { es: "Lo pide", en: "Called by", it: "Chiesto da" },
   ic_pie: { es: "Generado el {fecha} con PULSO desde el crono del banquillo", en: "Generated on {fecha} with PULSO from the bench timer", it: "Generato il {fecha} con PULSO dal cronometro della panchina" },
-  ic_pie_origen: { es: "Creado por Arkaitz Sisniega · En uso en Inter JP Financial", en: "Created by Arkaitz Sisniega · In use at Inter JP Financial", it: "Creato da Arkaitz Sisniega · In uso all'Inter JP Financial" },
+  ic_pie_origen: { es: "Creado por Arkaitz Sisniega (preparador físico de Inter JP Financial)", en: "Created by Arkaitz Sisniega (strength and conditioning coach at Inter JP Financial)", it: "Creato da Arkaitz Sisniega (preparatore atletico dell'Inter JP Financial)" },
 
   // ══════════════════ TOTALES, ESTADOS Y DESHACER (9/11/2026) ══════════════════
   tot_titulo: { ico: "📊", es: "Totales de la temporada", en: "Season totals", it: "Totali della stagione" },

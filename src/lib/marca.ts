@@ -41,5 +41,5 @@ export const MARCA_INFORME: MarcaInforme = {
   // Sin dominio en el pie hasta que exista de verdad: una dirección inventada
   // en un documento que se manda a un club se descubre al primer clic.
   pie: "Generado con PULSO desde el crono del banquillo",
-  origen: "Creado por Arkaitz Sisniega · En uso en Inter JP Financial",
+  origen: "Creado por Arkaitz Sisniega (preparador físico de Inter JP Financial)",
 };
