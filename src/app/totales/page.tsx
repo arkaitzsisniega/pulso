@@ -169,6 +169,16 @@ export default function TotalesPage() {
           {conNegritas(sinCerrar > 1 ? t("tot_sin_cerrar_n", { n: sinCerrar }) : t("tot_sin_cerrar_1"))}
         </p>
       )}
+      {tot && tot.directosFuera > 0 && (
+        <p className="mb-4 rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-300">
+          {conNegritas(tot.directosFuera > 1 ? t("tot_dup_directo_n", { n: tot.directosFuera }) : t("tot_dup_directo_1"))}
+        </p>
+      )}
+      {tot && tot.videosFuera > 0 && (
+        <p className="mb-4 rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-300">
+          {conNegritas(tot.videosFuera > 1 ? t("tot_dup_video_n", { n: tot.videosFuera }) : t("tot_dup_video_1"))}
+        </p>
+      )}
       {bloqueCerrar(false)}
 
       {eq.partidos === 0 ? (

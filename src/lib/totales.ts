@@ -12,10 +12,13 @@
  * comprobar con datos de mentira.
  *
  * Solo cuenta partidos FINALIZADOS: uno a medias falsearía medias y resultados.
+ * Y el mismo partido en directo y en vídeo cuenta UNA vez, el de vídeo
+ * (20/11/2026, lib/duplicadosVideo.ts).
  */
 import { JUGADOR_EQUIPO, type Partido, type Evento } from "@/lib/db";
 import { ROSTER } from "@/lib/clientes";
 import { ordenarPartidos } from "@/lib/ordenPartidos";
+import { quitarDuplicadosVideo } from "@/lib/duplicadosVideo";
 
 /** Pseudo-jugadores: acciones del equipo y tarjetas al cuerpo técnico. Nunca
  *  son un convocado real, así que no salen en las tablas por jugador. */
@@ -75,6 +78,10 @@ export interface Totales {
     golesContra: number;
     resultado: "G" | "E" | "P";
   }[];
+  /** Finalizados que NO se suman por estar repetidos (20/11/2026): en directo
+   *  con su vídeo ya guardado, y vídeos con otro más reciente. */
+  directosFuera: number;
+  videosFuera: number;
 }
 
 function vacioJugador(nombre: string, dorsal: string): TotalesJugador {
@@ -95,7 +102,8 @@ function sumaNuestra(por: Record<string, { inter: number; rival: number }> | und
 export function calcularTotales(todos: Partido[]): Totales {
   // Del más reciente al más antiguo: es el orden en que se mira una temporada
   // (el mismo que la lista del inicio: lib/ordenPartidos.ts).
-  const finalizados = ordenarPartidos(todos.filter((p) => p.estado === "finalizado" && p.config));
+  const dup = quitarDuplicadosVideo(todos.filter((p) => p.estado === "finalizado" && p.config));
+  const finalizados = ordenarPartidos(dup.cuentan);
 
   const dorsalDe = new Map(ROSTER.map((j) => [j.nombre, j.dorsal]));
   const porJugador = new Map<string, TotalesJugador>();
@@ -193,7 +201,11 @@ export function calcularTotales(todos: Partido[]): Totales {
   // Orden: los que más han jugado primero — es como se mira una plantilla.
   jugadores.sort((a, b) => b.segundos - a.segundos || a.nombre.localeCompare(b.nombre));
 
-  return { equipo, jugadores, partidos };
+  return {
+    equipo, jugadores, partidos,
+    directosFuera: dup.directosFuera.length,
+    videosFuera: dup.videosFuera.length,
+  };
 }
 
 /** "1h 23'" para totales largos; "23'" cuando no llega a la hora. */
