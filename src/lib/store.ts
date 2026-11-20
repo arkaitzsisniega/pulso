@@ -50,6 +50,7 @@ import { segundosVivos } from "./reloj";
 import { esLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "./lanzamientos";
 import { configParaRehacer, type CambiosRehacer } from "./rehacer";
 import { aplicarDecision } from "./importarPartido";
+import { GuardadoDiferido } from "./guardadoDiferido";
 
 const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
 const TICK_MS = 250;
@@ -264,7 +265,16 @@ function porteroEnPista(enPista: string[]): string | null {
 export function usePartido() {
   const [partido, setPartido] = useState<Partido>(() => partidoVacio(ID_PARTIDO));
   const [cargado, setCargado] = useState(false);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guardado con espera (300 ms) que NUNCA tira lo pendiente: al salir de la
+  // pantalla se escribe ya (lib/guardadoDiferido.ts — bug del 20/11/2026,
+  // «Finalizar partido y ver resumen» no finalizaba).
+  const guardado = useRef<GuardadoDiferido<Partido> | null>(null);
+  if (guardado.current == null) {
+    guardado.current = new GuardadoDiferido<Partido>(
+      (p) => { void db.partidos.put({ ...p, actualizado: Date.now() }); },
+      SAVE_DEBOUNCE_MS,
+    );
+  }
   // Tick para recálculo de "tiempo en pista" cuando el reloj corre
   const [, forceTick] = useState(0);
   useEffect(() => {
@@ -370,39 +380,20 @@ export function usePartido() {
 
   useEffect(() => {
     if (!cargado) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      db.partidos.put({ ...partido, actualizado: Date.now() });
-    }, SAVE_DEBOUNCE_MS);
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
+    guardado.current!.programar(partido);
   }, [partido, cargado]);
 
-  // El guardado espera 300 ms para no escribir en cada pulsación. Pero si en
-  // esa ventana se bloquea el iPad o se cambia de app, iOS congela la página
-  // y la última acción —un gol, un cambio, una falta— se pierde sin que nadie
-  // se entere. Al ocultarse la página se escribe YA.
-  //
-  // Hace falta la referencia porque el listener se registra una sola vez y de
-  // otro modo guardaría el partido que hubiera al registrarlo, no el de ahora.
-  const ultimoPartido = useRef(partido);
+  // Antes, al desmontarse la pantalla (cambiar de página dentro de la app) el
+  // temporizador del guardado se CANCELABA y el último cambio no llegaba a la
+  // base: así se perdía el «finalizado» de «Finalizar partido y ver resumen».
+  // Ahora lo pendiente se escribe al salir. Y al ocultarse la página (bloquear
+  // el iPad, cambiar de app) también se escribe YA: iOS la congela.
   useEffect(() => {
-    ultimoPartido.current = partido;
-  }, [partido]);
-
-  useEffect(() => {
-    if (!cargado) return;
-    const guardarYa = () => {
-      if (saveTimer.current) {
-        clearTimeout(saveTimer.current);
-        saveTimer.current = null;
-      }
-      void db.partidos.put({ ...ultimoPartido.current, actualizado: Date.now() });
-    };
+    const g = guardado.current!;
     const alOcultarse = () => {
-      if (document.visibilityState === "hidden") guardarYa();
+      if (document.visibilityState === "hidden") g.vaciar();
     };
+    const guardarYa = () => g.vaciar();
     document.addEventListener("visibilitychange", alOcultarse);
     // pagehide cubre lo que visibilitychange no pilla en Safari (cerrar la
     // pestaña, volver atrás); "freeze" es el aviso de Chrome antes de congelar.
@@ -412,8 +403,9 @@ export function usePartido() {
       document.removeEventListener("visibilitychange", alOcultarse);
       window.removeEventListener("pagehide", guardarYa);
       document.removeEventListener("freeze", guardarYa);
+      g.vaciar();                       // ← salir de la pantalla: se escribe
     };
-  }, [cargado]);
+  }, []);
 
   // ────────────────── selectores en vivo ───────────────────────────────
   const segundosTurnoActual = useCallback(
@@ -482,7 +474,7 @@ export function usePartido() {
     // race). Genera un id ÚNICO (multi-partido) y lo marca como activo.
     const nuevoId = nuevoIdPartido();
     const nuevo = construirPartidoNuevo(nuevoId, config, modo);
-    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    guardado.current!.descartar();
     await db.partidos.put(nuevo);
     escribirActivoId(nuevoId);
     setPartido(nuevo);
