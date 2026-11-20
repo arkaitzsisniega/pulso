@@ -15,6 +15,7 @@
  */
 import { JUGADOR_EQUIPO, type Partido, type Evento } from "@/lib/db";
 import { ROSTER } from "@/lib/clientes";
+import { ordenarPartidos } from "@/lib/ordenPartidos";
 
 /** Pseudo-jugadores: acciones del equipo y tarjetas al cuerpo técnico. Nunca
  *  son un convocado real, así que no salen en las tablas por jugador. */
@@ -92,10 +93,9 @@ function sumaNuestra(por: Record<string, { inter: number; rival: number }> | und
 }
 
 export function calcularTotales(todos: Partido[]): Totales {
-  const finalizados = todos.filter((p) => p.estado === "finalizado" && p.config);
-  // Del más reciente al más antiguo: es el orden en que se mira una temporada.
-  finalizados.sort((a, b) =>
-    String(b.config?.fecha ?? "").localeCompare(String(a.config?.fecha ?? "")));
+  // Del más reciente al más antiguo: es el orden en que se mira una temporada
+  // (el mismo que la lista del inicio: lib/ordenPartidos.ts).
+  const finalizados = ordenarPartidos(todos.filter((p) => p.estado === "finalizado" && p.config));
 
   const dorsalDe = new Map(ROSTER.map((j) => [j.nombre, j.dorsal]));
   const porJugador = new Map<string, TotalesJugador>();
