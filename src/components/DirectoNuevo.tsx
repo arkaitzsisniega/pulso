@@ -133,6 +133,7 @@ export const EMOJI_ICONO: Record<string, DefIcono> = {
   "🥅": { ico: "guante", color: "var(--texto-2)" },
   "ℹ": { ico: "info" },
   "➕": { ico: "mas" },
+  "✏": { ico: "lapiz" },
   "✈": { ico: "avion" },
   "📥": { ico: "bajar" },
 };

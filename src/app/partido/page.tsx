@@ -22,6 +22,7 @@ import { esAccionLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } fr
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { huecoFlotante, MARGEN_CAPA } from "@/lib/huecoFlotante";
 import { elegirRival, rgba } from "@/lib/tema";
+import { estadoFin } from "@/lib/finPartido";
 import {
   CabeceraNueva, BotonTiempoNuevo, HerramientasNueva, PistaNueva, BanquilloNuevo,
   BotonNuevo, Ico, NuevoCtx, useNuevo, useIc, conIconos, iconoDeTexto, sinEmojis,
@@ -77,6 +78,10 @@ export default function PartidoPage() {
   // (Arkaitz 22/8/2026: antes había que acordarse de memoria).
   const [modalSaque, setModalSaque] = useState(false);
   const [modalCambioParte, setModalCambioParte] = useState(false);
+  // Ventana de FIN DE PARTIDO (20/11/2026): al acabar la última parte se
+  // ofrece finalizar. «Seguir apuntando» la aparta para ESE momento (clave =
+  // parte + tiros de tanda + motivo); vuelve si cambia (p. ej. tras la tanda).
+  const [finDescartado, setFinDescartado] = useState<string | null>(null);
   // Aviso corto tras una acción que se guarda SIN abrir modal (pérdida y
   // recuperación de equipo). Arkaitz: "le doy al botón y, al no pasar nada, no
   // sé si lo he apuntado". Se borra solo.
@@ -400,6 +405,17 @@ export default function PartidoPage() {
   const huecosRellenables = Math.max(0, (5 - enPista.length) - cronosInferioridad.length);
 
   const p = partido.cronometro.parteActual;
+  // ¿Se acabó el partido? (lib/finPartido.ts: última parte completa y reloj
+  // parado). La ventana sale sola, pero nunca encima de otra ventana: si se
+  // está apuntando algo en el último segundo, espera a que se cierre.
+  const fin = estadoFin(partido);
+  const claveFin = `${p}|${partido.tanda?.tiros.length ?? 0}|${fin.motivo}`;
+  const hayOtraVentana = !!(modalCambio || modalAccionInd || modalAccionBanquillo || modalFalta
+    || modalGol || modalAmarilla || modalRoja || confirmExpulRival || confirmFaltaCT
+    || confirmPaseGol || confirmGolConPase || modalTM || modalPen || modalTanda || modalTiempos
+    || modalDisparoRival || modalIncorporacion || modalSaque || modalCambioParte);
+  const verFin = (fin.terminado || fin.motivo === "empate_pendiente")
+    && finDescartado !== claveFin && !hayOtraVentana;
   const sFalt = partido.stats.faltas[p];
   // AMARILLAS: se guardan por parte (para el informe), pero se MUESTRAN
   // acumuladas de TODO el partido — una amarilla no caduca al cambiar de
@@ -1592,6 +1608,20 @@ export default function PartidoPage() {
           onFinalizar={() => {
             finalizarPartido();
             setModalCambioParte(false);
+            router.push("/resumen");
+          }}
+        />
+      )}
+
+      {verFin && (
+        <VentanaFinPartido
+          partido={partido}
+          empate={fin.motivo === "empate_pendiente"}
+          tanda={fin.motivo === "terminado_tanda"}
+          onSeguir={() => setFinDescartado(claveFin)}
+          onProrroga={() => { setFinDescartado(claveFin); setModalCambioParte(true); }}
+          onFinalizar={() => {
+            finalizarPartido("aviso");
             router.push("/resumen");
           }}
         />
@@ -3522,6 +3552,64 @@ function ModalTanda(props: {
       <div className="mt-4 flex justify-end gap-2 border-t border-zinc-800 pt-3">
         <button onClick={props.onCerrar}
           className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded">{ic(t("mta_cerrar"))}</button>
+      </div>
+    </ModalShell>
+  );
+}
+
+// ──────────────── VENTANA DE FIN DE PARTIDO (20/11/2026) ────────────────
+//
+// Sale sola cuando el reloj de la ÚLTIMA parte llega a su final y se para (o
+// cuando la tanda ya tiene ganador). Nadie le daba a «Finalizar» y los
+// partidos se quedaban abiertos, fuera de Totales. «Seguir apuntando» deja
+// apuntar lo que pase tras el pitido; al volver al inicio se cierra solo.
+// Con empate en una competición con prórroga/penaltis, ofrece también ir a
+// la ventana de siempre de «cómo seguimos».
+function VentanaFinPartido(props: {
+  partido: Partido;
+  empate: boolean;
+  tanda: boolean;
+  onSeguir: () => void;
+  onProrroga: () => void;
+  onFinalizar: () => void;
+}) {
+  const ic = useIc();
+  const { partido } = props;
+  const cfg = partido.config!;
+  return (
+    <ModalShell titulo={props.empate ? t("fin_titulo_empate") : t("fin_titulo")}
+      onCerrar={props.onSeguir} maxW="max-w-xl">
+      <div data-fin-partido="" className="text-center bg-zinc-950 rounded-lg px-3 py-3 mb-4">
+        <div className="text-3xl font-bold tabular-nums">
+          <span className="text-emerald-400">{CLIENTE.nombreCorto} {partido.marcador.inter}</span>
+          <span className="text-zinc-500 mx-2">-</span>
+          <span className="text-red-400">{partido.marcador.rival} {cfg.rival}</span>
+        </div>
+        {partido.tanda?.tiros.length > 0 && (
+          <div className="text-sm text-zinc-400 mt-1">
+            {t("mcp_tanda")}: {partido.tanda.marcador.inter} - {partido.tanda.marcador.rival}
+          </div>
+        )}
+      </div>
+      <p className="text-base text-zinc-300 mb-5">
+        {props.empate ? t("fin_texto_empate") : props.tanda ? t("fin_texto_tanda") : t("fin_texto")}
+      </p>
+      <div className="space-y-3">
+        <button type="button" data-fin-finalizar="" onClick={props.onFinalizar}
+          style={{ touchAction: "manipulation" }}
+          className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xl font-bold">
+          {ic(t("res_finalizar"))}
+        </button>
+        {props.empate && (
+          <button type="button" onClick={props.onProrroga}
+            className="w-full py-3 bg-purple-700 hover:bg-purple-600 rounded-xl text-lg font-bold">
+            {ic(t("fin_btn_prorroga"))}
+          </button>
+        )}
+        <button type="button" data-fin-seguir="" onClick={props.onSeguir}
+          className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-lg font-semibold">
+          {ic(t("fin_btn_seguir"))}
+        </button>
       </div>
     </ModalShell>
   );

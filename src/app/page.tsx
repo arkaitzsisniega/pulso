@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { type Partido } from "@/lib/db";
-import { listarPartidos, marcarPartidoActivo, rehacerPartido, borrarPartido } from "@/lib/store";
+import { listarPartidos, marcarPartidoActivo, rehacerPartido, borrarPartido,
+         cerrarActivoSiTerminado, finalizarGuardado } from "@/lib/store";
+import { estadoFin } from "@/lib/finPartido";
+import { textoMotivoFin, nombrePartido } from "@/components/FinPartido";
 import { jugabamosEnCasa } from "@/lib/rehacer";
 import { t, useIdioma, labelCompeticionCorta } from "@/lib/i18n";
 import { ID_PARTIDO_EJEMPLO, sembrarPartidoEjemplo } from "@/lib/partidoEjemplo";
@@ -29,6 +32,11 @@ export default function Home() {
 
   const recargar = async () => {
     await sembrarPartidoEjemplo();
+    // Volver al inicio = salir del partido. Si el que se estaba apuntando ya
+    // tiene la última parte completa, cuenta como terminado (lib/finPartido.ts).
+    // Uno interrumpido se queda abierto. Solo el activo: los viejos, desde
+    // Totales («Dar por terminados…») o con «Finalizar» aquí.
+    try { await cerrarActivoSiTerminado(); } catch { /* que no tumbe el inicio */ }
     const lista = await listarPartidos();
     // Solo los que ya tienen config (descartar el vacío inicial "configurando").
     setPartidos(lista.filter((p) => p.config));
@@ -62,6 +70,16 @@ export default function Home() {
     if (nuevoId) { router.push("/partido"); return; }
     setRehaciendo(false);
     setARehacer(null);
+  };
+  // «Finalizar» de la lista (20/11/2026): cualquier partido abierto, con
+  // confirmación. Si el reloj dice que no acabó, se avisa en la pregunta.
+  const finalizar = async (p: Partido) => {
+    const fin = estadoFin(p);
+    let txt = t("home_finalizar_confirm", { partido: nombrePartido(p) });
+    if (!fin.terminado) txt += "\n\n" + t("home_finalizar_abierto", { motivo: textoMotivoFin(fin) });
+    if (!confirm(txt)) return;
+    await finalizarGuardado(p.id, "boton");
+    recargar();
   };
   const borrar = async (id: string) => {
     if (!confirm(t("home_borrar_confirm"))) return;
@@ -134,6 +152,7 @@ export default function Home() {
       <InicioNuevo partidos={partidos} cargado={cargado} aspecto={aspecto}
         sol={modoSol} onSol={() => setModoSol(!modoSol)} onAspecto={setAspecto}
         onContinuar={continuar} onStats={verStats} onRehacer={abrirRehacer} onBorrar={borrar}
+        onFinalizar={finalizar}
         onImportar={importar.abrir}
         ventana={<>{ventanaRehacer}{importar.selector}{importar.ventana}</>} />
     );
@@ -208,6 +227,12 @@ export default function Home() {
                         <button onClick={() => continuar(p.id)}
                           className="px-3 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg text-sm font-bold">
                           {t("home_continuar")}
+                        </button>
+                      )}
+                      {enCurso && (
+                        <button onClick={() => finalizar(p)} data-finalizar-partido=""
+                          className="px-3 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-sm font-bold">
+                          {t("home_finalizar")}
                         </button>
                       )}
                       <button onClick={() => verStats(p.id)}

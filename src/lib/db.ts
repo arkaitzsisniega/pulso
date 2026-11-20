@@ -444,6 +444,12 @@ export interface Partido {
   /** Solo si entró por «Importar partido» (19/11/2026, lib/importarPartido.ts).
    *  Los apuntados en el aparato no lo llevan. */
   importado?: MarcaImportado;
+  /** Cuándo y cómo se dio por terminado (20/11/2026, lib/finPartido.ts). Los
+   *  finalizados antes no lo llevan. `como`: «boton» (Finalizar), «aviso» (la
+   *  ventana de fin de partido), «al_salir» / «inicio» (salió del partido con
+   *  la última parte completa), «lote» (Totales: «Dar por terminados…»),
+   *  «importar» (entró ya acabado). */
+  cierre?: { el: number; como: "boton" | "aviso" | "al_salir" | "inicio" | "lote" | "importar" };
 }
 
 /** Marca de un partido que entró por «Importar partido». */

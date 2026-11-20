@@ -19,6 +19,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { type Partido } from "@/lib/db";
 import { partidoGuardado, guardarPartidoImportado } from "@/lib/store";
 import { validarArchivo, contarAcciones, TAMANO_MAXIMO, type ResultadoValidacion } from "@/lib/importarPartido";
+import { estadoFin, marcarFinalizado } from "@/lib/finPartido";
 import { CLIENTE, CLIENTE_ID, ROSTER, nombreClub } from "@/lib/clientes";
 import { t, labelEstadoPartido } from "@/lib/i18n";
 import { conIconos } from "@/components/DirectoNuevo";
@@ -79,8 +80,14 @@ export function useImportarPartido(opts: { nuevo: boolean; onHecho: () => void; 
     try {
       if (f.size > TAMANO_MAXIMO) { setPaso({ k: "error", msg: t("imp_err_grande") }); return; }
       const texto = await f.text();
-      const r = validarArchivo(texto, { cliente: CLIENTE_ID, roster: ROSTER.map((j) => j.nombre) });
+      let r = validarArchivo(texto, { cliente: CLIENTE_ID, roster: ROSTER.map((j) => j.nombre) });
       if (!r.ok) { setPaso({ k: "error", msg: mensajeError(r) }); return; }
+      // La misma regla que en el aparato (lib/finPartido.ts, 20/11/2026): si
+      // llega «en curso» pero con la última parte completa, ya acabó y entra
+      // terminado. Uno interrumpido entra abierto, para «Continuar».
+      if (r.partido.estado !== "finalizado" && estadoFin(r.partido).terminado) {
+        r = { ...r, partido: marcarFinalizado(r.partido, "importar", Date.now()), enCurso: false };
+      }
       const aqui = await partidoGuardado(r.partido.id);
       if (aqui) { setPaso({ k: "choque", nuevo: r.partido, aqui, info: r }); return; }
       await guardar(r.partido, false, r);
@@ -190,6 +197,7 @@ export function useImportarPartido(opts: { nuevo: boolean; onHecho: () => void; 
           <p>{t("imp_ok_detalle", { acciones: contarAcciones(p) })}</p>
           {copia && <p>{t("imp_ok_copia")}</p>}
           {info.enCurso && <p>{t("imp_ok_en_curso")}</p>}
+          {p.cierre?.como === "importar" && <p data-importar-cerrado="">{t("imp_ok_cerrado")}</p>}
           {info.relojParado && <p>{t("imp_ok_reloj")}</p>}
           {plantilla && <p className="text-zinc-400">{plantilla}</p>}
         </div>
