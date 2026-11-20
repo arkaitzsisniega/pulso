@@ -58,6 +58,16 @@ export function TotalesNuevo(props: {
               <span>{conNegritas(sinEmojis(sinCerrar > 1 ? t("tot_sin_cerrar_n", { n: sinCerrar }) : t("tot_sin_cerrar_1")))}</span>
             </p>
           )}
+          {tot.directosFuera > 0 && (
+            <p className="pz-tot-aviso">
+              <span>{conNegritas(sinEmojis(tot.directosFuera > 1 ? t("tot_dup_directo_n", { n: tot.directosFuera }) : t("tot_dup_directo_1")))}</span>
+            </p>
+          )}
+          {tot.videosFuera > 0 && (
+            <p className="pz-tot-aviso">
+              <span>{conNegritas(sinEmojis(tot.videosFuera > 1 ? t("tot_dup_video_n", { n: tot.videosFuera }) : t("tot_dup_video_1")))}</span>
+            </p>
+          )}
           {props.cerrar}
 
           {tot.equipo.partidos === 0 ? (
