@@ -51,6 +51,7 @@ import { esLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "./
 import { configParaRehacer, type CambiosRehacer } from "./rehacer";
 import { aplicarDecision } from "./importarPartido";
 import { GuardadoDiferido } from "./guardadoDiferido";
+import { ordenarPartidos } from "./ordenPartidos";
 
 const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
 const TICK_MS = 250;
@@ -125,10 +126,11 @@ function construirPartidoNuevo(id: string, config: ConfigPartido, modo: "directo
   };
 }
 
-/** Lista todos los partidos guardados (más reciente primero). */
+/** Lista todos los partidos guardados, por FECHA DEL PARTIDO, el último jugado
+ *  primero (lib/ordenPartidos.ts). Hasta el 20/11/2026 iba por el último
+ *  abierto o tocado, y abrir uno viejo lo subía arriba del todo. */
 export async function listarPartidos(): Promise<Partido[]> {
-  const todos = await db.partidos.toArray();
-  return todos.sort((a, b) => (b.actualizado ?? 0) - (a.actualizado ?? 0));
+  return ordenarPartidos(await db.partidos.toArray());
 }
 /** Marca un partido como el activo (el que abren /partido y /resumen). */
 export function marcarPartidoActivo(id: string) { escribirActivoId(id); }
