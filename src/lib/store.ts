@@ -25,7 +25,7 @@
  */
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   db,
   partidoVacio,
@@ -51,6 +51,7 @@ import { esLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "./
 import { configParaRehacer, type CambiosRehacer } from "./rehacer";
 import { aplicarDecision } from "./importarPartido";
 import { GuardadoDiferido } from "./guardadoDiferido";
+import { conCandado } from "./candado";
 import { ordenarPartidos } from "./ordenPartidos";
 import { estadoFin, marcarFinalizado, repasarSinCerrar, type ComoCierre, type RepasoCierre } from "./finPartido";
 
@@ -296,6 +297,69 @@ function porteroEnPista(enPista: string[]): string | null {
   return null;
 }
 
+/** El partido ACTIVO de la base, con la migración suave de campos nuevos
+ *  (null = no hay). Resolver el activo (localStorage). Migración: si no hay
+ *  activo guardado pero existe el "current" legacy, se usa y se fija como
+ *  activo. */
+async function leerPartidoActivo(): Promise<Partido | null> {
+  const id = leerActivoId();
+  escribirActivoId(id);
+  const p = await db.partidos.get(id);
+  if (!p) return null;
+  {
+    // Migración suave: añadir campos nuevos si vienen de versión antigua.
+    const cfgOrig = p.config;
+    const cfgMigrado: ConfigPartido | null = cfgOrig
+      ? {
+          ...cfgOrig,
+          duracionParte: cfgOrig.duracionParte
+            ?? (PRESETS_COMPETICION[cfgOrig.competicion]?.duraciones
+                ?? { "1T": 1200, "2T": 1200, PR1: 0, PR2: 0 }),
+          permiteTanda: cfgOrig.permiteTanda
+            ?? (PRESETS_COMPETICION[cfgOrig.competicion]?.permiteTanda ?? false),
+          direccionInter1T: cfgOrig.direccionInter1T ?? "der",
+        }
+      : null;
+    const tiemposMig: Record<string, TiempoJugador> = {};
+    for (const [k, t] of Object.entries(p.tiempos ?? {})) {
+      const tt = t as TiempoJugador;
+      tiemposMig[k] = {
+        ...tt,
+        // Si no traen los campos nuevos, deducir: si está en pista (segTurnoActual!=null)
+        // o entró antes → no está descansando.
+        segDescansoActual: tt.segDescansoActual !== undefined
+          ? tt.segDescansoActual
+          : (tt.segTurnoActual != null ? null : 0),
+        descansoStart: tt.descansoStart !== undefined ? tt.descansoStart : null,
+        segTurnoUltimo: tt.segTurnoUltimo !== undefined ? tt.segTurnoUltimo : null,
+      };
+    }
+    const migrado: Partido = {
+      ...p,
+      config: cfgMigrado,
+      tiempos: tiemposMig,
+      cronometro: {
+        ...p.cronometro,
+        segundosGuardadosPorParte: p.cronometro?.segundosGuardadosPorParte
+          ?? { "1T": 0, "2T": 0, PR1: 0, PR2: 0 } as Record<ParteId, number>,
+      },
+      disparosRival: p.disparosRival ?? { puerta: 0, fuera: 0, palo: 0, bloqueado: 0 },
+      // Partidos guardados antes del 20/8/2026: sin este campo. Se rellena
+      // a cero para que la pantalla no reviente al abrirlos.
+      incorporacionesRival: p.incorporacionesRival ?? { total: 0, conDisparo: 0, sinDisparo: 0 },
+      tanda: p.tanda ?? { activa: false, tiros: [], marcador: { inter: 0, rival: 0 } },
+      acciones: {
+        porJugador: Object.fromEntries(
+          Object.entries(p.acciones?.porJugador ?? {}).map(([k, v]) => [
+            k, { ...contadoresVacios(), ...(v as ContadoresJugador) },
+          ])
+        ),
+      },
+    };
+    return migrado;
+  }
+}
+
 export function usePartido() {
   const [partido, setPartido] = useState<Partido>(() => partidoVacio(ID_PARTIDO));
   const [cargado, setCargado] = useState(false);
@@ -349,71 +413,36 @@ export function usePartido() {
     return () => clearInterval(i);
   }, []);
 
+  // SOLO MIRAR (servidor de partidos, fase 3 · 21/11/2026): cuando el partido
+  // lo apunta OTRO aparato del club, esta pantalla no cambia nada. Las
+  // acciones de abajo no hacen nada y no se guarda en la base (lo que hay aquí
+  // es la copia del servidor; la trae `lib/servidor.ts` cada pocos segundos).
+  const soloLectura = useRef(false);
+  // El siguiente cambio de `partido` viene de la base (recargar): no se vuelve
+  // a guardar (cambiaría su `actualizado` y parecería que hay algo que subir).
+  const saltarGuardado = useRef(false);
+  const setSoloLectura = useCallback((v: boolean) => { soloLectura.current = v; }, []);
+
+  /** Vuelve a leer el partido activo de la base (tras traer una versión del
+   *  servidor o tomar el control). */
+  const recargar = useCallback(async () => {
+    const p = await leerPartidoActivo();
+    if (p) { saltarGuardado.current = true; setPartido(p); }
+  }, []);
+
   useEffect(() => {
     (async () => {
-      // Resolver el partido ACTIVO (localStorage). Migración: si no hay activo
-      // guardado pero existe el "current" legacy, se usa y se fija como activo.
-      const id = leerActivoId();
-      escribirActivoId(id);
-      const p = await db.partidos.get(id);
-      if (p) {
-        // Migración suave: añadir campos nuevos si vienen de versión antigua.
-        const cfgOrig = p.config;
-        const cfgMigrado: ConfigPartido | null = cfgOrig
-          ? {
-              ...cfgOrig,
-              duracionParte: cfgOrig.duracionParte
-                ?? (PRESETS_COMPETICION[cfgOrig.competicion]?.duraciones
-                    ?? { "1T": 1200, "2T": 1200, PR1: 0, PR2: 0 }),
-              permiteTanda: cfgOrig.permiteTanda
-                ?? (PRESETS_COMPETICION[cfgOrig.competicion]?.permiteTanda ?? false),
-              direccionInter1T: cfgOrig.direccionInter1T ?? "der",
-            }
-          : null;
-        const tiemposMig: Record<string, TiempoJugador> = {};
-        for (const [k, t] of Object.entries(p.tiempos ?? {})) {
-          const tt = t as TiempoJugador;
-          tiemposMig[k] = {
-            ...tt,
-            // Si no traen los campos nuevos, deducir: si está en pista (segTurnoActual!=null)
-            // o entró antes → no está descansando.
-            segDescansoActual: tt.segDescansoActual !== undefined
-              ? tt.segDescansoActual
-              : (tt.segTurnoActual != null ? null : 0),
-            descansoStart: tt.descansoStart !== undefined ? tt.descansoStart : null,
-            segTurnoUltimo: tt.segTurnoUltimo !== undefined ? tt.segTurnoUltimo : null,
-          };
-        }
-        const migrado: Partido = {
-          ...p,
-          config: cfgMigrado,
-          tiempos: tiemposMig,
-          cronometro: {
-            ...p.cronometro,
-            segundosGuardadosPorParte: p.cronometro?.segundosGuardadosPorParte
-              ?? { "1T": 0, "2T": 0, PR1: 0, PR2: 0 } as Record<ParteId, number>,
-          },
-          disparosRival: p.disparosRival ?? { puerta: 0, fuera: 0, palo: 0, bloqueado: 0 },
-          // Partidos guardados antes del 20/8/2026: sin este campo. Se rellena
-          // a cero para que la pantalla no reviente al abrirlos.
-          incorporacionesRival: p.incorporacionesRival ?? { total: 0, conDisparo: 0, sinDisparo: 0 },
-          tanda: p.tanda ?? { activa: false, tiros: [], marcador: { inter: 0, rival: 0 } },
-          acciones: {
-            porJugador: Object.fromEntries(
-              Object.entries(p.acciones?.porJugador ?? {}).map(([k, v]) => [
-                k, { ...contadoresVacios(), ...(v as ContadoresJugador) },
-              ])
-            ),
-          },
-        };
-        setPartido(migrado);
-      }
+      // Como siempre: al abrir, lo leído se vuelve a guardar (no se salta).
+      const p = await leerPartidoActivo();
+      if (p) setPartido(p);
       setCargado(true);
     })();
   }, []);
 
   useEffect(() => {
     if (!cargado) return;
+    if (saltarGuardado.current) { saltarGuardado.current = false; return; }
+    if (soloLectura.current) return;
     guardado.current!.programar(partido);
   }, [partido, cargado]);
 
@@ -1475,16 +1504,31 @@ export function usePartido() {
       : prev));
   }
 
+  // Todo lo que CAMBIA el partido pasa por aquí: en «solo mirar» no hace nada
+  // (aunque un botón se escapara del candado de la pantalla).
+  const acciones = useMemo(() => {
+    const crudas = {
+      iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
+      registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual, reset,
+      quitarAccionIndividual,
+      editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
+      iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
+      setDuracionesParte, finalizarPartido, retrocederParte, setModo,
+      setDireccionAtaque, setSaqueInicial,
+    };
+    return conCandado(crudas, () => soloLectura.current);
+  }, [iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
+      registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual, reset,
+      quitarAccionIndividual, editarEvento, borrarEvento, anadirEvento, recalcularMinutos,
+      setMinutosJugador, iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
+      setDuracionesParte, finalizarPartido, retrocederParte, setModo, setDireccionAtaque,
+      setSaqueInicial]);
+
   return {
     partido, cargado,
     segundosTurnoActual, segundosBanquillo, segundosParte, segundosPartidoTotal,
     segundosEnParte, segundosRestantesParte, duracionParteActual,
-    iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
-    registrarEvento, deshacerUltimoEvento, incAccion, registrarAccionIndividual, reset,
-    quitarAccionIndividual,
-    editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
-    iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
-    setDuracionesParte, finalizarPartido, retrocederParte, setModo,
-    setDireccionAtaque, setSaqueInicial,
+    ...acciones,
+    setSoloLectura, recargar,
   };
 }
