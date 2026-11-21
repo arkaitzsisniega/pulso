@@ -17,6 +17,9 @@ import { CLIENTE } from "@/lib/clientes";
 
 // Solo se muestra si el cliente no fija idioma (demo). El Inter va fijo en "es".
 const MOSTRAR_SELECTOR = CLIENTE.idiomaFijo === null;
+/** Para las páginas que acaban en un botón a todo lo ancho: si el selector se
+ *  ve, dejan abajo sitio para él (no tapa el botón al llegar al final). */
+export const HAY_SELECTOR_IDIOMA = MOSTRAR_SELECTOR;
 
 export default function SelectorIdioma() {
   // Suscribe al idioma activo (re-render al cambiar).

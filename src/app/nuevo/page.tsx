@@ -10,6 +10,7 @@ import { PRESETS_COMPETICION } from "@/lib/db";
 import { t, useIdioma, labelCompeticion, labelCompeticionCorta } from "@/lib/i18n";
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { NuevoPartidoNuevo } from "@/components/NuevoPartidoNuevo";
+import { HAY_SELECTOR_IDIOMA } from "@/components/SelectorIdioma";
 
 export default function NuevoPartido() {
   useIdioma();
@@ -186,8 +187,10 @@ export default function NuevoPartido() {
     );
   }
 
+  // Con el selector de idioma flotante (demo), sitio abajo para que no tape
+  // la esquina de «Empezar partido». En el Inter no cambia nada.
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
+    <div className={`min-h-screen bg-zinc-950 text-zinc-100 p-6${HAY_SELECTOR_IDIOMA ? " pb-20" : ""}`}>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">{t("nuevo_titulo")}</h1>
         <button type="button" onClick={() => router.push("/")}
