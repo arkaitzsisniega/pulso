@@ -323,6 +323,21 @@ console.log("── 5 · Otro aparato manda: solo se mira ──");
   await m2.motor.pasada();
   igual([m2.srv.puts().length, m2.ficha("p_9")?.estado, m2.ficha("p_9")?.version], [0, "subido", 3], "abierto siendo el dueño: al día, sin subir");
 }
+{
+  // Tomar el control sin poder traer la última: lo viejo de aquí NO se sube encima.
+  const m = montar({ partidos: [partido("p_8", 5000)] });
+  await m.motor.marcarBajado("p_8", 5000, 2, { id: "a_Z", nombre: "Mac" }, false);
+  m.tocar("p_8");                                         // tocado aquí mientras era ajeno
+  await m.motor.marcarDueno("p_8", 4, { id: "a_A", nombre: "iPad A" }, false);
+  await m.motor.pasada();
+  igual([m.srv.puts().length, m.ficha("p_8")?.estado, m.ficha("p_8")?.version], [0, "subido", 4],
+    "tomar el control sin traer la última: lo de aquí no se sube por encima");
+  m.tocar("p_8"); m.pasar(ENTRE_SUBIDAS_MS);
+  m.srv.partidos.set("p_8", { dueno: "a_A", version: 4, cuerpo: "{}" });
+  await m.motor.pasada();
+  igual([m.srv.puts().length, m.srv.puts()[0]?.cab["If-Match"], m.ficha("p_8")?.version], [1, '"v4"', 5],
+    "lo que se apunte después, sí (If-Match de la del servidor)");
+}
 
 console.log("── 6 · Llave anulada ──");
 {

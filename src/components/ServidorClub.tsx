@@ -97,7 +97,7 @@ type Importador = {
 };
 
 /** La ventana «Partidos del club». `locales` = los partidos de este aparato. */
-export function useServidorClub(opts: { nuevo: boolean; importar: Importador; locales: Partido[] }) {
+export function useServidorClub(opts: { nuevo: boolean; importar: Importador; locales: Partido[]; onCambio: () => void }) {
   const sv = useServidor();
   const [abierta, setAbierta] = useState(false);
   const [lista, setLista] = useState<PartidoClub[] | null>(null);
@@ -165,20 +165,20 @@ export function useServidorClub(opts: { nuevo: boolean; importar: Importador; lo
     if (!confirm(t("sv_tomar_confirm", { partido: `${p.partido_id} · ${p.rival}`, aparato: nombre }))) return;
     setTrabajando(p.id); setError(null);
     try {
-      const r = await tomarControlDe(p.id);
-      if (!r.ok) { setError(t("sv_err_accion", { motivo: textoMotivo(r.codigo) })); return; }
       const aqui = opts.locales.some((l) => l.id === p.id);
-      const f = sv.fichas[p.id];
-      // Si aquí ya está esa misma versión, no hace falta traer nada.
-      if (aqui && f?.version === r.datos.version) { await recargar(); return; }
-      await traer({ ...p, version: r.datos.version }, true);
+      const r = await tomarControlDe(p.id, aqui && sv.fichas[p.id]?.version === p.version);
+      if (!r.ok) setError(t("sv_err_accion", { motivo: textoMotivo(r.codigo) }));
+      opts.onCambio();
+      await recargar();
     } finally { setTrabajando(null); }
   };
 
   const fila = (p: PartidoClub) => {
     const aqui = opts.locales.some((l) => l.id === p.id);
     const f = sv.fichas[p.id];
-    const alDia = aqui && f?.version === p.version;
+    // El que manda y ya lo tiene aquí no «trae» nada: lo suyo es lo último (y
+    // traerlo mientras sube lo de aquí acabaría en un choque de versiones).
+    const alDia = aqui && (f?.version === p.version || p.dueno.soy_yo);
     return (
       <div key={p.id} className="bg-zinc-800 rounded-xl p-3" data-club-partido={p.id}>
         <div className="flex items-baseline gap-2 flex-wrap">

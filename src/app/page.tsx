@@ -54,7 +54,7 @@ export default function Home() {
   const importar = useImportarPartido({ nuevo, onHecho: () => { void recargar(); }, onVer: verStats });
   // «Partidos del club» (servidor de partidos, fase 2 · 21/11/2026): solo con
   // `servidor` encendido para el club (SERVIDOR_ACTIVO); si no, ni botón.
-  const club = useServidorClub({ nuevo, importar, locales: partidos });
+  const club = useServidorClub({ nuevo, importar, locales: partidos, onCambio: () => { void recargar(); } });
 
   // Rehacer con vídeo (26/9/2026): antes era un confirm() que copiaba la
   // cabecera tal cual, y si el partido estaba apuntado en casa siendo fuera no
