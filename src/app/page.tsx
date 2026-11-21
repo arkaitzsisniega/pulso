@@ -16,6 +16,8 @@ import { useAspecto, setAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { InicioNuevo } from "@/components/InicioNuevo";
 import { conIconos } from "@/components/DirectoNuevo";
 import { useImportarPartido } from "@/components/ImportarPartido";
+import { useServidorClub, IconoSubida } from "@/components/ServidorClub";
+import { SERVIDOR_ACTIVO } from "@/lib/clientes";
 
 export default function Home() {
   useIdioma();
@@ -50,6 +52,9 @@ export default function Home() {
   // «Importar partido» (19/11/2026): el JSON de «Exportar JSON» de otro
   // aparato entra como un partido más (components/ImportarPartido.tsx).
   const importar = useImportarPartido({ nuevo, onHecho: () => { void recargar(); }, onVer: verStats });
+  // «Partidos del club» (servidor de partidos, fase 2 · 21/11/2026): solo con
+  // `servidor` encendido para el club (SERVIDOR_ACTIVO); si no, ni botón.
+  const club = useServidorClub({ nuevo, importar, locales: partidos });
 
   // Rehacer con vídeo (26/9/2026): antes era un confirm() que copiaba la
   // cabecera tal cual, y si el partido estaba apuntado en casa siendo fuera no
@@ -154,7 +159,8 @@ export default function Home() {
         onContinuar={continuar} onStats={verStats} onRehacer={abrirRehacer} onBorrar={borrar}
         onFinalizar={finalizar}
         onImportar={importar.abrir}
-        ventana={<>{ventanaRehacer}{importar.selector}{importar.ventana}</>} />
+        servidor={SERVIDOR_ACTIVO ? { onAbrir: club.abrir, linea: club.linea } : null}
+        ventana={<>{ventanaRehacer}{importar.selector}{importar.ventana}{club.ventana}</>} />
     );
   }
 
@@ -184,6 +190,16 @@ export default function Home() {
           {t("home_importar")}
         </button>
 
+        {SERVIDOR_ACTIVO && (
+          <div className="-mt-6 mb-8">
+            <button type="button" onClick={club.abrir} data-club-boton=""
+              className="block w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-center font-bold text-zinc-200">
+              {t("sv_club")}
+            </button>
+            <p className="text-xs text-zinc-500 text-center mt-1" data-club-linea="">{club.linea}</p>
+          </div>
+        )}
+
         <h2 className="text-lg font-bold text-zinc-300 mb-3">{t("home_guardados")}</h2>
 
         {!cargado ? (
@@ -207,6 +223,7 @@ export default function Home() {
                         {CLIENTE.partidoEjemplo && p.id === ID_PARTIDO_EJEMPLO && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-700 text-amber-100">{t("home_ejemplo")}</span>
                         )}
+                        <IconoSubida id={p.id} nuevo={false} />
                         {p.importado && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-violet-800 text-violet-100" data-importado="">
                             {p.importado.copia ? t("home_importado_copia") : t("home_importado")}
@@ -284,6 +301,7 @@ export default function Home() {
       {ventanaRehacer}
       {importar.selector}
       {importar.ventana}
+      {club.ventana}
     </div>
   );
 }

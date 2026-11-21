@@ -60,12 +60,17 @@ export function useImportarPartido(opts: { nuevo: boolean; onHecho: () => void; 
   // Se abre el selector DENTRO del toque (iOS no abre «Archivos» si no).
   const abrir = () => { input.current?.click(); };
 
+  // Quien abre desde «Partidos del club» quiere saber qué se guardó (para no
+  // volver a subirlo). Con un fichero no hay nadie esperando.
+  const alGuardar = useRef<((p: Partido, copia: boolean) => void | Promise<void>) | null>(null);
+
   const guardar = async (p: Partido, copia: boolean, info: Extract<ResultadoValidacion, { ok: true }>) => {
     if (guardando) return;                       // anti-doble-toque
     setGuardando(true);
     try {
       const id = await guardarPartidoImportado(p, copia);
       const final: Partido = copia ? { ...p, id } : p;
+      try { await alGuardar.current?.(final, copia); } catch { /* que no tumbe lo guardado */ }
       setPaso({ k: "hecho", p: final, copia, info });
       opts.onHecho();
     } catch (e) {
@@ -76,10 +81,27 @@ export function useImportarPartido(opts: { nuevo: boolean; onHecho: () => void; 
   };
 
   const leer = async (f: File) => {
+    alGuardar.current = null;
     setPaso({ k: "leyendo" });
     try {
       if (f.size > TAMANO_MAXIMO) { setPaso({ k: "error", msg: t("imp_err_grande") }); return; }
-      const texto = await f.text();
+      await procesar(await f.text());
+    } catch (e) {
+      setPaso({ k: "error", msg: t("imp_err_leer", { detalle: (e as Error).message }) });
+    }
+  };
+
+  /** Lo mismo que con un fichero, con el texto ya en la mano (lo que devuelve
+   *  el servidor del club es exactamente lo de «Exportar JSON»). */
+  const abrirTexto = async (texto: string, cb?: (p: Partido, copia: boolean) => void | Promise<void>) => {
+    alGuardar.current = cb ?? null;
+    setPaso({ k: "leyendo" });
+    try { await procesar(texto); }
+    catch (e) { setPaso({ k: "error", msg: t("imp_err_leer", { detalle: (e as Error).message }) }); }
+  };
+
+  const procesar = async (texto: string) => {
+    {
       let r = validarArchivo(texto, { cliente: CLIENTE_ID, roster: ROSTER.map((j) => j.nombre) });
       if (!r.ok) { setPaso({ k: "error", msg: mensajeError(r) }); return; }
       // La misma regla que en el aparato (lib/finPartido.ts, 20/11/2026): si
@@ -91,8 +113,6 @@ export function useImportarPartido(opts: { nuevo: boolean; onHecho: () => void; 
       const aqui = await partidoGuardado(r.partido.id);
       if (aqui) { setPaso({ k: "choque", nuevo: r.partido, aqui, info: r }); return; }
       await guardar(r.partido, false, r);
-    } catch (e) {
-      setPaso({ k: "error", msg: t("imp_err_leer", { detalle: (e as Error).message }) });
     }
   };
 
@@ -226,5 +246,5 @@ export function useImportarPartido(opts: { nuevo: boolean; onHecho: () => void; 
     </div>
   );
 
-  return { abrir, selector, ventana };
+  return { abrir, abrirTexto, selector, ventana };
 }
