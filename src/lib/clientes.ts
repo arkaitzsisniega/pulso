@@ -17,7 +17,8 @@
  *   3. Su escudo: la imagen en `public/escudos/<id>.png` (PNG con fondo
  *      transparente, ~200 px de alto, que se lea en oscuro y en claro) y la
  *      línea `escudo: "escudos/<id>.png"` en su entrada. Nada más: las
- *      cabeceras, la ruta de cada build y el modo sin conexión salen solos.
+ *      cabeceras, el informe del partido (escudo + `colorPropio.sol` como
+ *      color), la ruta de cada build y el modo sin conexión salen solos.
  *   4. Desplegar con NEXT_PUBLIC_CLIENTE=<id> (+ CRONO_BASEPATH propio).
  *
  * Las contraseñas NUNCA se guardan en claro: solo su hash SHA-256 (igual que
@@ -75,9 +76,14 @@ export interface ConfigCliente {
    *  izquierda), relativo a `public/`: p. ej. "escudos/inter.png". UNA imagen
    *  para los dos modos (Pabellón y Sol), así que tiene que leerse sobre fondo
    *  oscuro y sobre claro. PNG con transparencia, ~200 px de alto como mucho.
-   *  El aspecto clásico y el informe NO lo usan (el informe lleva su marca,
-   *  `lib/marca.ts`). Ver `lib/escudo.ts`. */
+   *  El aspecto clásico no lo usa. El informe del partido SÍ (21/11/2026),
+   *  salvo en la demo, que lleva la marca PULSO: ver `lib/marca.ts`. */
   escudo: string;
+  /** Opcional: otro escudo SOLO para el informe del partido (papel blanco),
+   *  si el de las cabeceras no es el que mejor queda impreso. Sin esta línea,
+   *  el informe usa `escudo`. El Inter la usa: su escudo verde no se lee en el
+   *  modo Pabellón (oscuro), pero es el de sus documentos en papel. */
+  escudoInforme?: string;
 }
 
 // Colores de club para el aspecto nuevo. El verde del Inter lo llevan los tres
@@ -117,6 +123,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     colorPropio: VERDE_INTER,
     aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
+    escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
   },
   // Filial (28/8/2026). MISMO código que el Inter, otro build: su roster, su
   // contraseña, su URL (/crono-filial/) y su base local. No comparte NADA con
@@ -135,6 +142,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     colorPropio: VERDE_INTER,
     aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
+    escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
   },
   // Juvenil División de Honor (11/11/2026). Igual que el filial: mismo código,
   // otro build, con su plantilla, su contraseña, su URL (/crono-juvenil/) y su
@@ -153,6 +161,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     colorPropio: VERDE_INTER,
     aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
+    escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
   },
   pulso: {
     id: "pulso",

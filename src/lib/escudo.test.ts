@@ -52,9 +52,24 @@ console.log("Sin conexión:");
 ok(/rel="preload" as="image" href=\{rutaEscudo\(/.test(leer("src/app/layout.tsx")), "el layout precarga el escudo");
 ok(leer("public/sw.js").includes('a.includes("/escudos/")'), "el service worker guarda lo de /escudos/");
 
-console.log("El informe no cambia:");
-ok(leer("src/lib/marca.ts").includes("escudo: `${BASE}/marca.png`"), "el informe sigue con marca.png");
-ok(!/Escudo/.test(leer("src/app/informe/page.tsx")), "el informe no usa el escudo del aspecto nuevo");
+console.log("El informe lleva la marca del club (21/11/2026):");
+ok(/MARCA_INFORME: MarcaInforme = construirMarcaInforme\(CLIENTE, BASE\)/.test(leer("src/lib/marca.ts")),
+  "el informe sale de la entrada del club en clientes.ts");
+ok(/ficheroEscudoInforme\(CLIENTE\)/.test(leer("src/app/layout.tsx")),
+  "el layout precarga también el escudo del informe (sin conexión)");
+ok(leer("public/sw.js").includes("${BASE}/marca.png"), "la demo sigue con marca.png guardada al instalar");
+for (const id of ids) {
+  const ent = bloque.slice(bloque.indexOf(`  ${id}: {`));
+  const m = ent.slice(0, ent.indexOf("\n  },")).match(/escudoInforme: "([^"]+)"/);
+  if (!m) continue;
+  ok(m[1].startsWith("escudos/"), `${id}: escudo del informe en public/escudos/ (lo guarda el service worker)`);
+  const f = new URL(`public/${m[1]}`, raiz);
+  ok(existsSync(f), `${id}: public/${m[1]} existe`);
+  if (existsSync(f)) {
+    const png = readFileSync(f);
+    ok(png.subarray(1, 4).toString() === "PNG" && png.length < 60_000, `${id}: PNG que pesa poco (${Math.round(png.length / 1024)} KB)`);
+  }
+}
 
 if (fallos) { console.log(`\n${fallos} fallo(s)`); process.exit(1); }
 console.log("\nTodo bien.");

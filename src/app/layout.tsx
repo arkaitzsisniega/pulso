@@ -8,6 +8,7 @@ import SWRegister from "@/components/SWRegister";
 import SelectorIdioma from "@/components/SelectorIdioma";
 import { CLIENTE } from "@/lib/clientes";
 import { rutaEscudo } from "@/lib/escudo";
+import { ficheroEscudoInforme } from "@/lib/marca";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -96,6 +97,13 @@ export default function RootLayout({
             (busca en el HTML las rutas de /escudos/) y salga sin conexión. React
             lo sube al <head>. */}
         <link rel="preload" as="image" href={rutaEscudo(BP, CLIENTE.escudo)} />
+        {/* Y el del informe del partido, si el club tiene uno aparte para el
+            papel (el Inter: el verde). Mismo motivo: que el informe lo pinte
+            sin conexión. La demo lleva marca.png, que el service worker guarda
+            al instalarse. */}
+        {!CLIENTE.demo && ficheroEscudoInforme(CLIENTE) !== CLIENTE.escudo && (
+          <link rel="preload" as="image" href={rutaEscudo(BP, ficheroEscudoInforme(CLIENTE))} />
+        )}
         <SWRegister />
         <AuthGate>{children}</AuthGate>
         <SelectorIdioma />

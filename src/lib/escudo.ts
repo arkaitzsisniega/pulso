@@ -12,8 +12,9 @@
  * service worker la guarda para el modo sin conexión porque el layout la
  * precarga en todas las páginas (ver `app/layout.tsx` y `public/sw.js`).
  *
- * Ni el aspecto clásico ni el informe lo usan: el informe tiene su propia
- * marca (`lib/marca.ts` → `public/marca.png`) y sale igual que siempre.
+ * El aspecto clásico no lo usa. El informe del partido sí (21/11/2026): cada
+ * club con su escudo (o con `escudoInforme`, si tiene uno aparte para el
+ * papel) y la demo con la marca PULSO. Ver `lib/marca.ts`.
  */
 
 /** Une la carpeta del build y el fichero del escudo sin barras dobles. */
