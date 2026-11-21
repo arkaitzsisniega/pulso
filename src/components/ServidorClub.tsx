@@ -12,19 +12,22 @@
  *     quién apunta cada partido, «Abrir en este aparato» (la misma ventana de
  *     «Importar partido», con su pregunta si ya hay uno con ese id) y «Tomar el
  *     control» con confirmación.
+ *   · useSoloMirar / useSeguirEnDirecto / BannerSoloMirar (fase 3): en la
+ *     pantalla del partido, si lo apunta OTRO aparato, solo se mira (nada se
+ *     puede tocar) y se trae lo nuevo del servidor cada ~7 s (ETag/304).
  *
  * La ventana usa el mismo dibujo en los dos aspectos (como la de importar);
  * con el nuevo, los emojis de los títulos pasan a iconos.
  */
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { type Partido } from "@/lib/db";
 import { CLIENTE } from "@/lib/clientes";
 import { t } from "@/lib/i18n";
 import {
   SERVIDOR_ACTIVO, arrancarSincronizacion, useServidor, conectar, desconectar, partidosDelClub,
-  bajarDelClub, tomarControlDe, marcarAbierto, reintentarSubida, nombreAparatoGuardado,
+  bajarDelClub, tomarControlDe, marcarAbierto, reintentarSubida, nombreAparatoGuardado, seguirUnaVez, guardarParaMirar,
 } from "@/lib/servidor";
-import type { FichaSubida, PartidoClub } from "@/lib/colaSubida";
+import { soloMirar, INTERVALO_SEGUIR_MS, type FichaSubida, type PartidoClub, type DuenoPartido } from "@/lib/colaSubida";
 import { conIconos, Ico } from "@/components/DirectoNuevo";
 
 export function SincronizadorServidor() {
@@ -97,7 +100,11 @@ type Importador = {
 };
 
 /** La ventana «Partidos del club». `locales` = los partidos de este aparato. */
-export function useServidorClub(opts: { nuevo: boolean; importar: Importador; locales: Partido[]; onCambio: () => void }) {
+export function useServidorClub(opts: {
+  nuevo: boolean; importar: Importador; locales: Partido[]; onCambio: () => void;
+  /** Abrir la pantalla del partido (fase 3: «Seguir en directo»). */
+  onContinuar?: (id: string) => void;
+}) {
   const sv = useServidor();
   const [abierta, setAbierta] = useState(false);
   const [lista, setLista] = useState<PartidoClub[] | null>(null);
@@ -159,6 +166,38 @@ export function useServidorClub(opts: { nuevo: boolean; importar: Importador; lo
     try { await traer(p, p.dueno.soy_yo); } finally { setTrabajando(null); }
   };
 
+  /** «Seguir en directo» (fase 3): lo trae y abre la pantalla del partido en
+   *  modo solo mirar. Si aquí hay una copia que NO es solo para mirar (se
+   *  apuntó algo aquí), pasa por la ventana de importar, que pregunta. */
+  const seguir = async (p: PartidoClub) => {
+    if (trabajando || !opts.onContinuar) return;
+    setTrabajando(p.id); setError(null);
+    try {
+      const aqui = opts.locales.some((l) => l.id === p.id);
+      const f = sv.fichas[p.id];
+      if (aqui && f?.estado !== "ajeno" && f?.version !== p.version) { await traer(p, false); return; }
+      // (si aquí estaba y es solo para mirar, o no estaba, se trae sin preguntar)
+      const local = opts.locales.find((l) => l.id === p.id);
+      if (local && f?.version === p.version && f.subidoActualizado === local.actualizado) {
+        // Aquí ya está esa misma versión, sin nada encima: solo se marca para mirar.
+        if (f.estado !== "ajeno") await marcarAbierto(p.id, local.actualizado, p.version, { id: p.dueno.id, nombre: p.dueno.nombre }, false);
+      } else if (!(await seguirDirecto(p))) return;
+      setAbierta(false);
+      opts.onContinuar(p.id);
+    } finally { setTrabajando(null); }
+  };
+
+  /** Bajar y guardar tal cual (sin ventana): solo para un partido que aquí no
+   *  está, o está solo para mirar. */
+  const seguirDirecto = async (p: PartidoClub): Promise<boolean> => {
+    const b = await bajarDelClub(p.id);
+    if (!b.ok) { setError(t("sv_err_accion", { motivo: textoMotivo(b.codigo) })); return false; }
+    const ok = await guardarParaMirar(b.datos.texto, b.datos.version, { id: p.dueno.id, nombre: p.dueno.nombre });
+    if (!ok) { setError(t("sv_err_accion", { motivo: textoMotivo("no_partido") })); return false; }
+    opts.onCambio();
+    return true;
+  };
+
   const tomar = async (p: PartidoClub) => {
     if (trabajando) return;
     const nombre = p.dueno.nombre || t("sv_otro_aparato");
@@ -203,6 +242,13 @@ export function useServidorClub(opts: { nuevo: boolean; importar: Importador; lo
               style={{ touchAction: "manipulation" }}
               className="px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-sm font-bold disabled:opacity-60">
               {aqui ? t("sv_abrir_otra_vez") : t("sv_abrir")}
+            </button>
+          )}
+          {!p.dueno.soy_yo && p.estado === "en_curso" && opts.onContinuar && (
+            <button type="button" disabled={!!trabajando} onClick={() => seguir(p)} data-club-seguir=""
+              style={{ touchAction: "manipulation" }}
+              className="px-3 py-2 rounded-lg bg-sky-700 hover:bg-sky-600 text-sm font-bold disabled:opacity-60">
+              {t("sv_seguir")}
             </button>
           )}
           {!p.dueno.soy_yo && (
@@ -298,4 +344,112 @@ export function useServidorClub(opts: { nuevo: boolean; importar: Importador; lo
     : sv.caducada ? t("sv_caducada") : t("sv_sin_conectar");
 
   return { activo: SERVIDOR_ACTIVO, abrir, ventana, linea, conectado: !!sv.sesion };
+}
+
+// ── Solo mirar y seguir en directo (fase 3, 21/11/2026) ──────────────────
+
+/** ¿Este partido lo apunta otro aparato? (= aquí solo se mira). */
+export function useSoloMirar(id: string | undefined): { activo: boolean; dueno: DuenoPartido | null } {
+  const sv = useServidor();
+  const f = id ? sv.fichas[id] : undefined;
+  return { activo: SERVIDOR_ACTIVO && soloMirar(f), dueno: f?.dueno ?? null };
+}
+
+export interface EstadoSeguimiento { ok: boolean; el: number }
+
+/** Mientras se mira un partido EN CURSO y la pantalla se ve: pregunta al
+ *  servidor cada INTERVALO_SEGUIR_MS (y al volver a la app o la red). Con
+ *  versión nueva, la guarda y llama a `alNuevo` (que vuelve a leer la base). */
+export function useSeguirEnDirecto(id: string | undefined, estadoPartido: string | undefined,
+                                   alNuevo: () => void | Promise<void>): EstadoSeguimiento | null {
+  const sv = useServidor();
+  const f = id ? sv.fichas[id] : undefined;
+  const activo = SERVIDOR_ACTIVO && !!sv.sesion && !!id && soloMirar(f) && estadoPartido === "en_curso";
+  const cb = useRef(alNuevo);
+  useEffect(() => { cb.current = alNuevo; });
+  const [ultima, setUltima] = useState<EstadoSeguimiento | null>(null);
+  useEffect(() => {
+    if (!activo || !id) return;
+    let vivo = true;
+    let ocupado = false;
+    const una = async () => {
+      if (ocupado || document.visibilityState !== "visible") return;
+      ocupado = true;
+      try {
+        const r = await seguirUnaVez(id);
+        if (!vivo) return;
+        if (r === "nuevo") await cb.current();
+        if (r !== "no") setUltima({ ok: r !== "fallo", el: Date.now() });
+      } catch { /* la próxima vuelta */ } finally { ocupado = false; }
+    };
+    void una();
+    const reloj = window.setInterval(() => { void una(); }, INTERVALO_SEGUIR_MS);
+    const alVer = () => { if (document.visibilityState === "visible") void una(); };
+    document.addEventListener("visibilitychange", alVer);
+    window.addEventListener("online", alVer);
+    return () => {
+      vivo = false;
+      window.clearInterval(reloj);
+      document.removeEventListener("visibilitychange", alVer);
+      window.removeEventListener("online", alVer);
+    };
+  }, [activo, id]);
+  return activo ? ultima : null;
+}
+
+/** La franja de «solo mirar» (abajo, por encima de todo): quién lo lleva, si
+ *  está al día, y las tres salidas: tomar el control, resumen e inicio. */
+export function BannerSoloMirar(props: {
+  id: string; dueno: DuenoPartido | null; partido: string; seguimiento: EstadoSeguimiento | null;
+  nuevo: boolean; onTomado: () => void | Promise<void>; onResumen: () => void; onInicio: () => void;
+}) {
+  const [tomando, setTomando] = useState(false);
+  const [, tic] = useState(0);
+  useEffect(() => { const i = window.setInterval(() => tic((x) => x + 1), 1000); return () => window.clearInterval(i); }, []);
+  const nombre = props.dueno?.nombre || t("sv_otro_aparato");
+  const s = props.seguimiento;
+  const hace = s ? Math.max(0, Math.round((Date.now() - s.el) / 1000)) : null;
+  const estado = !s ? t("sv_mirar_conectando")
+    : !s.ok ? t("sv_mirar_sin_red")
+    : t("sv_mirar_al_dia", { s: hace ?? 0 });
+  const tomar = async () => {
+    if (tomando) return;
+    if (!confirm(t("sv_tomar_confirm", { partido: props.partido, aparato: nombre }))) return;
+    setTomando(true);
+    try {
+      const r = await tomarControlDe(props.id, false);
+      if (!r.ok) alert(t("sv_err_accion", { motivo: textoMotivo(r.codigo) }));
+      await props.onTomado();
+    } finally { setTomando(false); }
+  };
+  const ic = (txt: string): ReactNode => (props.nuevo ? conIconos(txt) : txt);
+  return (
+    <div role="status" aria-live="polite" data-solo-mirar-banner="" data-mirar-ok=""
+      className="fixed left-1/2 -translate-x-1/2 bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] z-[80]
+                 w-[min(96vw,760px)] rounded-2xl bg-zinc-900/95 border border-sky-500/60 shadow-xl shadow-black/70
+                 text-zinc-100 px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <Ico.ojo className="pz-ico" />
+        <div className="min-w-0">
+          <div className="font-bold leading-tight" data-solo-mirar-dueno="">{t("sv_mirar_titulo", { aparato: nombre })}</div>
+          <div className={`text-xs ${s && !s.ok ? "text-amber-300" : "text-zinc-400"}`} data-solo-mirar-estado="">{estado}</div>
+        </div>
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        <button type="button" onClick={() => void tomar()} disabled={tomando} data-solo-mirar-tomar=""
+          style={{ touchAction: "manipulation" }}
+          className="px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-sm font-bold disabled:opacity-60">
+          {tomando ? t("sv_trabajando") : t("sv_tomar")}
+        </button>
+        <button type="button" onClick={props.onResumen} style={{ touchAction: "manipulation" }}
+          className="px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-sm font-semibold">
+          {ic(t("sv_mirar_resumen"))}
+        </button>
+        <button type="button" onClick={props.onInicio} style={{ touchAction: "manipulation" }}
+          className="px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-sm font-semibold">
+          {ic(t("inicio"))}
+        </button>
+      </div>
+    </div>
+  );
 }

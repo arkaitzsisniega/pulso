@@ -24,7 +24,7 @@ import { validarArchivo } from "./importarPartido";
 import { estadoFin, marcarFinalizado } from "./finPartido";
 import { guardarPartidoImportado } from "./store";
 import {
-  MotorSubida, iniciarSesion, listarDelClub, bajarPartido, tomarControl,
+  MotorSubida, iniciarSesion, listarDelClub, bajarPartido, tomarControl, seguirPartido, soloMirar,
   type AlmacenCola, type FichaSubida, type SesionServidor, type ResultadoSesion,
   type DuenoPartido,
 } from "./colaSubida";
@@ -214,4 +214,49 @@ export async function marcarAbierto(id: string, actualizado: number, version: nu
 export async function reintentarSubida(id: string) {
   await elMotor().reintentar(id);
   void subirAhora();
+}
+
+// ── Seguir en directo (fase 3, 21/11/2026) ────────────────────────────────
+
+/** Una pregunta del que SOLO MIRA: ¿hay versión nueva en el servidor? Si la
+ *  hay, la guarda aquí (en lugar de la que había) y devuelve "nuevo" para que
+ *  la pantalla la vuelva a leer. Nunca pisa un partido que manda este aparato:
+ *  si mientras tanto se ha tomado el control, no hace nada. */
+export async function seguirUnaVez(id: string): Promise<"nuevo" | "igual" | "fallo" | "no"> {
+  const s = estado.sesion;
+  const f = estado.fichas[id];
+  if (!SERVIDOR_ACTIVO || !s || !soloMirar(f)) return "no";
+  const r = await seguirPartido(fetch, s, id, f.version ? `"v${f.version}"` : null);
+  if (r.tipo === "igual") return "igual";
+  if (r.tipo === "fallo") { if (r.codigo === "sin_llave") perderSesion(); return "fallo"; }
+  // ¿Ya manda este aparato (se tomó el control con esta misma llave)? No pisar.
+  if (r.dueno && r.dueno === s.aparato.id) return "no";
+  const v = validarArchivo(r.texto, { cliente: CLIENTE_ID, roster: ROSTER.map((j) => j.nombre) });
+  if (!v.ok) return "fallo";
+  // Lo que se haya hecho aquí en el rato de la petición (tomar el control) manda.
+  if (!soloMirar(estado.fichas[id])) return "no";
+  let p = v.partido;
+  if (p.estado !== "finalizado" && estadoFin(p).terminado) p = marcarFinalizado(p, "importar", Date.now());
+  // Quién apunta: si ha cambiado (otro tomó el control), su nombre de la lista.
+  let dueno: DuenoPartido = f.dueno ?? { id: r.dueno ?? "", nombre: null };
+  if (r.dueno && r.dueno !== dueno.id) {
+    dueno = { id: r.dueno, nombre: null };
+    const l = await listarDelClub(fetch, s);
+    if (l.ok) dueno.nombre = l.datos.find((x) => x.id === id)?.dueno.nombre ?? null;
+  }
+  await guardarPartidoImportado(p, false);
+  await elMotor().marcarBajado(id, p.actualizado, r.version, dueno, false);
+  return "nuevo";
+}
+
+/** «Seguir en directo» desde «Partidos del club»: guarda aquí la versión del
+ *  servidor tal cual, para MIRAR (ficha «ajeno»). false = no es un partido. */
+export async function guardarParaMirar(texto: string, version: number, dueno: DuenoPartido): Promise<boolean> {
+  const v = validarArchivo(texto, { cliente: CLIENTE_ID, roster: ROSTER.map((j) => j.nombre) });
+  if (!v.ok) return false;
+  let p = v.partido;
+  if (p.estado !== "finalizado" && estadoFin(p).terminado) p = marcarFinalizado(p, "importar", Date.now());
+  await guardarPartidoImportado(p, false);
+  await elMotor().marcarBajado(p.id, p.actualizado, version, dueno, false);
+  return true;
 }

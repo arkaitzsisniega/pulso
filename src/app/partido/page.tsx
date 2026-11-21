@@ -23,6 +23,7 @@ import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { huecoFlotante, MARGEN_CAPA } from "@/lib/huecoFlotante";
 import { elegirRival, rgba } from "@/lib/tema";
 import { estadoFin } from "@/lib/finPartido";
+import { useSoloMirar, useSeguirEnDirecto, BannerSoloMirar } from "@/components/ServidorClub";
 import {
   CabeceraNueva, BotonTiempoNuevo, HerramientasNueva, PistaNueva, BanquilloNuevo,
   BotonNuevo, Ico, NuevoCtx, useNuevo, useIc, conIconos, iconoDeTexto, sinEmojis,
@@ -41,7 +42,17 @@ export default function PartidoPage() {
     quitarAccionIndividual,
     iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
     setDuracionesParte, finalizarPartido, retrocederParte, setModo,
-    setDireccionAtaque, setSaqueInicial } = usePartido();
+    setDireccionAtaque, setSaqueInicial, setSoloLectura, recargar } = usePartido();
+
+  // SOLO MIRAR (servidor de partidos, fase 3 · 21/11/2026): si este partido lo
+  // apunta OTRO aparato del club, aquí no se toca nada (las acciones del store
+  // no hacen nada y la pantalla queda inerte) y se trae lo nuevo del servidor
+  // cada ~7 s. Sin servidor encendido o sin conectar, `mirar.activo` es false
+  // y todo es como siempre. Se fija en el render (es un ref): así ningún
+  // guardado se cuela entre que llega el «ajeno» y el efecto.
+  const mirar = useSoloMirar(partido.id);
+  setSoloLectura(mirar.activo);
+  const seguimiento = useSeguirEnDirecto(partido.id, partido.estado, recargar);
 
   // Estado UI
   const [modalCambio, setModalCambio] = useState<{ sale: string } | null>(null);
@@ -312,6 +323,21 @@ export default function PartidoPage() {
     return e.enPropia ? t("pg_en_propia") : (e.goleador || e.tirador || "—");
   };
 
+  // Al pasar a «solo mirar» (otro aparato ha tomado el control) se cierra lo
+  // que estuviera abierto: lo que se apuntara ya no se guardaría.
+  useEffect(() => {
+    if (!mirar.activo) return;
+    setModalCambio(null); setModalAccionInd(null); setModalAccionBanquillo(null);
+    setModalFalta(false); setModalGol(false); setModalAmarilla(false); setModalRoja(false);
+    setConfirmExpulRival(null); setConfirmFaltaCT(null); setConfirmPaseGol(null); setConfirmGolConPase(null);
+    setModalTM(false); setModalPen(false); setModalTanda(false); setModalTiempos(false);
+    setModalDisparoRival(false); setModalIncorporacion(false); setModalSaque(false); setModalCambioParte(false);
+  }, [mirar.activo]);
+  // El que mira, cuando el que manda finaliza: al resumen.
+  useEffect(() => {
+    if (cargado && mirar.activo && partido.estado === "finalizado") router.push("/resumen");
+  }, [cargado, mirar.activo, partido.estado, router]);
+
   if (!cargado) {
     return <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">{t("part_cargando")}</div>;
   }
@@ -415,7 +441,7 @@ export default function PartidoPage() {
     || confirmPaseGol || confirmGolConPase || modalTM || modalPen || modalTanda || modalTiempos
     || modalDisparoRival || modalIncorporacion || modalSaque || modalCambioParte);
   const verFin = (fin.terminado || fin.motivo === "empate_pendiente")
-    && finDescartado !== claveFin && !hayOtraVentana;
+    && finDescartado !== claveFin && !hayOtraVentana && !mirar.activo;
   const sFalt = partido.stats.faltas[p];
   // AMARILLAS: se guardan por parte (para el informe), pero se MUESTRAN
   // acumuladas de TODO el partido — una amarilla no caduca al cambiar de
@@ -480,7 +506,14 @@ export default function PartidoPage() {
     // banners a la vez), el contenedor sí permite scroll como red de seguridad.
     // NuevoCtx: las ventanas saben si van con el aspecto nuevo (no añade nada al DOM).
     <NuevoCtx.Provider value={nuevo}>
-    <div className={nuevo
+    {mirar.activo && (
+      <BannerSoloMirar id={partido.id} dueno={mirar.dueno} nuevo={nuevo}
+        partido={`${cfg.partido_id} · ${cfg.rival}`} seguimiento={seguimiento}
+        onTomado={recargar}
+        onResumen={() => router.push("/resumen")} onInicio={() => router.push("/")} />
+    )}
+    <div inert={mirar.activo || undefined} data-solo-mirar={mirar.activo ? "" : undefined}
+      className={nuevo
         ? "pz h-[calc(100dvh-env(safe-area-inset-top,0px))] text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"
         : "h-[calc(100dvh-env(safe-area-inset-top,0px))] bg-zinc-950 text-zinc-100 p-2 flex flex-col gap-1.5 overflow-y-auto"}
       data-tema={nuevo && modoSol ? "sol" : undefined}
