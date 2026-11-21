@@ -241,6 +241,57 @@ export async function tomarControl(
   return fallo(r);
 }
 
+// ── Seguir en directo (fase 3, 21/11/2026) ────────────────────────────────
+
+/** Cada cuánto pregunta el que solo mira (5-10 s; con ETag casi siempre es un
+ *  304 sin cuerpo). */
+export const INTERVALO_SEGUIR_MS = 7_000;
+
+/** Respuesta a «¿hay algo nuevo?» del que mira. */
+export type Seguimiento =
+  | { tipo: "igual" }
+  | { tipo: "nuevo"; texto: string; version: number; etag: string; dueno: string | null; sustituidoPor: string | null }
+  | { tipo: "fallo"; codigo: string; estado: number };
+
+/** GET con If-None-Match: 304 = nada nuevo; 200 = la versión nueva entera.
+ *  `etag` = el de la última que se tiene aquí ("v<n>"), o null la primera vez. */
+export async function seguirPartido(
+  fetchFn: Fetch, s: SesionServidor, id: string, etag: string | null,
+): Promise<Seguimiento> {
+  const cab: Record<string, string> = { ...llave(s) };
+  if (etag) cab["If-None-Match"] = etag;
+  let dueno: string | null = null, sustituido: string | null = null;
+  const envolver: Fetch = async (u, i) => {
+    const r = await fetchFn(u, i);
+    dueno = r.headers.get("X-Pulso-Dueno");
+    sustituido = r.headers.get("X-Pulso-Sustituido-Por");
+    return r;
+  };
+  const r = await peticion(envolver, unir(s.url, `/v1/partidos/${encodeURIComponent(id)}`), { headers: cab });
+  if (r.estado === 304) return { tipo: "igual" };
+  if (r.estado === 200 && r.texto) {
+    const v = Number((r.etag ?? "").replace(/[^0-9]/g, ""));
+    return { tipo: "nuevo", texto: r.texto, version: Number.isFinite(v) && v > 0 ? v : 0,
+      etag: r.etag ?? "", dueno, sustituidoPor: sustituido };
+  }
+  const f = fallo<never>(r) as { ok: false; codigo: string; estado: number };
+  return { tipo: "fallo", codigo: f.codigo, estado: f.estado };
+}
+
+/** ¿Este aparato tiene que SOLO MIRAR este partido? Cuando el servidor dice
+ *  que lo apunta otro aparato del club (ficha «ajeno»). Sin ficha (servidor
+ *  apagado, aparato sin conectar, partido que nunca se subió) se apunta como
+ *  siempre: el crono no depende del servidor. */
+export function soloMirar(f: FichaSubida | undefined): boolean {
+  return !!f && f.estado === "ajeno";
+}
+
+/** ¿Hay que seguirlo en directo (preguntar cada pocos segundos)? Solo mientras
+ *  se mira, está en curso y la pestaña se ve. */
+export function hayQueSeguir(f: FichaSubida | undefined, estadoPartido: string | undefined, visible: boolean): boolean {
+  return soloMirar(f) && estadoPartido === "en_curso" && visible;
+}
+
 // ── El motor de la cola ───────────────────────────────────────────────────
 
 /** Lo que el motor necesita de la base local (Dexie en el crono, un Map en
