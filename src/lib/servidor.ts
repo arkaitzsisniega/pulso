@@ -19,6 +19,10 @@ import { useSyncExternalStore } from "react";
 import { db } from "./db";
 import { CLIENTE_ID, SERVIDOR_ACTIVO, URL_SERVIDOR, VERSION_CRONO } from "./clientes";
 import { ID_PARTIDO_EJEMPLO } from "./partidoEjemplo";
+import { ROSTER } from "./clientes";
+import { validarArchivo } from "./importarPartido";
+import { estadoFin, marcarFinalizado } from "./finPartido";
+import { guardarPartidoImportado } from "./store";
 import {
   MotorSubida, iniciarSesion, listarDelClub, bajarPartido, tomarControl,
   type AlmacenCola, type FichaSubida, type SesionServidor, type ResultadoSesion,
@@ -175,12 +179,31 @@ export function bajarDelClub(id: string) {
   return bajarPartido(fetch, s, id);
 }
 
-export async function tomarControlDe(id: string) {
+/** «Tomar el control»: este aparato pasa a mandar y se queda con la ÚLTIMA
+ *  versión del servidor (la del aparato que mandaba). Lo de aquí se sustituye
+ *  sin más pregunta: ya lo dijo la confirmación. `yaAlDia` = aquí ya está esa
+ *  misma versión (no hace falta traer nada). */
+export async function tomarControlDe(id: string, yaAlDia: boolean):
+    Promise<{ ok: true; traido: boolean } | { ok: false; codigo: string }> {
   const s = estado.sesion;
-  if (!s) return { ok: false as const, codigo: "sin_llave", estado: 401 };
+  if (!s) return { ok: false, codigo: "sin_llave" };
+  const yo = { id: s.aparato.id, nombre: s.aparato.nombre };
   const r = await tomarControl(fetch, s, id);
-  if (r.ok) await elMotor().marcarDueno(id, r.datos.version, { id: s.aparato.id, nombre: s.aparato.nombre });
-  return r;
+  if (!r.ok) { if (r.codigo === "sin_llave") perderSesion(); return { ok: false, codigo: r.codigo }; }
+  if (yaAlDia) { await elMotor().marcarDueno(id, r.datos.version, yo, true); return { ok: true, traido: false }; }
+  const b = await bajarPartido(fetch, s, id);
+  const v = b.ok ? validarArchivo(b.datos.texto, { cliente: CLIENTE_ID, roster: ROSTER.map((j) => j.nombre) }) : null;
+  if (!b.ok || !v || !v.ok) {
+    // Manda este aparato, pero no se pudo traer la última: lo de aquí no se
+    // sube encima de ella; lo que se apunte desde ahora, sí.
+    await elMotor().marcarDueno(id, r.datos.version, yo, false);
+    return { ok: false, codigo: !b.ok ? b.codigo : "no_partido" };
+  }
+  let p = v.partido;
+  if (p.estado !== "finalizado" && estadoFin(p).terminado) p = marcarFinalizado(p, "importar", Date.now());
+  await guardarPartidoImportado(p, false);
+  await elMotor().marcarBajado(id, p.actualizado, b.datos.version, yo, true);
+  return { ok: true, traido: true };
 }
 
 /** Lo que se acaba de abrir desde el servidor ya está al día aquí. */

@@ -461,17 +461,23 @@ export class MotorSubida {
     });
   }
 
-  /** «Tomar el control» hecho: este aparato manda. Lo que haya cambiado aquí
-   *  desde lo último que tiene el servidor se sube en la próxima pasada. */
-  async marcarDueno(id: string, version: number, dueno: DuenoPartido): Promise<void> {
+  /** «Tomar el control» hecho: este aparato manda.
+   *  · `subirLoDeAqui` true (aquí ya estaba la versión del servidor): lo que
+   *    haya cambiado aquí desde entonces se sube en la próxima pasada.
+   *  · false (no se pudo traer la última): lo de aquí NO se sube por encima;
+   *    lo que se apunte desde ahora, sí (con If-Match de la del servidor).
+   *  Ojo: si se va a traer la última versión, NO se llama a esto antes de
+   *  guardarla (marcarBajado): una pasada en medio subiría lo viejo de aquí
+   *  encima (visto en la prueba con dos aparatos del 21/11). */
+  async marcarDueno(id: string, version: number, dueno: DuenoPartido, subirLoDeAqui = true): Promise<void> {
     const f = this.fichas.get(id);
     const p = await this.d.almacen.leerPartido(id);
     const base: FichaSubida = f ?? { id, estado: "subido", intentos: 0, proximoIntento: 0 };
-    const cambiado = p ? hayCambios(p.actualizado, f) : false;
+    const cambiado = subirLoDeAqui && p ? hayCambios(p.actualizado, f) : false;
     await this.guardar({
       ...base, id, version, dueno, subidoPor: dueno.id, codigo: undefined, intentos: 0, proximoIntento: 0,
       estado: cambiado ? "pendiente" : "subido",
-      subidoActualizado: f?.subidoActualizado ?? p?.actualizado,
+      subidoActualizado: subirLoDeAqui ? (f?.subidoActualizado ?? p?.actualizado) : p?.actualizado,
     });
   }
 
