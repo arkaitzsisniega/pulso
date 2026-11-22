@@ -12,8 +12,9 @@
  * ⚠️ Hay TRES Raúles y «Jugador» a secas es el 6: Jugador Gómez = JUGADOR · Jugador
  * = JUGADOR · Jugador Jugador = JUGADOR.
  *
- * ROSTER_DEMO va EN PARALELO: mismos dorsales y posiciones, nombres falsos
- * (JUGADOR→ROMAN, JUGADOR→SALAS). Si se añade a uno, se añade al otro.
+ * ROSTER_DEMO va EN PARALELO: mismas posiciones, nombres falsos (JUGADOR→ROMAN,
+ * JUGADOR→SALAS) y, desde el 22/11/2026, dorsales barajados (los pone
+ * scripts/generar_partido_demo.ts). Si se añade a uno, se añade al otro.
  *
  * Aquí solo viven los DATOS crudos (ROSTER_REAL y ROSTER_DEMO). Qué roster usa
  * cada build lo decide `clientes.ts` según NEXT_PUBLIC_CLIENTE: "inter" → reales,
@@ -66,32 +67,32 @@ export const ROSTER_REAL: Jugador[] = [
 // JUGADOR→SERRANO, JUGADOR→CANO…). Lo selecciona clientes.ts con NEXT_PUBLIC_CLIENTE=pulso.
 export const ROSTER_DEMO: Jugador[] = [
   // Porteros primer equipo
-  { dorsal: "1", nombre: "REYES", posicion: "PORTERO", equipo: "PRIMER" },
-  { dorsal: "27", nombre: "SERRANO", posicion: "PORTERO", equipo: "PRIMER" },
-  { dorsal: "15", nombre: "ROMAN", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "30", nombre: "REYES", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "13", nombre: "SERRANO", posicion: "PORTERO", equipo: "PRIMER" },
+  { dorsal: "25", nombre: "ROMAN", posicion: "PORTERO", equipo: "PRIMER" },
   // Campo primer equipo
-  { dorsal: "2", nombre: "PRIETO", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "5", nombre: "IBAÑEZ", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "6", nombre: "SOTO", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "7", nombre: "PARRA", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "8", nombre: "LARA", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "10", nombre: "CANO", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "11", nombre: "DUARTE", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "17", nombre: "NEGRO", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "14", nombre: "CALVO", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "12", nombre: "SUAREZ", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "39", nombre: "ORTEGA", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "4", nombre: "MARIN", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "99", nombre: "LEON", posicion: "CAMPO", equipo: "PRIMER" },
-  { dorsal: "21", nombre: "ARANDA", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "6", nombre: "PRIETO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "31", nombre: "IBAÑEZ", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "40", nombre: "SOTO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "4", nombre: "PARRA", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "41", nombre: "LARA", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "7", nombre: "CANO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "27", nombre: "DUARTE", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "12", nombre: "NEGRO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "3", nombre: "CALVO", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "17", nombre: "SUAREZ", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "19", nombre: "ORTEGA", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "18", nombre: "MARIN", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "5", nombre: "LEON", posicion: "CAMPO", equipo: "PRIMER" },
+  { dorsal: "2", nombre: "ARANDA", posicion: "CAMPO", equipo: "PRIMER" },
   // Portero filial
-  { dorsal: "28", nombre: "PASTOR", posicion: "PORTERO", equipo: "FILIAL" },
-  { dorsal: "29", nombre: "MENDEZ", posicion: "PORTERO", equipo: "FILIAL" },
+  { dorsal: "26", nombre: "PASTOR", posicion: "PORTERO", equipo: "FILIAL" },
+  { dorsal: "1", nombre: "MENDEZ", posicion: "PORTERO", equipo: "FILIAL" },
   // Campo filial
-  { dorsal: "32", nombre: "MOLINA", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "31", nombre: "TORRES", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "33", nombre: "VEGA", posicion: "CAMPO", equipo: "FILIAL" },
-  { dorsal: "34", nombre: "SALAS", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "38", nombre: "MOLINA", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "14", nombre: "TORRES", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "8", nombre: "VEGA", posicion: "CAMPO", equipo: "FILIAL" },
+  { dorsal: "35", nombre: "SALAS", posicion: "CAMPO", equipo: "FILIAL" },
 ];
 
 /**

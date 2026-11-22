@@ -38,8 +38,9 @@ const INTER = nombres(ROSTER_REAL);
 const FILIAL = nombres(ROSTER_FILIAL);
 const JUVENIL = nombres(ROSTER_JUVENIL);
 
-/** El partido de ejemplo de la demo: uno de verdad, terminado, en vídeo, con
- *  236 acciones. Es lo que sale de «Exportar JSON» (sin la etiqueta: de antes). */
+/** El partido de ejemplo de la demo: terminado, en vídeo, con 244 acciones
+ *  (inventado a partir de uno de verdad con scripts/generar_partido_demo.ts).
+ *  Es lo que sale de «Exportar JSON» (sin la etiqueta: de antes). */
 const ejemplo = (): Partido => JSON.parse(leer("../../public/_demo_partido.json"));
 const AHORA = 1_763_550_000_000;
 const exportar = (p: Partido, cliente = "pulso", ahora = AHORA) =>
@@ -70,8 +71,8 @@ console.log("── 1 · Ida y vuelta: exportar → importar = el mismo partido 
   ok(r.ok, "el fichero del propio crono se acepta");
   if (r.ok) {
     ok(!("exportacion" in r.partido), "la etiqueta no se guarda en el aparato");
-    igual(sinMarca(r.partido), orig, "MISMO partido: config, marcador, tiempos, stats y las 236 acciones");
-    igual(r.partido.eventos.length, 236, "236 acciones");
+    igual(sinMarca(r.partido), orig, "MISMO partido: config, marcador, tiempos, stats y las 244 acciones");
+    igual(r.partido.eventos.length, 244, "244 acciones");
     igual(contarAcciones(r.partido), orig.eventos.length + orig.tanda.tiros.length, "contarAcciones = eventos + tiros de la tanda");
     igual(r.partido.importado, { el: AHORA + 5000, idOriginal: "demo_partido_1" }, "con la marca de importado");
     ok(r.club === "etiqueta" && !r.enCurso && !r.relojParado, "club por la etiqueta, terminado, reloj sin tocar");
