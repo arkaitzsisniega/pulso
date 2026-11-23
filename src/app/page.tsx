@@ -12,7 +12,7 @@ import { jugabamosEnCasa } from "@/lib/rehacer";
 import { t, useIdioma, labelCompeticionCorta } from "@/lib/i18n";
 import { ID_PARTIDO_EJEMPLO, sembrarPartidoEjemplo } from "@/lib/partidoEjemplo";
 import { CLIENTE, VERSION_CRONO } from "@/lib/clientes";
-import { useAspecto, setAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { InicioNuevo } from "@/components/InicioNuevo";
 import { conIconos } from "@/components/DirectoNuevo";
 import { useImportarPartido } from "@/components/ImportarPartido";
@@ -149,8 +149,8 @@ export default function Home() {
 
   if (nuevo) {
     return (
-      <InicioNuevo partidos={partidos} cargado={cargado} aspecto={aspecto}
-        sol={modoSol} onSol={() => setModoSol(!modoSol)} onAspecto={setAspecto}
+      <InicioNuevo partidos={partidos} cargado={cargado}
+        sol={modoSol} onSol={() => setModoSol(!modoSol)}
         onContinuar={continuar} onStats={verStats} onRehacer={abrirRehacer} onBorrar={borrar}
         onFinalizar={finalizar}
         onImportar={importar.abrir}
@@ -260,25 +260,9 @@ export default function Home() {
           {t("home_offline")}
         </div>
 
-        {/* Interruptor del ASPECTO (rediseño 16/11/2026). Aquí, en la pantalla
-            de inicio, y no en la del partido: para que no se cambie sin querer
-            con el reloj corriendo. Se guarda en el aparato (lib/aspecto.ts). */}
-        <div className="mt-4 flex items-center justify-center gap-3 flex-wrap text-xs text-zinc-500">
-          <span>{t("pz_aspecto_titulo")}</span>
-          <div className="inline-flex rounded-lg overflow-hidden border border-zinc-700" role="radiogroup"
-            aria-label={t("pz_aspecto_titulo")}>
-            {(["clasico", "nuevo"] as const).map((a) => (
-              <button key={a} type="button" role="radio" aria-checked={aspecto === a}
-                data-aspecto={a}
-                onClick={() => setAspecto(a)}
-                className={`px-4 py-2 text-sm font-bold ${
-                  aspecto === a ? "bg-zinc-200 text-zinc-900" : "bg-zinc-900 text-zinc-400"}`}>
-                {a === "nuevo" ? t("pz_aspecto_nuevo") : t("pz_aspecto_clasico")}
-              </button>
-            ))}
-          </div>
-          <span className="basis-full text-center text-zinc-600">{t("pz_aspecto_nota")}</span>
-        </div>
+        {/* El interruptor del ASPECTO (clásico/nuevo) se quitó el 15/12/2026:
+            todos van con el nuevo y esta pantalla clásica ya no se alcanza
+            (lib/aspecto.ts). Se deja para poder volver atrás. */}
       </div>
 
       {ventanaRehacer}

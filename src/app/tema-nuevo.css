@@ -1,9 +1,9 @@
 /* ══════════════════════════════════════════════════════════════════════════
    ASPECTO NUEVO del crono (rediseño PULSO, tanda 1 · 16/11/2026)
 
-   Todo vive bajo la clase .pz, que SOLO lleva la pantalla del partido cuando
-   el aparato tiene el aspecto nuevo activado (lib/aspecto.ts). Con el aspecto
-   clásico ninguna de estas reglas se aplica: el crono se ve como siempre.
+   Todo vive bajo la clase .pz. Desde el 15/12/2026 TODOS los clientes van con
+   el aspecto nuevo (sin interruptor, lib/aspecto.ts); el clásico, que no usa
+   ninguna de estas reglas, queda en el código pero ya no se alcanza.
 
    · Pabellón (oscuro, por defecto): azul noche de la marca, no negro puro.
    · Sol (claro): .pz[data-tema="sol"], para pistas con mucha luz.
@@ -619,6 +619,8 @@ button.pz-ini-sec { width: 100%; text-align: left; cursor: pointer; }
 .pz-ib.icono .pz-ico { color: var(--texto-3); }
 .pz-ib:active { transform: scale(.97); filter: brightness(1.12); }
 
+/* Interruptor clásico/nuevo: SE PODRÁ BORRAR. Desde el 15/12/2026 no hay
+   interruptor (lib/aspecto.ts) y ya no se pinta nada con esta clase. */
 .pz-ini-aspecto {
   margin-top: auto; padding-top: 28px; display: flex; align-items: center; justify-content: center;
   gap: 8px 12px; flex-wrap: wrap; color: var(--texto-3); font-size: 12px;

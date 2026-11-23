@@ -290,9 +290,9 @@ function GolesTramo(props: { tramos: Informe["golesPorTramo"] }) {
 /** Qué informe enseña este build lo decide `clientes.ts`. Inter y filial: el de
  *  siempre, el de aquí abajo, sin tocar. PULSO: el completo, en su componente. */
 export default function InformePage() {
-  // Con el aspecto NUEVO activado en el aparato, el informe sale con el lenguaje
-  // del rediseño (23/11/2026), en claro porque va a papel. Con el clásico, el de
-  // siempre, sin tocar una coma.
+  // El informe sale con el lenguaje del rediseño (23/11/2026), en claro porque
+  // va a papel. Desde el 15/12/2026 SIEMPRE (useAspecto() es siempre "nuevo",
+  // lib/aspecto.ts); la rama `nuevo=false` (el de siempre) ya no se alcanza.
   const nuevo = useAspecto() === "nuevo";
   fijarPiel(nuevo);
   return CLIENTE.informeCompleto

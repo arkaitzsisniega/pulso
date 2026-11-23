@@ -68,10 +68,8 @@ export interface ConfigCliente {
    *  modo Sol (claro). El del rival sale solo (lib/tema.ts → elegirRival): es
    *  coral, salvo que el del club se le parezca. */
   colorPropio: ParColor;
-  /** Aspecto con el que arranca el crono en un aparato que no lo ha elegido:
-   *  "nuevo" (rediseño 16/11/2026) o "clasico" (el de siempre). Cada aparato
-   *  lo cambia desde la pantalla de inicio y se le queda guardado. */
-  aspectoPorDefecto: "nuevo" | "clasico";
+  // (`aspectoPorDefecto` se quitó el 15/12/2026: ya no hay interruptor y
+  //  todos los clientes van con el aspecto nuevo. Ver lib/aspecto.ts.)
   /** Escudo del club en las cabeceras del aspecto NUEVO (arriba a la
    *  izquierda), relativo a `public/`: p. ej. "escudos/inter.png". UNA imagen
    *  para los dos modos (Pabellón y Sol), así que tiene que leerse sobre fondo
@@ -121,7 +119,6 @@ const CLIENTES: Record<string, ConfigCliente> = {
     informeCompleto: false,
     partidoEjemplo: false,
     colorPropio: VERDE_INTER,
-    aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
     escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
   },
@@ -140,7 +137,6 @@ const CLIENTES: Record<string, ConfigCliente> = {
     informeCompleto: false,
     partidoEjemplo: false,
     colorPropio: VERDE_INTER,
-    aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
     escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
   },
@@ -159,7 +155,6 @@ const CLIENTES: Record<string, ConfigCliente> = {
     informeCompleto: false,
     partidoEjemplo: false,
     colorPropio: VERDE_INTER,
-    aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
     escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
   },
@@ -174,7 +169,6 @@ const CLIENTES: Record<string, ConfigCliente> = {
     informeCompleto: true,
     partidoEjemplo: true,
     colorPropio: AZUL_PULSO,
-    aspectoPorDefecto: "nuevo",
     escudo: "escudos/pulso.png", // la demo no es un club: lleva el logo de PULSO
   },
 };

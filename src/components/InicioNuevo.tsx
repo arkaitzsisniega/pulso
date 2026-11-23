@@ -4,8 +4,9 @@
  * InicioNuevo.tsx — Pantalla de INICIO con el aspecto NUEVO (rediseño PULSO,
  * tanda 3 · 18/11/2026). Maqueta: PULSO/comercial/crono/maquetas/inicio.html.
  *
- * SOLO dibuja. La lista de partidos, continuar, estadísticas, rehacer, borrar
- * y el interruptor de aspecto llegan hechos desde app/page.tsx: los MISMOS
+ * SOLO dibuja. La lista de partidos, continuar, estadísticas, rehacer y borrar
+ * llegan hechos desde app/page.tsx (el interruptor de aspecto se quitó el
+ * 15/12/2026: todos van con el nuevo, ver lib/aspecto.ts): los MISMOS
  * manejadores que el aspecto clásico. Los textos son los de i18n de siempre;
  * los emojis se cambian por iconos SVG al dibujar (sinEmojis / Ico).
  *
@@ -17,7 +18,6 @@ import { type Partido } from "@/lib/db";
 import { t, labelCompeticionCorta } from "@/lib/i18n";
 import { ID_PARTIDO_EJEMPLO } from "@/lib/partidoEjemplo";
 import { CLIENTE, VERSION_CRONO } from "@/lib/clientes";
-import { type Aspecto } from "@/lib/aspecto";
 import { variablesEquipos } from "@/lib/tema";
 import { Ico, sinEmojis } from "@/components/DirectoNuevo";
 import { Escudo } from "@/components/Escudo";
@@ -49,10 +49,8 @@ export function BotonSol(props: { sol: boolean; onCambiar: () => void }) {
 export function InicioNuevo(props: {
   partidos: Partido[];
   cargado: boolean;
-  aspecto: Aspecto;
   sol: boolean;
   onSol: () => void;
-  onAspecto: (a: Aspecto) => void;
   onContinuar: (id: string) => void;
   onStats: (id: string) => void;
   onRehacer: (p: Partido) => void;
@@ -64,7 +62,7 @@ export function InicioNuevo(props: {
   /** La ventana de «rehacer con vídeo» (la misma del clásico). */
   ventana: ReactNode;
 }) {
-  const { partidos, cargado, aspecto } = props;
+  const { partidos, cargado } = props;
   return (
     <div className="pz pz-ini" data-tema={props.sol ? "sol" : undefined}
       style={variablesEquipos(CLIENTE.colorPropio, props.sol) as React.CSSProperties}>
@@ -184,23 +182,6 @@ export function InicioNuevo(props: {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Interruptor del ASPECTO: abajo del todo, pequeño y apartado, para que
-          no se toque sin querer (igual que en el clásico, mismas acciones). */}
-      <div className="pz-ini-aspecto">
-        <span>{t("pz_aspecto_titulo")}</span>
-        <div className="pz-seg" role="radiogroup" aria-label={t("pz_aspecto_titulo")}>
-          {(["clasico", "nuevo"] as const).map((a) => (
-            <button key={a} type="button" role="radio" aria-checked={aspecto === a}
-              data-aspecto={a}
-              onClick={() => props.onAspecto(a)}
-              className={aspecto === a ? "on" : ""}>
-              {a === "nuevo" ? t("pz_aspecto_nuevo") : t("pz_aspecto_clasico")}
-            </button>
-          ))}
-        </div>
-        <span className="nota">{t("pz_aspecto_nota")}</span>
       </div>
 
       {props.ventana}

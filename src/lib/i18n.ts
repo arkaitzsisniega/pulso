@@ -1866,14 +1866,8 @@ export const CATALOGO: Record<string, Entrada> = {
   pz_portero: { es: "portero", en: "keeper", it: "portiere" },
   pz_tema_sol: { es: "Modo Sol (claro)", en: "Sun mode (light)", it: "Modalità Sole (chiara)" },
   pz_tema_pabellon: { es: "Modo Pabellón (oscuro)", en: "Arena mode (dark)", it: "Modalità Palazzetto (scura)" },
-  pz_aspecto_titulo: { es: "Aspecto del crono en este aparato", en: "Look of the clock on this device", it: "Aspetto del crono su questo dispositivo" },
-  pz_aspecto_clasico: { es: "Clásico", en: "Classic", it: "Classico" },
-  pz_aspecto_nuevo: { es: "Nuevo", en: "New", it: "Nuovo" },
-  pz_aspecto_nota: {
-    es: "Solo cambia cómo se ven las pantallas. Los datos y los botones son los mismos.",
-    en: "It only changes how the screens look. Data and buttons stay the same.",
-    it: "Cambia solo l'aspetto delle schermate. Dati e pulsanti restano uguali.",
-  },
+  // (Los textos pz_aspecto_* del interruptor clásico/nuevo se quitaron el
+  //  15/12/2026: ya no hay interruptor. Ver lib/aspecto.ts.)
 
   // ══════════════════ SELECTOR DE IDIOMA (demo) ══════════════════
   selector_idioma_label: { es: "Idioma", en: "Language", it: "Lingua" },
