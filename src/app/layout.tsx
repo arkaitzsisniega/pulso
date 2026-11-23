@@ -52,12 +52,13 @@ const BP = process.env.NEXT_EXPORT === "1" ? (process.env.CRONO_BASEPATH || "/pu
 const MANIFEST = `${BP}/manifest${CLIENTE.id === "inter" ? "" : `-${CLIENTE.id}`}.json`;
 
 // Icono de la pantalla de inicio («Añadir a pantalla de inicio» en Safari).
-// Los tres equipos del club llevan el escudo del Inter con el cronómetro
-// (public/icons/, hecho a propósito); la demo es el producto y lleva el de
-// PULSO (public/icons-pulso/, fondo blanco opaco: iOS pinta de negro lo
-// transparente). Su manifest-pulso.json apunta a la misma carpeta.
-const ICONOS = `${BP}/${CLIENTE.id === "pulso" ? "icons-pulso" : "icons"}`;
-const APPLE_TOUCH = CLIENTE.id === "pulso" ? `${ICONOS}/icon-180.png` : `${BP}/apple-touch-icon.png`;
+// Desde el 23/11/2026 TODOS los clientes (inter, filial, juvenil y la demo)
+// llevan el emblema de PULSO con un pequeño cronómetro (decisión de Arkaitz:
+// «la web y el crono van con el icono de PULSO»). public/icons-pulso/, fondo
+// blanco opaco: iOS pinta de negro lo transparente. Los cuatro manifest
+// apuntan a la misma carpeta.
+const ICONOS = `${BP}/icons-pulso`;
+const APPLE_TOUCH = `${ICONOS}/icon-180.png`;
 
 export const metadata: Metadata = {
   title: CLIENTE.appTitulo,
