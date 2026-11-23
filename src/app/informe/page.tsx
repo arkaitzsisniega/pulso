@@ -25,7 +25,7 @@
  * resumen a propósito — el resumen se mira por pestañas, el papel no.
  */
 import Link from "next/link";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { usePartido } from "@/lib/store";
 import { CLIENTE, NOMBRE_CORTO_TC, ROSTER } from "@/lib/clientes";
 import InformeCompleto from "@/components/InformeCompleto";
@@ -35,11 +35,31 @@ import {
   construirInforme, mmss, type FilaJugador, type Informe,
 } from "@/lib/informe";
 import { MARCA_INFORME } from "@/lib/marca";
+import { useAspecto } from "@/lib/aspecto";
+import {
+  CSS_NUEVO, GolesNuevo, Icono, InformeNuevoCtx, MapasNuevo, Tarjeta, cortesDePartes,
+  fijarPiel, iconoSeccion, useInformeNuevo,
+} from "@/components/InformeNuevo";
+import { contarMapas, finEje, nombreBonito, type GolNuevo } from "@/lib/informeNuevo";
 
 // ──────────────────────────────────────────────────────────────────────────
 // Piezas de maquetación
 // ──────────────────────────────────────────────────────────────────────────
-function Seccion(props: { titulo: string; children: React.ReactNode; corta?: boolean }) {
+function Seccion(props: { titulo: string; children: React.ReactNode; corta?: boolean;
+                          /** Clave del título: con el aspecto nuevo lleva su icono. */
+                          ico?: string; partible?: boolean }) {
+  const nuevo = useInformeNuevo();
+  if (nuevo) {
+    return (
+      <section className={`${props.corta ? "mb-3" : "mb-5"}${props.partible ? "" : " break-inside-avoid"}`}>
+        <h2 className="mb-1.5 border-b pb-1">
+          <Icono nombre={iconoSeccion(props.ico ?? "")} style={{ color: MARCA_INFORME.color }} />
+          {props.titulo}
+        </h2>
+        {props.children}
+      </section>
+    );
+  }
   return (
     <section className={`${props.corta ? "mb-3" : "mb-5"} break-inside-avoid`}>
       <h2 className="mb-1.5 border-b pb-1 text-[11px] font-bold uppercase tracking-[0.12em]"
@@ -51,7 +71,7 @@ function Seccion(props: { titulo: string; children: React.ReactNode; corta?: boo
   );
 }
 
-function Tabla(props: { cols: string[]; alinearDerecha?: number;
+function Tabla(props: { cols: React.ReactNode[]; alinearDerecha?: number;
                         filas: React.ReactNode[][]; nota?: string }) {
   const { cols, filas, alinearDerecha = 2 } = props;
   return (
@@ -60,7 +80,7 @@ function Tabla(props: { cols: string[]; alinearDerecha?: number;
         <thead>
           <tr className="border-b border-zinc-300 text-[8.5px] uppercase tracking-wide text-zinc-500">
             {cols.map((c, i) => (
-              <th key={c + i}
+              <th key={i}
                   className={`py-1 font-semibold ${i >= alinearDerecha ? "text-right" : "text-left"}`}>
                 {c}
               </th>
@@ -220,6 +240,7 @@ function Puntos(props: { v: number; fuerte?: boolean }) {
 /** Franja de cifras para leer el partido de un vistazo, antes de las tablas. */
 function Kpis(props: { inf: Informe }) {
   const { inf } = props;
+  const nuevo = useInformeNuevo();
   const cajas: [string, string][] = [
     [t("inf_kpi_disparos"), `${inf.nosotros.disparos} - ${inf.rival.disparos}`],
     [t("inf_kpi_apuerta"), `${inf.nosotros.aPuerta} - ${inf.rival.aPuerta}`],
@@ -233,7 +254,7 @@ function Kpis(props: { inf: Informe }) {
   return (
     <div className="mb-4 grid grid-cols-5 gap-[3px]">
       {cajas.map(([et, v]) => (
-        <div key={et} className="bg-zinc-50 px-2 py-1.5 text-center">
+        <div key={et} className={`bg-zinc-50 px-2 py-1.5 text-center${nuevo ? " in-kpi" : ""}`}>
           <p className="text-[13px] font-black leading-tight tabular-nums"
              style={{ color: MARCA_INFORME.color }}>{v}</p>
           <p className="text-[7.5px] uppercase leading-tight tracking-wide text-zinc-500">{et}</p>
@@ -269,10 +290,18 @@ function GolesTramo(props: { tramos: Informe["golesPorTramo"] }) {
 /** Qué informe enseña este build lo decide `clientes.ts`. Inter y filial: el de
  *  siempre, el de aquí abajo, sin tocar. PULSO: el completo, en su componente. */
 export default function InformePage() {
-  return CLIENTE.informeCompleto ? <InformeCompleto /> : <InformeClasico />;
+  // Con el aspecto NUEVO activado en el aparato, el informe sale con el lenguaje
+  // del rediseño (23/11/2026), en claro porque va a papel. Con el clásico, el de
+  // siempre, sin tocar una coma.
+  const nuevo = useAspecto() === "nuevo";
+  fijarPiel(nuevo);
+  return CLIENTE.informeCompleto
+    ? <InformeCompleto nuevo={nuevo} />
+    : <InformeNuevoCtx.Provider value={nuevo}><InformeClasico nuevo={nuevo} /></InformeNuevoCtx.Provider>;
 }
 
-function InformeClasico() {
+function InformeClasico(props: { nuevo: boolean }) {
+  const { nuevo } = props;
   const { partido, cargado } = usePartido();
   useIdioma();     // re-renderiza al cambiar de idioma
 
@@ -310,11 +339,27 @@ function InformeClasico() {
   const golIzq = local ? c.gf : c.gc;
   const golDer = local ? c.gc : c.gf;
 
+  // ── Aspecto nuevo: los goles y los mapas como en el PDF del club ─────────
+  const porterosSet = new Set(inf.porteros.map((x) => x.nombre));
+  const golesNuevo: GolNuevo[] = nuevo ? inf.goles.map((g) => {
+    const [a, b] = g.marcador.split("-").map((x) => Number(x) || 0);
+    return {
+      seg: g.seg, nuestro: g.nuestro, nos: a, rival: b,
+      goleador: g.goleador, asistente: g.asistente ?? "",
+      situacion: g.accion ?? "", situacionOriginal: g.accion ?? "",
+      portero: g.quinteto.find((x) => porterosSet.has(x)) ?? "",
+      enPista: g.quinteto.filter((x) => !porterosSet.has(x)),
+    };
+  }) : [];
+  const mapasNuevo = nuevo && partido ? contarMapas(partido.eventos ?? []) : null;
+  const rivalBonito = nombreBonito(c.rival);
+
   return (
     // La clase `informe` es la que engancha el CSS de impresión de globals.css.
     // Sin ella, el ancho de lectura de pantalla (820px) se llevaba las tablas
     // anchas fuera del papel: la última columna salía cortada.
-    <main className="informe mx-auto max-w-[820px] bg-white p-5 text-zinc-900 print:p-0">
+    <main className={`informe mx-auto max-w-[820px] bg-white p-5 text-zinc-900 print:p-0${nuevo ? " inf-n" : ""}`}>
+      {nuevo && <style dangerouslySetInnerHTML={{ __html: CSS_NUEVO }} />}
       {/* Botonera: fuera del papel */}
       <div className="mb-4 flex gap-2 print:hidden">
         <Link href="/resumen" className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-white">
@@ -323,7 +368,9 @@ function InformeClasico() {
         <button onClick={() => window.print()}
                 className="rounded-lg px-4 py-2 text-sm font-bold text-white"
                 style={{ backgroundColor: MARCA_INFORME.color }}>
-          📄 {t("inf_guardar_pdf")}
+          {nuevo
+            ? <span className="inline-flex items-center gap-1.5"><Icono nombre="doc" /> {t("inf_guardar_pdf")}</span>
+            : <>📄 {t("inf_guardar_pdf")}</>}
         </button>
       </div>
       <div className="mb-4 rounded-lg border border-amber-400 bg-amber-50 p-3 text-xs text-amber-900 print:hidden">
@@ -369,7 +416,20 @@ function InformeClasico() {
       )}
 
       {/* ── 1 · Goles ─────────────────────────────────────────────────── */}
-      <Seccion titulo={t("inf_sec_goles")}>
+      {nuevo ? (
+        <Seccion titulo={t("inf_sec_goles")} ico="inf_sec_goles" partible>
+          {inf.goles.length === 0
+            ? <p className="text-[10px] text-zinc-500">{t("inf_sin_goles")}</p>
+            : (
+              <GolesNuevo goles={golesNuevo} nos={c.nosotros} rival={rivalBonito}
+                          inicio2T={inf.inicios["2T"] || 1200}
+                          cortes={cortesDePartes(inf.inicios, c.partesJugadas)}
+                          fin={finEje(golesNuevo, c.duracionTotal)}
+                          colorNos={MARCA_INFORME.color} colorRival={MARCA_INFORME.colorRival} />
+            )}
+        </Seccion>
+      ) : (
+      <Seccion titulo={t("inf_sec_goles")} ico="inf_sec_goles">
         {inf.goles.length === 0
           ? <p className="text-[10px] text-zinc-500">{t("inf_sin_goles")}</p>
           : (
@@ -398,9 +458,10 @@ function InformeClasico() {
             </div>
           )}
       </Seccion>
+      )}
 
       {/* ── 2 · Estadísticas de equipo ────────────────────────────────── */}
-      <Seccion titulo={t("inf_sec_equipo")}>
+      <Seccion titulo={t("inf_sec_equipo")} ico="inf_sec_equipo">
         <div className="mb-1 flex items-center gap-2 text-[9px] font-bold uppercase tracking-wide">
           <span className="w-7 text-right" style={{ color: MARCA_INFORME.color }}>
             {c.nosotros}
@@ -442,7 +503,7 @@ function InformeClasico() {
 
       {/* ── Valoración del partido ────────────────────────────────────── */}
       {inf.valoraciones.length > 0 && (
-        <Seccion titulo={t("inf_sec_valoracion")}>
+        <Seccion titulo={t("inf_sec_valoracion")} ico="inf_sec_valoracion">
           <Tabla
             alinearDerecha={2}
             cols={["", t("inf_jugador"), t("inf_min"), t("inf_val"),
@@ -460,9 +521,10 @@ function InformeClasico() {
       )}
 
       {/* ── 3 · Jugadores de campo ────────────────────────────────────── */}
-      <Seccion titulo={`${t("inf_sec_jugadores")} (${c.partesJugadas.join(" · ")})`}>
+      <Seccion titulo={`${t("inf_sec_jugadores")} (${c.partesJugadas.join(" · ")})`} ico="inf_sec_jugadores">
         <Tabla
-          cols={["Nº", t("inf_jugador"), t("inf_min"), "⚽", t("inf_asist_col"),
+          cols={["Nº", t("inf_jugador"), t("inf_min"),
+                 nuevo ? <Icono key="g" nombre="gol" /> : "⚽", t("inf_asist_col"),
                  t("inf_disp"), t("inf_pta"), t("inf_robos"), t("inf_cortes"),
                  t("inf_perd"), ...(totalDivididos > 0 ? [t("inf_bd")] : []),
                  t("inf_faltas"), "±"]}
@@ -481,7 +543,7 @@ function InformeClasico() {
 
       {/* ── 4 · Porteros ──────────────────────────────────────────────── */}
       {inf.porteros.length > 0 && (
-        <Seccion titulo={t("inf_sec_porteros")} corta>
+        <Seccion titulo={t("inf_sec_porteros")} corta ico="inf_sec_porteros">
           <Tabla
             cols={["Nº", t("inf_portero"), t("inf_min"), t("inf_paradas"),
                    t("inf_encajados"), t("inf_pct_parada")]}
@@ -495,7 +557,7 @@ function InformeClasico() {
 
       {/* ── 5 · Cronograma de rotaciones ──────────────────────────────── */}
       {inf.tramos.length > 1 && (
-        <Seccion titulo={t("inf_sec_cronograma")}>
+        <Seccion titulo={t("inf_sec_cronograma")} ico="inf_sec_cronograma">
           <Cronograma inf={inf} />
           <p className="mt-1 text-[8px] text-zinc-500">{t("inf_nota_cronograma")}</p>
         </Seccion>
@@ -503,7 +565,7 @@ function InformeClasico() {
 
       {/* ── Rotaciones individuales: cuándo entró y salió cada uno ────── */}
       {inf.rotaciones.some((r) => r.tramos.length > 1) && (
-        <Seccion titulo={t("inf_sec_rotaciones")}>
+        <Seccion titulo={t("inf_sec_rotaciones")} ico="inf_sec_rotaciones">
           <Tabla
             alinearDerecha={3}
             cols={["", t("inf_jugador"), t("inf_periodos"), t("inf_veces"), t("inf_min")]}
@@ -519,7 +581,7 @@ function InformeClasico() {
 
       {/* ── 6 · Quintetos ─────────────────────────────────────────────── */}
       {inf.quintetos.length > 0 && (
-        <Seccion titulo={t("inf_sec_quintetos")}>
+        <Seccion titulo={t("inf_sec_quintetos")} ico="inf_sec_quintetos">
           <Tabla
             alinearDerecha={1}
             cols={[t("inf_quinteto"), t("inf_min"), t("inf_gf"), t("inf_gc"), "±"]}
@@ -534,7 +596,7 @@ function InformeClasico() {
 
       {/* ── Cuartetos: los cuatro de campo, sin el portero ────────────── */}
       {inf.cuartetos.length > 1 && (
-        <Seccion titulo={t("inf_sec_cuartetos")}>
+        <Seccion titulo={t("inf_sec_cuartetos")} ico="inf_sec_cuartetos">
           <Tabla
             alinearDerecha={1}
             cols={[t("inf_cuarteto"), t("inf_min"), t("inf_gf"), t("inf_gc"), "±"]}
@@ -549,7 +611,7 @@ function InformeClasico() {
 
       {/* ── 7 · Goles por tipo de jugada ──────────────────────────────── */}
       {inf.golesPorJugada.length > 0 && (
-        <Seccion titulo={t("inf_sec_jugadas")} corta>
+        <Seccion titulo={t("inf_sec_jugadas")} corta ico="inf_sec_jugadas">
           <Tabla
             alinearDerecha={1}
             cols={[t("inf_jugada"), c.nosotros, c.rival]}
@@ -559,8 +621,9 @@ function InformeClasico() {
       )}
 
       {/* ── Cuándo se marcaron los goles ──────────────────────────────── */}
-      {inf.goles.length > 0 && (
-        <Seccion titulo={t("inf_sec_tramos")} corta>
+      {/* (con el aspecto nuevo lo cuenta «el marcador a lo largo del partido») */}
+      {!nuevo && inf.goles.length > 0 && (
+        <Seccion titulo={t("inf_sec_tramos")} corta ico="inf_sec_tramos">
           <GolesTramo tramos={inf.golesPorTramo} />
           <p className="mt-1 text-[8px] text-zinc-500">{t("inf_nota_tramos")}</p>
         </Seccion>
@@ -568,7 +631,7 @@ function InformeClasico() {
 
       {/* ── Tanda de penaltis, solo si se llegó a tirar ────────────────── */}
       {inf.tanda && (
-        <Seccion titulo={`${t("inf_sec_tanda")} · ${inf.tanda.marcador.inter} - ${inf.tanda.marcador.rival}`}>
+        <Seccion titulo={`${t("inf_sec_tanda")} · ${inf.tanda.marcador.inter} - ${inf.tanda.marcador.rival}`} ico="inf_sec_tanda">
           <Tabla
             alinearDerecha={4}
             cols={["#", t("inf_equipo"), t("inf_tirador"), t("inf_portero"),
@@ -582,9 +645,16 @@ function InformeClasico() {
       )}
 
       {/* ── 8 · Mapas de zona ─────────────────────────────────────────── */}
-      {(Object.keys(inf.zonasPorteria).length > 0
+      {nuevo && mapasNuevo?.hayDatos && (
+        <Seccion titulo={t("inf_sec_zonas")} ico="inf_sec_zonas" partible>
+          <MapasNuevo nos={mapasNuevo.nos} rival={mapasNuevo.rival}
+                      nombreNos={c.nosotros} nombreRival={rivalBonito}
+                      colorNos={MARCA_INFORME.color} colorRival={MARCA_INFORME.colorRival} />
+        </Seccion>
+      )}
+      {!nuevo && (Object.keys(inf.zonasPorteria).length > 0
         || Object.keys(inf.zonasCampo).length > 0) && (
-        <Seccion titulo={t("inf_sec_zonas")}>
+        <Seccion titulo={t("inf_sec_zonas")} ico="inf_sec_zonas">
           <div className="grid grid-cols-2 gap-4">
             <CampoMapa zonas={inf.zonasCampo} titulo={t("inf_z_campo_favor")}
                        color={MARCA_INFORME.color} direccion={inf.direccion1T} />
@@ -610,7 +680,7 @@ function InformeClasico() {
       {(Object.keys(inf.zonasRecuperaciones).length > 0
         || Object.keys(inf.zonasPerdidas).length > 0
         || Object.keys(inf.zonasFaltas).length > 0) && (
-        <Seccion titulo={t("inf_sec_mapas_juego")}>
+        <Seccion titulo={t("inf_sec_mapas_juego")} ico="inf_sec_mapas_juego">
           <div className="grid grid-cols-3 gap-3">
             <CampoMapa zonas={inf.zonasRecuperaciones} titulo={t("inf_m_recuperaciones")}
                        color={MARCA_INFORME.color} direccion={inf.direccion1T} />
@@ -625,7 +695,7 @@ function InformeClasico() {
 
       {/* ── 9 · Métricas de vídeo ─────────────────────────────────────── */}
       {inf.hayVideo && (
-        <Seccion titulo={t("inf_sec_video")}>
+        <Seccion titulo={t("inf_sec_video")} ico="inf_sec_video">
           <TablaVideo jugadores={inf.jugadores} />
           {inf.porteros.some((p) => Object.keys(p.video).length > 0) && (
             <div className="mt-3">
@@ -656,7 +726,7 @@ function InformeClasico() {
 
       {/* ── 10 · Penaltis, tiempos muertos y tarjetas ─────────────────── */}
       {(inf.penaltis.length > 0 || inf.tarjetas.length > 0) && (
-        <Seccion titulo={t("inf_sec_otros")} corta>
+        <Seccion titulo={t("inf_sec_otros")} corta ico="inf_sec_otros">
           <div className="grid grid-cols-2 gap-4 text-[10px]">
             <div>
               {inf.penaltis.length > 0 && (
@@ -685,7 +755,7 @@ function InformeClasico() {
                     <div key={i} className="border-b border-zinc-100 py-[2px]">
                       <span className="font-mono font-bold">{tj.minuto}</span>{" "}
                       <span className="text-zinc-500">{tj.parte}</span>{" "}
-                      {tj.roja ? "🟥" : "🟨"} {tj.nuestro ? c.nosotros : c.rival}
+                      {nuevo ? <Tarjeta roja={tj.roja} /> : (tj.roja ? "🟥" : "🟨")} {tj.nuestro ? c.nosotros : c.rival}
                       {tj.jugador ? ` — ${tj.jugador}` : ""}
                     </div>
                   ))}

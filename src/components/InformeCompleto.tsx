@@ -24,11 +24,15 @@ import { CLIENTE, ROSTER } from "@/lib/clientes";
 import { idiomaActivo, labelCompeticion, t, useIdioma } from "@/lib/i18n";
 import { MARCA_INFORME } from "@/lib/marca";
 import {
-  COLUMNAS_MATRIZ, construirInformeCompleto, minSeg,
+  COLUMNAS_MATRIZ, construirInformeCompleto, minSeg, offsetsDeParte,
   type Cronograma, type FilaPase, type InformeCompleto as Informe,
   type Matriz, type Reparto,
 } from "@/lib/informeCompleto";
 import type { ParteId } from "@/lib/db";
+import {
+  CSS_NUEVO, GolesNuevo, Icono, MapasNuevo, cortesDePartes, iconoSeccion, piel,
+} from "@/components/InformeNuevo";
+import { contarMapas, finEje, nombreBonito, type GolNuevo } from "@/lib/informeNuevo";
 
 const COLOR = MARCA_INFORME.color;
 const ROJO = MARCA_INFORME.colorRival;
@@ -91,6 +95,20 @@ const CSS = `
   .ic { width: auto; padding: 0; }
 }
 `;
+
+/** ¿Aspecto nuevo? Lo fija la página en cada pintada, antes que las secciones
+ *  (que no tienen estado propio y se pintan en esa misma pasada). */
+let NUEVO = false;
+
+/** Título de sección: con el aspecto nuevo, con su icono delante. */
+function Titulo(props: { clave: string; centrado?: boolean }) {
+  return (
+    <h2 style={props.centrado ? { textAlign: "center" } : undefined}>
+      {NUEVO && <Icono nombre={iconoSeccion(props.clave)} />}
+      {t(props.clave)}
+    </h2>
+  );
+}
 
 // ──────────────────────────────────────────────────────────────────────────
 // Formatos (dependen del idioma: la coma decimal, los ordinales)
@@ -172,22 +190,22 @@ function colorMinutos(t01: number): string {
 function colorRotacion(seg: number, portero: boolean): string | undefined {
   if (portero || seg <= 0) return undefined;
   const m = seg / 60;
-  if (m < 1) return "#BBDEFB";
-  if (m < 2) return "#C8E6C9";
-  if (m < 3) return "#FFF59D";
-  return "#EF9A9A";
+  if (m < 1) return piel("#BBDEFB");
+  if (m < 2) return piel("#C8E6C9");
+  if (m < 3) return piel("#FFF59D");
+  return piel("#EF9A9A");
 }
 
 function colorValoracion(v: number): string | undefined {
-  if (v < 0) return v <= -2 ? "#FFCDD2" : "#FFE0E0";
+  if (v < 0) return v <= -2 ? piel("#FFCDD2") : piel("#FFE0E0");
   if (v < 3) return undefined;
-  if (v < 6) return "#DCEDC8";
-  if (v < 10) return "#A5D6A7";
-  return "#66BB6A";
+  if (v < 6) return piel("#DCEDC8");
+  if (v < 10) return piel("#A5D6A7");
+  return piel("#66BB6A");
 }
 
 function colorZona(v: number, max: number): string {
-  if (max <= 0 || v <= 0) return "#f5f5f5";
+  if (max <= 0 || v <= 0) return piel("#f5f5f5");
   const f = Math.max(0, Math.min(1, v / max));
   if (f < 0.5) return `rgb(255,${Math.round(220 - 50 * f * 2)},180)`;
   const u = (f - 0.5) * 2;
@@ -212,8 +230,8 @@ function Cabecera(props: { inf: Informe }) {
   const der = c.local ? c.rival : c.nombreLargo;
   const golIzq = c.local ? c.gf : c.gc;
   const golDer = c.local ? c.gc : c.gf;
-  const colorIzq = c.local ? "#2E7D32" : "#B71C1C";
-  const colorDer = c.local ? "#B71C1C" : "#2E7D32";
+  const colorIzq = c.local ? piel("#2E7D32") : piel("#B71C1C");
+  const colorDer = c.local ? piel("#B71C1C") : piel("#2E7D32");
   return (
     <>
       <div className="ic-cab">
@@ -298,7 +316,7 @@ function Equipo(props: { inf: Informe }) {
   );
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_equipo")}</h2>
+      <Titulo clave="ic_sec_equipo" />
       <table className="ic-eq" style={{ width: "140mm" }}>
         <Anchos mm={[70, 35, 35]} />
         <thead>
@@ -348,7 +366,7 @@ function Minutos(props: { inf: Informe }) {
   );
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_minutos")}</h2>
+      <Titulo clave="ic_sec_minutos" />
       <table style={{ width: "127mm" }}>
         <Anchos mm={conPR ? [12, 40, 25, 25, 25, 25] : [12, 40, 25, 25, 25]} />
         <thead>
@@ -374,9 +392,9 @@ function Minutos(props: { inf: Informe }) {
       </table>
       <p className="ic-nota">
         {t("ic_semaforo")}{" "}
-        <span style={{ background: "#C8E6C9" }}>&nbsp;{t("ic_sem_pocos")}&nbsp;</span>{" "}
-        <span style={{ background: "#FFF59D" }}>&nbsp;{t("ic_sem_medios")}&nbsp;</span>{" "}
-        <span style={{ background: "#EF9A9A" }}>&nbsp;{t("ic_sem_muchos")}&nbsp;</span>.{" "}
+        <span style={{ background: piel("#C8E6C9") }}>&nbsp;{t("ic_sem_pocos")}&nbsp;</span>{" "}
+        <span style={{ background: piel("#FFF59D") }}>&nbsp;{t("ic_sem_medios")}&nbsp;</span>{" "}
+        <span style={{ background: piel("#EF9A9A") }}>&nbsp;{t("ic_sem_muchos")}&nbsp;</span>.{" "}
         {t("ic_sem_porteros")}
       </p>
     </section>
@@ -389,7 +407,7 @@ function Individuales(props: { inf: Informe }) {
   const n = bd ? 16 : 14;
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_individuales")}</h2>
+      <Titulo clave="ic_sec_individuales" />
       <table>
         <Anchos mm={[9, 28, ...Array(n).fill(149 / n)]} />
         <thead>
@@ -432,7 +450,7 @@ function VideoCampo(props: { inf: Informe }) {
   const hayPase = inf.equipo.video.paseGol > 0;
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_video")}</h2>
+      <Titulo clave="ic_sec_video" />
       <table>
         <Anchos mm={[9, 28, 15, 15, 17, 17, 16, 15, 14, 14, ...(hayPase ? [13] : [])]} />
         <thead>
@@ -476,7 +494,7 @@ function VideoPorteros(props: { inf: Informe }) {
   if (!porteros.length) return null;
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_video_porteros")}</h2>
+      <Titulo clave="ic_sec_video_porteros" />
       <table style={{ width: "149mm" }}>
         <Anchos mm={[9, 28, 19, 19, 15, 14, 15, 14, 16]} />
         <thead>
@@ -515,7 +533,7 @@ function PorteriaTabla(props: { inf: Informe }) {
   if (!filas.length) return null;
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_porteria")}</h2>
+      <Titulo clave="ic_sec_porteria" />
       <table style={{ width: "143mm" }}>
         <Anchos mm={[10, 30, 20, 20, 18, 15, 15, 15]} />
         <thead>
@@ -548,7 +566,7 @@ function Valoracion(props: { inf: Informe }) {
   const conVideo = inf.hayValoracionVideo;
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_valoracion")}</h2>
+      <Titulo clave="ic_sec_valoracion" />
       <p className="ic-txt">{conNegrita(t("ic_val_txt"))}</p>
       <p className="ic-txt">{conNegrita(conVideo ? t("ic_val_video") : t("ic_val_directo"))}</p>
       <table style={{ width: "133mm" }}>
@@ -601,7 +619,7 @@ function GolesTabla(props: { inf: Informe }) {
   const { inf } = props;
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_goles")}</h2>
+      <Titulo clave="ic_sec_goles" />
       <table>
         <Anchos mm={[13, 16, 15, 42, 20, 20, 17, 40]} />
         <thead>
@@ -613,7 +631,7 @@ function GolesTabla(props: { inf: Informe }) {
         </thead>
         <tbody>
           {inf.goles.map((g, i) => {
-            const bg = g.nuestro ? "#EDF7EE" : "#FDECEC";
+            const bg = g.nuestro ? piel("#EDF7EE") : piel("#FDECEC");
             const celda = { background: bg };
             const cuarteto = g.nuestro && g.goleador && !g.cuarteto.includes(g.goleador)
               && g.goleador !== g.portero
@@ -646,15 +664,15 @@ function GolesCinco(props: { inf: Informe }) {
   const escala = (Y1 - Y0 - 16) / max;
   const ancho = paso * 0.4;
   const bloques = inf.hayProrroga
-    ? [{ d: 0, h: 4, c: "#F1F8F2", e: t("ic_1a_parte"), col: "#558B2F" },
-       { d: 4, h: 8, c: "#EEF4FB", e: t("ic_2a_parte"), col: "#1565C0" },
-       { d: 8, h: tr.length, c: "#F6EFFA", e: t("ic_prorroga"), col: "#6A1B9A" }]
-    : [{ d: 0, h: 4, c: "#F1F8F2", e: t("ic_1a_parte"), col: "#558B2F" },
-       { d: 4, h: tr.length, c: "#EEF4FB", e: t("ic_2a_parte"), col: "#1565C0" }];
+    ? [{ d: 0, h: 4, c: piel("#F1F8F2"), e: t("ic_1a_parte"), col: piel("#558B2F") },
+       { d: 4, h: 8, c: piel("#EEF4FB"), e: t("ic_2a_parte"), col: piel("#1565C0") },
+       { d: 8, h: tr.length, c: piel("#F6EFFA"), e: t("ic_prorroga"), col: piel("#6A1B9A") }]
+    : [{ d: 0, h: 4, c: piel("#F1F8F2"), e: t("ic_1a_parte"), col: piel("#558B2F") },
+       { d: 4, h: tr.length, c: piel("#EEF4FB"), e: t("ic_2a_parte"), col: piel("#1565C0") }];
   const ticks = Array.from({ length: max + 1 }, (_, i) => i);
   return (
     <section className="ic-sec" style={{ marginTop: "24pt" }}>
-      <h2 style={{ textAlign: "center" }}>{t("ic_sec_5min")}</h2>
+      <Titulo clave="ic_sec_5min" centrado />
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t("ic_sec_5min")}>
         {bloques.map((b) => (
           <g key={b.e}>
@@ -672,7 +690,7 @@ function GolesCinco(props: { inf: Informe }) {
         ))}
         {bloques.slice(1).map((b) => (
           <line key={b.e} x1={X0 + b.d * paso} x2={X0 + b.d * paso} y1={Y0 - 20} y2={Y1}
-                stroke="#90A4AE" strokeWidth="2" strokeDasharray="7 5" />
+                stroke={piel("#90A4AE")} strokeWidth="2" strokeDasharray="7 5" />
         ))}
         {tr.map((x, i) => {
           const cx = X0 + (i + 0.5) * paso;
@@ -685,8 +703,8 @@ function GolesCinco(props: { inf: Informe }) {
           );
           return (
             <g key={x.desde}>
-              {barra(x.nuestros, cx - ancho, "#2E7D32")}
-              {barra(x.rival, cx, "#C62828")}
+              {barra(x.nuestros, cx - ancho, piel("#2E7D32"))}
+              {barra(x.rival, cx, piel("#C62828"))}
               <text x={cx} y={Y1 + 22} textAnchor="middle" fontSize="15" fill="#333">
                 {x.desde}–{x.desde + 5}&apos;
               </text>
@@ -696,8 +714,8 @@ function GolesCinco(props: { inf: Informe }) {
         <line x1={X0} x2={X1} y1={Y1} y2={Y1} stroke="#333" strokeWidth="1.2" />
       </svg>
       <div className="ic-leyenda">
-        <span><i style={{ background: "#2E7D32" }} />{inf.cabecera.nombreCorto} ({t("ic_a_favor")})</span>
-        <span><i style={{ background: "#C62828" }} />{t("ic_rival")} ({t("ic_en_contra")})</span>
+        <span><i style={{ background: piel("#2E7D32") }} />{inf.cabecera.nombreCorto} ({t("ic_a_favor")})</span>
+        <span><i style={{ background: piel("#C62828") }} />{t("ic_rival")} ({t("ic_en_contra")})</span>
       </div>
     </section>
   );
@@ -741,7 +759,7 @@ function MatrizJugadas(props: { inf: Informe }) {
   const { inf } = props;
   return (
     <>
-      <h2>{t("ic_sec_matriz")}</h2>
+      <Titulo clave="ic_sec_matriz" />
       {inf.matrizFavor.total > 0 ? (
         <section style={{ marginBottom: "10pt" }}>
           <p className="ic-tit"><b>{t("ic_a_favor_cap")}</b></p>
@@ -771,7 +789,7 @@ function CampoZonas(props: { zonas: Record<string, number>; titulo: string }) {
   const { zonas } = props;
   const max = Math.max(1, ...Object.values(zonas));
   const col = (z: string) => colorZona(zonas[z] ?? 0, max);
-  const BORDE = "#1B5E20";
+  const BORDE = piel("#1B5E20");
   const num = (z: string, x: number, y: number) => (
     <text key={z} x={x} y={y + 11} textAnchor="middle" fontSize="32" fontWeight="700" fill="#000">
       {zonas[z] ?? 0}
@@ -781,7 +799,7 @@ function CampoZonas(props: { zonas: Record<string, number>; titulo: string }) {
     <div className="ic-mapa" style={{ width: "128mm" }}>
       <p>{props.titulo}</p>
       <svg viewBox="-15 -10 1030 520" role="img" aria-label={props.titulo}>
-        <rect x="-15" y="-10" width="1030" height="520" fill="#A5D6A7" />
+        <rect x="-15" y="-10" width="1030" height="520" fill={piel("#A5D6A7")} />
         <rect x="500" y="0" width="500" height="500" fill={col("A11")} />
         <rect x="0" y="0" width="250" height="62.5" fill={col("A6")} />
         <rect x="0" y="437.5" width="250" height="62.5" fill={col("A3")} />
@@ -808,8 +826,8 @@ function CampoZonas(props: { zonas: Record<string, number>; titulo: string }) {
         <circle cx="500" cy="250" r="5" fill={BORDE} />
         <circle cx="150" cy="250" r="5" fill={BORDE} />
         <circle cx="250" cy="250" r="5" fill={BORDE} />
-        <rect x="-5" y="207.5" width="10" height="10" fill="#B71C1C" />
-        <rect x="-5" y="282.5" width="10" height="10" fill="#B71C1C" />
+        <rect x="-5" y="207.5" width="10" height="10" fill={piel("#B71C1C")} />
+        <rect x="-5" y="282.5" width="10" height="10" fill={piel("#B71C1C")} />
         {num("A11", 750, 250)}{num("A6", 125, 31)}{num("A3", 125, 469)}
         {num("A10", 375, 31)}{num("A7", 375, 469)}{num("A9", 375, 156)}
         {num("A8", 375, 343)}{num("A5", 200, 156)}{num("A4", 200, 343)}
@@ -826,17 +844,17 @@ function PorteriaZonas(props: { zonas: Record<string, number>; titulo: string })
   const cw = PW / 3, ch = PH / 3;
   const franjas: React.ReactNode[] = [];
   for (let i = 0; i < 6; i += 1) {
-    const c = i % 2 === 0 ? "#B71C1C" : "#FFFFFF";
+    const c = i % 2 === 0 ? piel("#B71C1C") : piel("#FFFFFF");
     const y = Y + (i * PH) / 6;
     franjas.push(
-      <rect key={`l${i}`} x={X - POSTE} y={y} width={POSTE} height={PH / 6} fill={c} stroke="#7F1010" strokeWidth=".5" />,
-      <rect key={`r${i}`} x={X + PW} y={y} width={POSTE} height={PH / 6} fill={c} stroke="#7F1010" strokeWidth=".5" />,
+      <rect key={`l${i}`} x={X - POSTE} y={y} width={POSTE} height={PH / 6} fill={c} stroke={piel("#7F1010")} strokeWidth=".5" />,
+      <rect key={`r${i}`} x={X + PW} y={y} width={POSTE} height={PH / 6} fill={c} stroke={piel("#7F1010")} strokeWidth=".5" />,
     );
   }
   for (let i = 0; i < 8; i += 1) {
     franjas.push(
       <rect key={`t${i}`} x={X + (i * PW) / 8} y={Y - POSTE} width={PW / 8} height={POSTE}
-            fill={i % 2 === 0 ? "#B71C1C" : "#FFFFFF"} stroke="#7F1010" strokeWidth=".5" />,
+            fill={i % 2 === 0 ? piel("#B71C1C") : piel("#FFFFFF")} stroke={piel("#7F1010")} strokeWidth=".5" />,
     );
   }
   return (
@@ -858,7 +876,7 @@ function PorteriaZonas(props: { zonas: Record<string, number>; titulo: string })
         })}
         {franjas}
         <line x1={X - POSTE - 10} x2={X + PW + POSTE + 10} y1={Y + PH + 4} y2={Y + PH + 4}
-              stroke="#1B5E20" strokeWidth="2" />
+              stroke={piel("#1B5E20")} strokeWidth="2" />
       </svg>
     </div>
   );
@@ -878,12 +896,12 @@ function MapaPases(props: { flechas: FilaPase[] }) {
     <svg viewBox="-12 -12 824 424" role="img" aria-label={t("ic_sec_pases")}>
       <defs>
         <marker id="ic-p-n" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="4"
-                markerHeight="4" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill={NEGRO_PASE} /></marker>
+                markerHeight="4" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill={piel(NEGRO_PASE)} /></marker>
         <marker id="ic-p-v" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="4"
-                markerHeight="4" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill={VERDE_ASIST} /></marker>
+                markerHeight="4" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill={piel(VERDE_ASIST)} /></marker>
       </defs>
-      <rect x="0" y="0" width={W} height={H} rx="8" fill={FONDO_PISTA} />
-      <g fill="none" stroke={LINEAS_PISTA} strokeWidth="2.5">
+      <rect x="0" y="0" width={W} height={H} rx="8" fill={piel(FONDO_PISTA)} />
+      <g fill="none" stroke={piel(LINEAS_PISTA)} strokeWidth="2.5">
         <rect x="2" y="2" width={W - 4} height={H - 4} rx="6" strokeWidth="3" />
         <line x1="400" y1="0" x2="400" y2={H} strokeWidth="3" />
         <circle cx="400" cy="200" r="60" strokeWidth="2" />
@@ -894,7 +912,7 @@ function MapaPases(props: { flechas: FilaPase[] }) {
         <line x1="600" y1="50" x2="600" y2="350" strokeDasharray="4 4" opacity=".4" />
         <line x1="200" y1="50" x2="200" y2="350" strokeDasharray="4 4" opacity=".4" />
       </g>
-      <g fill={LINEAS_PISTA}>
+      <g fill={piel(LINEAS_PISTA)}>
         {[400, 680, 600, 120, 200].map((cx) => <circle key={cx} cx={cx} cy="200" r="3" />)}
         <rect x={W - 4} y="170" width="4" height="60" />
         <rect x="0" y="170" width="4" height="60" />
@@ -902,7 +920,7 @@ function MapaPases(props: { flechas: FilaPase[] }) {
       {orden.map((f, i) => {
         const fl = f.flecha!;
         const grosor = f.asistencia ? 4.2 : 3;
-        const color = f.asistencia ? VERDE_ASIST : NEGRO_PASE;
+        const color = piel(f.asistencia ? VERDE_ASIST : NEGRO_PASE);
         const x0 = fl.x0 * W, y0 = fl.y0 * H, x1 = fl.x1 * W, y1 = fl.y1 * H;
         const largo = Math.hypot(x1 - x0, y1 - y0);
         let recorte = 0.9 * 4 * grosor;
@@ -933,7 +951,7 @@ function Pases(props: { inf: Informe }) {
   }
   return (
     <>
-      <h2>{t("ic_sec_pases")}</h2>
+      <Titulo clave="ic_sec_pases" />
       <div style={{ width: "170mm", margin: "0 auto" }}><MapaPases flechas={p.flechas} /></div>
       <p className="ic-nota" style={{ fontSize: "8pt" }}>{t("ic_pases_ley")}</p>
       <p style={{ margin: "6pt 0" }}>{conNegrita(rec.join(" · "))}</p>
@@ -948,7 +966,7 @@ function Pases(props: { inf: Informe }) {
         <tbody>
           {p.filas.map((f, i) => (
             <tr key={i}>
-              <td className="ic-neg" style={{ color: f.asistencia ? VERDE_ASIST : NEGRO_PASE }}>
+              <td className="ic-neg" style={{ color: piel(f.asistencia ? VERDE_ASIST : NEGRO_PASE) }}>
                 {f.asistencia ? t("ic_pa_asistencia") : t("ic_pa_pasegol")}
               </td>
               <td>{nombreParte(f.parte)}</td>
@@ -970,7 +988,7 @@ function Pases(props: { inf: Informe }) {
 }
 
 function colorFalta(n: number): string {
-  return n <= 4 ? "#F57C00" : n === 5 ? "#E65100" : "#C62828";
+  return n <= 4 ? piel("#F57C00") : n === 5 ? piel("#E65100") : piel("#C62828");
 }
 
 const COLOR_PARTE: Record<ParteId, { campo: string; portero: string }> = {
@@ -1006,19 +1024,19 @@ function CronogramaSvg(props: { c: Cronograma; corto: string }) {
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t("ic_sec_crono")}>
       {ticks.map((m) => (
         <g key={m}>
-          <line x1={X(m * 60)} x2={X(m * 60)} y1={Y0 - 4} y2={YFin} stroke="#CFD8DC" strokeWidth="1" />
+          <line x1={X(m * 60)} x2={X(m * 60)} y1={Y0 - 4} y2={YFin} stroke={piel("#CFD8DC")} strokeWidth="1" />
           <text x={X(m * 60)} y={YFin + 18} textAnchor="middle" fontSize="12" fill="#333">{m}</text>
         </g>
       ))}
       {c.partes.slice(1).map((p) => (
         <line key={p.parte} x1={X(p.inicio)} x2={X(p.inicio)} y1={Y0 - 4} y2={YFin}
-              stroke="#37474F" strokeWidth="3" />
+              stroke={piel("#37474F")} strokeWidth="3" />
       ))}
       {c.jugadores.map((j, i) => {
         const y = Y0 + i * FILA;
         return (
           <g key={j.nombre}>
-            <text x={X0 - 8} y={y + FILA / 2 + 5} textAnchor="end" fontSize="13" fill="#212121">
+            <text x={X0 - 8} y={y + FILA / 2 + 5} textAnchor="end" fontSize="13" fill={piel("#212121")}>
               #{j.dorsal} {j.nombre}
             </text>
             {j.tramos.map((tr, k) => {
@@ -1027,28 +1045,28 @@ function CronogramaSvg(props: { c: Cronograma; corto: string }) {
               return (
                 <rect key={k} x={X(base + tr.desde)} y={y + 4}
                       width={Math.max(1, X(base + tr.hasta) - X(base + tr.desde))}
-                      height={FILA - 8} fill={j.portero ? col.portero : col.campo}
+                      height={FILA - 8} fill={piel(j.portero ? col.portero : col.campo)}
                       stroke="#fff" strokeWidth="1" />
               );
             })}
-            <text x={X1 + 6} y={y + FILA / 2 + 5} fontSize="12" fill="#212121">{minSeg(j.segTotal)}</text>
+            <text x={X1 + 6} y={y + FILA / 2 + 5} fontSize="12" fill={piel("#212121")}>{minSeg(j.segTotal)}</text>
           </g>
         );
       })}
-      <line x1={X0} x2={X1} y1={yLinea} y2={yLinea} stroke="#B0BEC5" strokeWidth="1.5" />
-      <text x={X0 - 8} y={yNos + 5} textAnchor="end" fontSize="12" fill="#212121">
+      <line x1={X0} x2={X1} y1={yLinea} y2={yLinea} stroke={piel("#B0BEC5")} strokeWidth="1.5" />
+      <text x={X0 - 8} y={yNos + 5} textAnchor="end" fontSize="12" fill={piel("#212121")}>
         {t("ic_carril_nos", { corto: props.corto })}
       </text>
-      <text x={X0 - 8} y={yRival + 5} textAnchor="end" fontSize="12" fill="#212121">
+      <text x={X0 - 8} y={yRival + 5} textAnchor="end" fontSize="12" fill={piel("#212121")}>
         {t("ic_carril_rival")}
       </text>
       {c.goles.map((g, i) => (
         <line key={i} x1={X(g.x)} x2={X(g.x)} y1={Y0 - 8} y2={yLinea}
-              stroke={g.nuestro ? "#2E7D32" : "#C62828"} strokeWidth="2" strokeDasharray="6 4" opacity=".75" />
+              stroke={g.nuestro ? piel("#2E7D32") : piel("#C62828")} strokeWidth="2" strokeDasharray="6 4" opacity=".75" />
       ))}
       {badges.map((b, i) => (
         <g key={i}>
-          <rect x={b.x - 20} y={b.y} width="40" height="18" rx="4" fill={b.nuestro ? "#2E7D32" : "#C62828"} />
+          <rect x={b.x - 20} y={b.y} width="40" height="18" rx="4" fill={b.nuestro ? piel("#2E7D32") : piel("#C62828")} />
           <text x={b.x} y={b.y + 13.5} textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">
             {b.nuestro ? t("ic_crono_gol") : t("ic_crono_gc")}
           </text>
@@ -1069,17 +1087,17 @@ function CronogramaSvg(props: { c: Cronograma; corto: string }) {
       })}
       {c.tarjetas.map((f, i) => {
         const y = f.nuestro ? yNos : yRival;
-        const col = f.roja ? "#D32F2F" : "#FBC02D";
+        const col = f.roja ? piel("#D32F2F") : piel("#FBC02D");
         const cBar = f.nuestro ? yJug.get(f.jugador) : undefined;
         const etiqueta = f.jugador === "#CT" ? "CT" : f.jugador.slice(0, 9);
         return (
           <g key={i}>
-            <rect x={X(f.x) - 9} y={y - 9} width="18" height="18" fill={col} stroke="#424242" strokeWidth="1" />
+            <rect x={X(f.x) - 9} y={y - 9} width="18" height="18" fill={col} stroke={piel("#424242")} strokeWidth="1" />
             {etiqueta && (
-              <text x={X(f.x)} y={y + 21} textAnchor="middle" fontSize="9.5" fill="#212121">{etiqueta}</text>
+              <text x={X(f.x)} y={y + 21} textAnchor="middle" fontSize="9.5" fill={piel("#212121")}>{etiqueta}</text>
             )}
             {cBar !== undefined && (
-              <rect x={X(f.x) - 5} y={cBar - 5} width="10" height="10" fill={col} stroke="#424242" strokeWidth=".8" />
+              <rect x={X(f.x) - 5} y={cBar - 5} width="10" height="10" fill={col} stroke={piel("#424242")} strokeWidth=".8" />
             )}
           </g>
         );
@@ -1094,20 +1112,20 @@ function Cronogramas(props: { inf: Informe }) {
   const hayMarcas = inf.cronograma.faltas.length + inf.cronograma.tarjetas.length > 0;
   return (
     <>
-      <h2>{t("ic_sec_crono")}</h2>
+      <Titulo clave="ic_sec_crono" />
       <p className="ic-txt">{conNegrita(t("ic_crono_txt"))}</p>
       <CronogramaSvg c={inf.cronograma} corto={inf.cabecera.nombreCorto} />
       <div className="ic-leyenda">
-        <span><i style={{ background: "#A5D6A7" }} />{t("ic_1a_parte")}</span>
-        <span><i style={{ background: "#90CAF9" }} />{t("ic_2a_parte")}</span>
-        {conPR && <span><i style={{ background: "#CE93D8" }} />{t("ic_prorroga")}</span>}
-        <span><i style={{ background: "#FFE082" }} />{t("ic_1a_portero")}</span>
-        <span><i style={{ background: "#FFCC80" }} />{t("ic_2a_portero")}</span>
+        <span><i style={{ background: piel("#A5D6A7") }} />{t("ic_1a_parte")}</span>
+        <span><i style={{ background: piel("#90CAF9") }} />{t("ic_2a_parte")}</span>
+        {conPR && <span><i style={{ background: piel("#CE93D8") }} />{t("ic_prorroga")}</span>}
+        <span><i style={{ background: piel("#FFE082") }} />{t("ic_1a_portero")}</span>
+        <span><i style={{ background: piel("#FFCC80") }} />{t("ic_2a_portero")}</span>
         {hayMarcas && (
           <>
-            <span><i className="c" style={{ background: "#F57C00" }} />{t("ic_ley_falta")}</span>
-            <span><i style={{ background: "#FBC02D", border: "0.5pt solid #424242" }} />{t("ic_ley_amarilla")}</span>
-            <span><i style={{ background: "#D32F2F", border: "0.5pt solid #424242" }} />{t("ic_ley_roja")}</span>
+            <span><i className="c" style={{ background: piel("#F57C00") }} />{t("ic_ley_falta")}</span>
+            <span><i style={{ background: piel("#FBC02D"), border: "0.5pt solid #424242" }} />{t("ic_ley_amarilla")}</span>
+            <span><i style={{ background: piel("#D32F2F"), border: "0.5pt solid #424242" }} />{t("ic_ley_roja")}</span>
           </>
         )}
       </div>
@@ -1120,13 +1138,13 @@ function Rotaciones(props: { inf: Informe }) {
   if (!inf.rotaciones.length) return null;
   return (
     <>
-      <h2>{t("ic_sec_rotaciones")}</h2>
+      <Titulo clave="ic_sec_rotaciones" />
       <p className="ic-txt ic-ind">
         {t("ic_rot_color")}{" "}
-        <span style={{ background: "#BBDEFB" }}>0-1&apos;</span>{" "}
-        <span style={{ background: "#C8E6C9" }}>1-2&apos;</span>{" "}
-        <span style={{ background: "#FFF59D" }}>2-3&apos;</span>{" "}
-        <span style={{ background: "#EF9A9A" }}>&gt;3&apos;</span>
+        <span style={{ background: piel("#BBDEFB") }}>0-1&apos;</span>{" "}
+        <span style={{ background: piel("#C8E6C9") }}>1-2&apos;</span>{" "}
+        <span style={{ background: piel("#FFF59D") }}>2-3&apos;</span>{" "}
+        <span style={{ background: piel("#EF9A9A") }}>&gt;3&apos;</span>
       </p>
       {inf.rotaciones.map((r) => {
         const anchoTurno = Math.min(16, 130 / r.maxTurnos);
@@ -1172,7 +1190,7 @@ function Cuartetos(props: { inf: Informe }) {
   const bd = c.hayDivididos;
   return (
     <>
-      <h2>{t("ic_sec_cuartetos")}</h2>
+      <Titulo clave="ic_sec_cuartetos" />
       <p className="ic-txt">{conNegrita(t("ic_cua_txt"))}</p>
       <table>
         <Anchos mm={bd
@@ -1198,7 +1216,7 @@ function Cuartetos(props: { inf: Informe }) {
               <td>{vacio(f.robos)}</td><td>{vacio(f.cortes)}</td>
               {bd && <td>{f.bdg || f.bdp ? `${f.bdg}/${f.bdp}` : ""}</td>}
               <td>{f.gf}/{f.gc}</td>
-              <td style={{ color: f.balance > 0 ? "#2E7D32" : f.balance < 0 ? "#B71C1C" : undefined }}>
+              <td style={{ color: f.balance > 0 ? piel("#2E7D32") : f.balance < 0 ? piel("#B71C1C") : undefined }}>
                 {entSigno(f.balance)}
               </td>
             </tr>
@@ -1222,7 +1240,7 @@ function Tanda(props: { inf: Informe }) {
     : d.rival > d.nos ? t("ic_tanda_gana_rival") : t("ic_tanda_sin");
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_tanda")}</h2>
+      <Titulo clave="ic_sec_tanda" />
       <p className="ic-txt">{conNegrita(t("ic_tanda_txt", { a: d.nos, b: d.rival, quien }))}</p>
       <table style={{ width: "160mm" }}>
         <Anchos mm={[10, 26, 42, 36, 26, 22]} />
@@ -1239,7 +1257,7 @@ function Tanda(props: { inf: Informe }) {
               <td>{x.nuestro ? inf.cabecera.nombreCorto : t("ic_rival")}</td>
               <td className="ic-izq">{x.tirador || "—"}</td>
               <td className="ic-izq">{x.portero || "—"}</td>
-              <td style={{ color: x.resultado === "GOL" ? "#2E7D32" : "#B71C1C" }}>
+              <td style={{ color: x.resultado === "GOL" ? piel("#2E7D32") : piel("#B71C1C") }}>
                 {t(`ic_res_${x.resultado}`)}
               </td>
               <td>{x.marcadorNos}-{x.marcadorRival}</td>
@@ -1256,7 +1274,7 @@ function TiemposMuertos(props: { inf: Informe }) {
   if (!inf.tiemposMuertos.length) return null;
   return (
     <section className="ic-sec">
-      <h2>{t("ic_sec_tm")}</h2>
+      <Titulo clave="ic_sec_tm" />
       <p className="ic-txt">{t("ic_tm_txt")}</p>
       <table style={{ width: "88mm" }}>
         <Anchos mm={[20, 20, 28, 20]} />
@@ -1282,7 +1300,9 @@ function TiemposMuertos(props: { inf: Informe }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-export default function InformeCompleto() {
+export default function InformeCompleto(props: { nuevo?: boolean }) {
+  const nuevo = Boolean(props.nuevo);
+  NUEVO = nuevo;
   const { partido, cargado } = usePartido();
   useIdioma();     // re-renderiza al cambiar de idioma
 
@@ -1316,12 +1336,29 @@ export default function InformeCompleto() {
 
   const ahora = new Date();
   const dosCifras = (x: number) => String(x).padStart(2, "0");
+  // ── Aspecto nuevo: goles y mapas como en el PDF del club ─────────────────
+  const offsets = partido ? offsetsDeParte(partido) : {};
+  const golesNuevo: GolNuevo[] = nuevo ? inf.goles.map((g) => {
+    const [a, b] = g.marcador.split("-").map((x) => Number(x) || 0);
+    const enPista = g.nuestro && g.goleador && !g.cuarteto.includes(g.goleador)
+      && g.goleador !== g.portero ? [...g.cuarteto, g.goleador] : g.cuarteto;
+    return {
+      seg: g.segAbs, nuestro: g.nuestro, nos: a, rival: b,
+      goleador: g.goleador || (g.nuestro && g.enPropia ? t("ic_en_propia") : ""),
+      asistente: g.asistente, situacion: nombreAccion(g.accion, g.columna),
+      situacionOriginal: g.accion, portero: g.portero, enPista,
+    };
+  }) : [];
+  const mapasNuevo = nuevo && partido ? contarMapas(partido.eventos ?? []) : null;
+  const rivalBonito = nombreBonito(inf.cabecera.rival);
+
   const generado = `${dosCifras(ahora.getDate())}/${dosCifras(ahora.getMonth() + 1)}/${ahora.getFullYear()}`
     + ` ${dosCifras(ahora.getHours())}:${dosCifras(ahora.getMinutes())}`;
 
   return (
-    <main className="informe ic">
+    <main className={`informe ic${nuevo ? " ic-n" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {nuevo && <style dangerouslySetInnerHTML={{ __html: CSS_NUEVO }} />}
       <div className="mb-4 flex gap-2 print:hidden">
         <Link href="/resumen" className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-white">
           ← {t("inf_volver")}
@@ -1329,7 +1366,9 @@ export default function InformeCompleto() {
         <button onClick={() => window.print()}
                 className="rounded-lg px-4 py-2 text-sm font-bold text-white"
                 style={{ backgroundColor: COLOR }}>
-          📄 {t("inf_guardar_pdf")}
+          {nuevo
+            ? <span className="inline-flex items-center gap-1.5"><Icono nombre="doc" /> {t("inf_guardar_pdf")}</span>
+            : <>📄 {t("inf_guardar_pdf")}</>}
         </button>
       </div>
       <div className="mb-4 rounded-lg border border-amber-400 bg-amber-50 p-3 text-xs text-amber-900 print:hidden">
@@ -1368,20 +1407,38 @@ export default function InformeCompleto() {
         <Valoracion inf={inf} />
       </div>
 
-      {inf.goles.length > 0 && (
+      {inf.goles.length > 0 && (nuevo ? (
+        <div className="ic-pag">
+          <Titulo clave="ic_sec_goles" />
+          <GolesNuevo goles={golesNuevo} nos={inf.cabecera.nombreCorto} rival={rivalBonito}
+                      inicio2T={offsets["2T"] || 1200}
+                      cortes={cortesDePartes(offsets, inf.hayProrroga ? ["2T", "PR1"] : ["2T"])}
+                      fin={finEje(golesNuevo, inf.golesPorTramo.length * 300)}
+                      colorNos={COLOR} colorRival={ROJO} />
+        </div>
+      ) : (
         <div className="ic-pag">
           <GolesTabla inf={inf} />
           <GolesCinco inf={inf} />
         </div>
-      )}
+      ))}
 
       {inf.goles.length > 0 && (
         <div className="ic-pag"><MatrizJugadas inf={inf} /></div>
       )}
 
-      {inf.mapas && (
+      {nuevo && inf.mapas && mapasNuevo?.hayDatos && (
         <div className="ic-pag">
-          <h2>{t("ic_sec_mapas")}</h2>
+          <Titulo clave="ic_sec_mapas" />
+          <MapasNuevo nos={mapasNuevo.nos} rival={mapasNuevo.rival}
+                      nombreNos={inf.cabecera.nombreCorto} nombreRival={rivalBonito}
+                      colorNos={COLOR} colorRival={ROJO} />
+        </div>
+      )}
+
+      {!nuevo && inf.mapas && (
+        <div className="ic-pag">
+          <Titulo clave="ic_sec_mapas" />
           <CampoZonas zonas={inf.mapas.favorCampo} titulo={t("ic_mapa_fc")} />
           <PorteriaZonas zonas={inf.mapas.favorPorteria} titulo={t("ic_mapa_fp")} />
           <CampoZonas zonas={inf.mapas.contraCampo} titulo={t("ic_mapa_cc")} />

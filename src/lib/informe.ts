@@ -62,6 +62,8 @@ export interface GolInforme {
   /** Los cinco que estaban en pista cuando cayó. */
   quinteto: string[];
   marcador: string;          // "2-1" tras el gol
+  /** Segundo absoluto del partido (para la línea de tiempo del aspecto nuevo). */
+  seg: number;
 }
 
 export interface FilaJugador {
@@ -217,6 +219,8 @@ export interface Informe {
   zonasFaltas: Record<string, number>;
   /** Hacia dónde atacamos en la 1ª parte: los mapas se pintan en ese sentido. */
   direccion1T: "izq" | "der";
+  /** Segundo absoluto en el que empieza cada parte (para la línea de tiempo). */
+  inicios: Record<string, number>;
   penaltis: {
     minuto: string; parte: ParteId; nuestro: boolean;
     tipo: string; tirador?: string; resultado: string;
@@ -445,6 +449,7 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
         ? (e.cuarteto as string[])
         : enPistaEn(tramos, t),
       marcador: `${gfAcum}-${gcAcum}`,
+      seg: t,
     });
   }
 
@@ -824,5 +829,6 @@ export function construirInforme(p: Partido, ctx: ContextoInforme): Informe | nu
     direccion1T: (String(cfg.direccionInter1T ?? "der") === "izq" ? "izq" : "der"),
     penaltis, tiemposMuerto, tarjetas,
     hayVideo,
+    inicios,
   };
 }
