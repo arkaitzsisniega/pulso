@@ -1199,3 +1199,43 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
 .pz-vac-cargando {
   font: 700 18px/1 var(--f-num); letter-spacing: .08em; text-transform: uppercase; color: var(--texto-3);
 }
+
+/* ── Pantalla de CONTRASEÑA (components/PantallaVacia.tsx → PantallaClave,
+   23/11/2026). La misma caja que las vacías, con el escudo del club arriba,
+   un campo grande para el dedo y el botón principal en el color del club.
+   Sin color-mix (iPads con Safari < 16.2). ── */
+.pz-clave { max-width: 520px; padding-top: 30px; }
+.pz-clave-escudo { width: 104px; height: 112px; margin-bottom: 16px; }
+.pz-clave-form { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.pz-clave-campo {
+  position: relative; display: flex; align-items: center; min-height: 68px;
+  border-radius: 14px; background: var(--capa-3); border: 2px solid var(--linea);
+}
+.pz-clave-campo:focus-within { border-color: var(--nos); box-shadow: 0 0 0 4px var(--nos-suave); }
+.pz-clave-campo.mal { border-color: var(--mal); }
+.pz-clave-candado { position: absolute; left: 18px; width: 24px; height: 24px; color: var(--texto-3); pointer-events: none; }
+.pz-clave-campo input {
+  flex: 1; min-width: 0; height: 64px; padding: 0 64px; background: transparent; border: 0;
+  color: var(--texto); font: 700 24px/1 var(--f-num); letter-spacing: .12em; text-align: center;
+  -webkit-appearance: none; appearance: none;
+}
+.pz-clave-campo input:focus { outline: none; }
+.pz-clave-campo input::placeholder { color: var(--texto-3); letter-spacing: .06em; font-weight: 600; text-transform: uppercase; font-size: 18px; }
+.pz-clave-ver {
+  position: absolute; right: 6px; width: 56px; height: 56px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center; color: var(--texto-2);
+  background: transparent; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.pz-clave-ver .pz-ico { width: 24px; height: 24px; }
+.pz-clave-ver:active { background: var(--capa-2); }
+.pz-clave-error {
+  display: flex; align-items: flex-start; gap: 12px; text-align: left; padding: 12px 14px;
+  border-radius: 12px; background: rgba(255,77,77,.12); border: 1px solid rgba(255,77,77,.35);
+}
+.pz-clave-error .pz-ico { flex: none; width: 22px; height: 22px; color: var(--mal); margin-top: 1px; }
+.pz-clave-error b { display: block; color: var(--mal); font-size: 16px; }
+.pz-clave-error span { display: block; color: var(--texto-2); font-size: 14px; margin-top: 2px; }
+.pz-clave-entrar { margin-top: 4px; cursor: pointer; }
+.pz-clave-entrar:disabled { opacity: .45; cursor: default; transform: none; filter: none; }
+.pz-clave-olvido { color: var(--texto-3); font-size: 13.5px; margin-top: 18px; }
+@media (max-height: 640px) { .pz-clave-escudo { width: 72px; height: 78px; margin-bottom: 10px; } }

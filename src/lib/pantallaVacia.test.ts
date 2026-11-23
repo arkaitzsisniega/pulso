@@ -62,5 +62,32 @@ ok(/\.pz-vac-btn\.lleno \{[^}]*var\(--nos\)/.test(css), "el botón principal va 
 ok(!/color-mix\(/.test(bloque), "sin color-mix (Safari < 16.2)");
 ok(/100vh/.test(bloque) && /100dvh/.test(bloque), "alto con dvh y su red para Safari < 15.4");
 
+// Pantalla de CONTRASEÑA (23/11/2026): dibujo nuevo, lógica intacta.
+{
+  const gate = leer("../components/AuthGate.tsx");
+  const iNueva = gate.indexOf("<PantallaClave");
+  const iClasica = gate.indexOf('type="password"');
+  ok(iNueva > 0 && iNueva < iClasica, "AuthGate: la contraseña nueva va antes que la clásica");
+  ok(/onEntrar=\{intentarEntrar\}/.test(gate) && /onValor=\{setInput\}/.test(gate),
+    "AuthGate: la nueva usa el MISMO intentarEntrar y el mismo estado");
+  ok(/PASS_HASHES_CLIENTE\.includes\(hash\)/.test(gate) && /sha256\(input\.trim\(\)\)/.test(gate)
+    && /const STORAGE_KEY = `\$\{CLIENTE\.id\}_crono_auth`/.test(gate),
+    "AuthGate: la comprobación (SHA-256) y dónde se guarda no cambian");
+  const clave = comp.slice(comp.indexOf("export function PantallaClave"));
+  ok(/<Escudo className="pz-clave-escudo"/.test(clave), "contraseña: con el escudo del club");
+  ok(/<BotonSol /.test(clave) && /useModoSol\(\)/.test(clave), "contraseña: modo Sol");
+  ok(/role="alert"/.test(clave) && clave.includes('t("login_reintentar")'), "contraseña: error amable");
+  ok(/autoCapitalize="none"/.test(clave) && /enterKeyHint="go"/.test(clave), "contraseña: teclado del iPad sin mayúscula automática");
+  ok(!/fetch\(|import\(/.test(clave), "contraseña: no carga nada de la red");
+  for (const k of ["login_reintentar", "login_mostrar", "login_ocultar", "login_sin_red"]) {
+    const m = i18n.match(new RegExp(`\\n  ${k}: \\{([\\s\\S]*?)\\},\\n`));
+    ok(!!m && /es: "/.test(m[1]) && /en: "/.test(m[1]) && /it: "/.test(m[1]), `texto ${k} en es/en/it`);
+  }
+  const bc = css.slice(css.indexOf(".pz-clave {"), css.indexOf("@media (max-height: 640px) { .pz-clave-escudo"));
+  ok(bc.length > 100 && !/color-mix\(/.test(bc), "CSS de la contraseña, sin color-mix");
+  ok(/\.pz-clave-campo input \{[^}]*font: 700 2\dpx/.test(css) && /\.pz-clave-campo \{[^}]*min-height: 6\dpx/.test(css),
+    "contraseña: campo grande para el iPad");
+}
+
 console.log(fallos ? `\n${fallos} fallo(s)` : "\nTodo bien");
 process.exit(fallos ? 1 : 0);

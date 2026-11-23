@@ -437,6 +437,19 @@ export const CATALOGO: Record<string, Entrada> = {
     en: "If you forgot it, ask Arkaitz.",
     it: "Se l'hai dimenticata, chiedi ad Arkaitz.",
   },
+  // Pantalla de contraseña con el aspecto nuevo (23/11/2026).
+  login_reintentar: {
+    es: "Revisa mayúsculas y números y vuelve a probar.",
+    en: "Check capitals and numbers and try again.",
+    it: "Controlla maiuscole e numeri e riprova.",
+  },
+  login_mostrar: { es: "Mostrar contraseña", en: "Show password", it: "Mostra password" },
+  login_ocultar: { es: "Ocultar contraseña", en: "Hide password", it: "Nascondi password" },
+  login_sin_red: {
+    es: "Funciona sin conexión: la contraseña se comprueba en este aparato.",
+    en: "Works offline: the password is checked on this device.",
+    it: "Funziona offline: la password viene verificata su questo dispositivo.",
+  },
 
   // ══════════════════ NUEVO PARTIDO (nuevo/page.tsx) ══════════════════
   nuevo_titulo: { ico: "⚽", es: "Nuevo partido", en: "New match", it: "Nuova partita" },
