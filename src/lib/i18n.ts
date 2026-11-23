@@ -525,6 +525,11 @@ export const CATALOGO: Record<string, Entrada> = {
   part_cargando: { es: "Cargando…", en: "Loading…", it: "Caricamento…" },
   part_no_en_curso: { es: "No hay partido en curso.", en: "No match in progress.", it: "Nessuna partita in corso." },
   part_crear_nuevo: { ico: "🏁", es: "Crear partido nuevo", en: "Create new match", it: "Crea nuova partita" },
+  // Pantallas vacías con el aspecto nuevo (components/PantallaVacia.tsx, 23/11/2026).
+  vac_empezar: { es: "Empezar partido", en: "Start a match", it: "Inizia partita" },
+  vac_part_ayuda: { es: "Empieza uno nuevo o vuelve al inicio para seguir con uno guardado.", en: "Start a new one or go back home to continue a saved match.", it: "Iniziane una nuova o torna alla home per continuarne una salvata." },
+  vac_res_ayuda: { es: "Vuelve al inicio y elige un partido guardado para ver sus estadísticas.", en: "Go back home and pick a saved match to see its stats.", it: "Torna alla home e scegli una partita salvata per vederne le statistiche." },
+  vac_inf_ayuda: { es: "Vuelve al inicio y elige un partido guardado para ver su informe.", en: "Go back home and pick a saved match to see its report.", it: "Torna alla home e scegli una partita salvata per vederne il report." },
   part_fin_parte: { ico: "⏱️", es: "Fin de parte", en: "End of half", it: "Fine tempo" },
   part_saca_badge: { ico: "⚽", es: "Saca {equipo}", en: "{equipo} kicks off", it: "Batte {equipo}" },
   part_iniciar: { ico: "▶", es: "INICIAR", en: "START", it: "AVVIA" },

@@ -20,6 +20,8 @@
 import { useEffect, useState } from "react";
 import { t, useIdioma } from "@/lib/i18n";
 import { CLIENTE, PASS_HASHES_CLIENTE } from "@/lib/clientes";
+import { useAspecto } from "@/lib/aspecto";
+import { PantallaCargando } from "@/components/PantallaVacia";
 
 // Las contraseñas válidas (hash SHA-256) salen del CLIENTE activo
 // (src/lib/clientes.ts): una por club por defecto, admite varias.
@@ -37,6 +39,7 @@ async function sha256(text: string): Promise<string> {
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   useIdioma();
+  const nuevo = useAspecto() === "nuevo";
   // Estado: undefined = aún no comprobado (SSR / primer render), true = ok, false = pedir pass
   const [autorizado, setAutorizado] = useState<boolean | undefined>(undefined);
   const [input, setInput] = useState("");
@@ -84,6 +87,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   // Mientras comprobamos por primera vez, no renderizar nada (evita flash de
   // login antes de que veamos que estaba autorizado).
   if (autorizado === undefined) {
+    // Aspecto nuevo: el mismo «Cargando…» que las demás pantallas (23/11/2026).
+    if (nuevo) return <PantallaCargando />;
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">
         <span className="text-sm text-zinc-500">{t("cargando")}</span>

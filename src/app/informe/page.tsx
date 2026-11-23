@@ -36,6 +36,8 @@ import {
 } from "@/lib/informe";
 import { MARCA_INFORME } from "@/lib/marca";
 import { useAspecto } from "@/lib/aspecto";
+import { PantallaVacia, PantallaCargando, SALIDA_INICIO, SALIDA_NUEVO } from "@/components/PantallaVacia";
+import { Ico } from "@/components/DirectoNuevo";
 import {
   CSS_NUEVO, GolesNuevo, Icono, InformeNuevoCtx, MapasNuevo, Tarjeta, cortesDePartes,
   fijarPiel, iconoSeccion, useInformeNuevo,
@@ -316,10 +318,21 @@ function InformeClasico(props: { nuevo: boolean }) {
     return () => window.clearTimeout(id);
   }, [cargado, partido]);
 
-  if (!cargado) return <main className="p-6 text-zinc-400">{t("inf_cargando")}</main>;
+  // Aspecto nuevo: «Cargando…» y «No hay ningún partido abierto» con el mismo
+  // dibujo que el resto (components/PantallaVacia.tsx, 23/11/2026).
+  if (!cargado) {
+    if (nuevo) return <PantallaCargando texto="inf_cargando" />;
+    return <main className="p-6 text-zinc-400">{t("inf_cargando")}</main>;
+  }
 
   const inf = partido ? construirInforme(partido, { nombreCorto: NOMBRE_CORTO_TC, roster: ROSTER }) : null;
   if (!inf) {
+    if (nuevo) {
+      return (
+        <PantallaVacia icono={<Ico.doc />} titulo="inf_sin_partido" ayuda="vac_inf_ayuda"
+          principal={SALIDA_INICIO} secundaria={SALIDA_NUEVO} />
+      );
+    }
     return (
       <main className="p-6 text-zinc-300">
         <p>{t("inf_sin_partido")}</p>

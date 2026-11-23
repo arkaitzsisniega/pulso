@@ -15,6 +15,7 @@ import { t, useIdioma, labelAccionGol, labelResultadoDisparo, labelParte, labelC
 import { contarPorZona } from "@/lib/zonas";
 import { accionDeLanzamiento, esLanzamiento } from "@/lib/lanzamientos";
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import { PantallaVacia, PantallaCargando, SALIDA_INICIO, SALIDA_NUEVO } from "@/components/PantallaVacia";
 import {
   PostCtx, icPP, useIcPP, useTPP, estiloPP, CabeceraResumen, PestanasResumen,
   DisparosNuevo, BalonNuevo, prefijo,
@@ -176,10 +177,19 @@ export default function ResumenPage() {
   const ic = (txt: string): React.ReactNode => (nuevo ? icPP(txt) : txt);
   const T = (clave: string, params?: Record<string, string | number>) => ic(t(clave, params));
 
+  // Aspecto nuevo: «Cargando…» y «No hay partido para resumir» con el mismo
+  // dibujo que el resto (components/PantallaVacia.tsx, 23/11/2026).
   if (!cargado) {
+    if (nuevo) return <PantallaCargando />;
     return <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">{T("cargando")}</div>;
   }
   if (!partido.config) {
+    if (nuevo) {
+      return (
+        <PantallaVacia icono={<Ico.barras />} titulo="res_no_partido" ayuda="vac_res_ayuda"
+          principal={SALIDA_INICIO} secundaria={SALIDA_NUEVO} />
+      );
+    }
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center gap-4">
         <p>{T("res_no_partido")}</p>

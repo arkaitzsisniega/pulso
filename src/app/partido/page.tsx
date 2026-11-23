@@ -20,6 +20,7 @@ import { golNuestroCerca, pasesGolCerca } from "@/lib/paseGol";
 import { camposFlechaAsistencia, pideFlechaAsistencia } from "@/lib/asistencia";
 import { esAccionLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "@/lib/lanzamientos";
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
+import { PantallaVacia, PantallaCargando, SALIDA_INICIO, SALIDA_NUEVO } from "@/components/PantallaVacia";
 import { huecoFlotante, MARGEN_CAPA } from "@/lib/huecoFlotante";
 import { elegirRival, rgba } from "@/lib/tema";
 import { estadoFin } from "@/lib/finPartido";
@@ -312,10 +313,19 @@ export default function PartidoPage() {
     return e.enPropia ? t("pg_en_propia") : (e.goleador || e.tirador || "—");
   };
 
+  // Aspecto nuevo: el «Cargando…» y el «No hay partido en curso» con el mismo
+  // dibujo que el resto (components/PantallaVacia.tsx, 23/11/2026).
   if (!cargado) {
+    if (aspecto === "nuevo") return <PantallaCargando texto="part_cargando" />;
     return <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">{t("part_cargando")}</div>;
   }
   if (partido.estado !== "en_curso" || !partido.config) {
+    if (aspecto === "nuevo") {
+      return (
+        <PantallaVacia icono={<Ico.reloj />} titulo="part_no_en_curso" ayuda="vac_part_ayuda"
+          principal={SALIDA_NUEVO} secundaria={SALIDA_INICIO} />
+      );
+    }
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center gap-4">
         <p className="text-xl">{t("part_no_en_curso")}</p>
