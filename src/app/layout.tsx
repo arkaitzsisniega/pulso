@@ -51,6 +51,15 @@ const BP = process.env.NEXT_EXPORT === "1" ? (process.env.CRONO_BASEPATH || "/pu
 // intacto; los demás usan "manifest-<id>.json" (p.ej. la demo → manifest-pulso.json).
 const MANIFEST = `${BP}/manifest${CLIENTE.id === "inter" ? "" : `-${CLIENTE.id}`}.json`;
 
+// Icono de la pantalla de inicio («Añadir a pantalla de inicio» en Safari).
+// Desde el 23/11/2026 TODOS los clientes (inter, filial, juvenil y la demo)
+// llevan el emblema de PULSO con un pequeño cronómetro (decisión de Arkaitz:
+// «la web y el crono van con el icono de PULSO»). public/icons-pulso/, fondo
+// blanco opaco: iOS pinta de negro lo transparente. Los cuatro manifest
+// apuntan a la misma carpeta.
+const ICONOS = `${BP}/icons-pulso`;
+const APPLE_TOUCH = `${ICONOS}/icon-180.png`;
+
 export const metadata: Metadata = {
   title: CLIENTE.appTitulo,
   description: `Crono de partido en directo para el cuerpo técnico de ${CLIENTE.nombreLargo}`,
@@ -62,14 +71,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: `${BP}/icons/icon-192.png`, sizes: "192x192", type: "image/png" },
-      { url: `${BP}/icons/icon-512.png`, sizes: "512x512", type: "image/png" },
+      { url: `${ICONOS}/icon-192.png`, sizes: "192x192", type: "image/png" },
+      { url: `${ICONOS}/icon-512.png`, sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: `${BP}/apple-touch-icon.png`, sizes: "180x180", type: "image/png" },
-      { url: `${BP}/icons/icon-152.png`, sizes: "152x152", type: "image/png" },
-      { url: `${BP}/icons/icon-167.png`, sizes: "167x167", type: "image/png" },
-      { url: `${BP}/icons/icon-180.png`, sizes: "180x180", type: "image/png" },
+      { url: APPLE_TOUCH, sizes: "180x180", type: "image/png" },
+      { url: `${ICONOS}/icon-152.png`, sizes: "152x152", type: "image/png" },
+      { url: `${ICONOS}/icon-167.png`, sizes: "167x167", type: "image/png" },
+      { url: `${ICONOS}/icon-180.png`, sizes: "180x180", type: "image/png" },
     ],
   },
 };

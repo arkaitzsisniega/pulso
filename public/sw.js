@@ -70,8 +70,11 @@ async function precachePaginaYAssets(cache, url) {
       // Y el manifest DE ESTE CLIENTE (manifest-filial.json, -juvenil, -pulso):
       // APP_SHELL solo lleva el manifest.json del Inter, que este fichero no
       // sabe qué cliente es; el que de verdad pide la página sale de su <link>.
+      // Y los iconos de la pantalla de inicio (apple-touch-icon e icons*/),
+      // para que «Añadir a pantalla de inicio» los encuentre sin red.
       if (a.includes("/_next/") || a.includes("/escudos/") ||
-          /\/manifest[^/]*\.json$/.test(a)) urls.add(a);
+          /\/manifest[^/]*\.json$/.test(a) ||
+          /\/(icons[^/]*\/[^/]+|apple-touch-icon[^/]*)\.png$/.test(a)) urls.add(a);
     }
     await Promise.allSettled([...urls].map((a) => cache.add(a).catch(() => {})));
   } catch { /* best-effort */ }
