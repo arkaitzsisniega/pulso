@@ -460,6 +460,19 @@ export const CATALOGO: Record<string, Entrada> = {
     en: "If you forgot it, ask Arkaitz.",
     it: "Se l'hai dimenticata, chiedi ad Arkaitz.",
   },
+  // Pantalla de contraseña con el aspecto nuevo (23/11/2026).
+  login_reintentar: {
+    es: "Revisa mayúsculas y números y vuelve a probar.",
+    en: "Check capitals and numbers and try again.",
+    it: "Controlla maiuscole e numeri e riprova.",
+  },
+  login_mostrar: { es: "Mostrar contraseña", en: "Show password", it: "Mostra password" },
+  login_ocultar: { es: "Ocultar contraseña", en: "Hide password", it: "Nascondi password" },
+  login_sin_red: {
+    es: "Funciona sin conexión: la contraseña se comprueba en este aparato.",
+    en: "Works offline: the password is checked on this device.",
+    it: "Funziona offline: la password viene verificata su questo dispositivo.",
+  },
 
   // ══════════════════ NUEVO PARTIDO (nuevo/page.tsx) ══════════════════
   nuevo_titulo: { ico: "⚽", es: "Nuevo partido", en: "New match", it: "Nuova partita" },
@@ -548,6 +561,11 @@ export const CATALOGO: Record<string, Entrada> = {
   part_cargando: { es: "Cargando…", en: "Loading…", it: "Caricamento…" },
   part_no_en_curso: { es: "No hay partido en curso.", en: "No match in progress.", it: "Nessuna partita in corso." },
   part_crear_nuevo: { ico: "🏁", es: "Crear partido nuevo", en: "Create new match", it: "Crea nuova partita" },
+  // Pantallas vacías con el aspecto nuevo (components/PantallaVacia.tsx, 23/11/2026).
+  vac_empezar: { es: "Empezar partido", en: "Start a match", it: "Inizia partita" },
+  vac_part_ayuda: { es: "Empieza uno nuevo o vuelve al inicio para seguir con uno guardado.", en: "Start a new one or go back home to continue a saved match.", it: "Iniziane una nuova o torna alla home per continuarne una salvata." },
+  vac_res_ayuda: { es: "Vuelve al inicio y elige un partido guardado para ver sus estadísticas.", en: "Go back home and pick a saved match to see its stats.", it: "Torna alla home e scegli una partita salvata per vederne le statistiche." },
+  vac_inf_ayuda: { es: "Vuelve al inicio y elige un partido guardado para ver su informe.", en: "Go back home and pick a saved match to see its report.", it: "Torna alla home e scegli una partita salvata per vederne il report." },
   part_fin_parte: { ico: "⏱️", es: "Fin de parte", en: "End of half", it: "Fine tempo" },
   part_saca_badge: { ico: "⚽", es: "Saca {equipo}", en: "{equipo} kicks off", it: "Batte {equipo}" },
   part_iniciar: { ico: "▶", es: "INICIAR", en: "START", it: "AVVIA" },
@@ -1959,14 +1977,8 @@ export const CATALOGO: Record<string, Entrada> = {
   pz_portero: { es: "portero", en: "keeper", it: "portiere" },
   pz_tema_sol: { es: "Modo Sol (claro)", en: "Sun mode (light)", it: "Modalità Sole (chiara)" },
   pz_tema_pabellon: { es: "Modo Pabellón (oscuro)", en: "Arena mode (dark)", it: "Modalità Palazzetto (scura)" },
-  pz_aspecto_titulo: { es: "Aspecto del crono en este aparato", en: "Look of the clock on this device", it: "Aspetto del crono su questo dispositivo" },
-  pz_aspecto_clasico: { es: "Clásico", en: "Classic", it: "Classico" },
-  pz_aspecto_nuevo: { es: "Nuevo", en: "New", it: "Nuovo" },
-  pz_aspecto_nota: {
-    es: "Solo cambia cómo se ven las pantallas. Los datos y los botones son los mismos.",
-    en: "It only changes how the screens look. Data and buttons stay the same.",
-    it: "Cambia solo l'aspetto delle schermate. Dati e pulsanti restano uguali.",
-  },
+  // (Los textos pz_aspecto_* del interruptor clásico/nuevo se quitaron el
+  //  15/12/2026: ya no hay interruptor. Ver lib/aspecto.ts.)
 
   // ══════════════════ SELECTOR DE IDIOMA (demo) ══════════════════
   selector_idioma_label: { es: "Idioma", en: "Language", it: "Lingua" },

@@ -1,9 +1,9 @@
 /* ══════════════════════════════════════════════════════════════════════════
    ASPECTO NUEVO del crono (rediseño PULSO, tanda 1 · 16/11/2026)
 
-   Todo vive bajo la clase .pz, que SOLO lleva la pantalla del partido cuando
-   el aparato tiene el aspecto nuevo activado (lib/aspecto.ts). Con el aspecto
-   clásico ninguna de estas reglas se aplica: el crono se ve como siempre.
+   Todo vive bajo la clase .pz. Desde el 15/12/2026 TODOS los clientes van con
+   el aspecto nuevo (sin interruptor, lib/aspecto.ts); el clásico, que no usa
+   ninguna de estas reglas, queda en el código pero ya no se alcanza.
 
    · Pabellón (oscuro, por defecto): azul noche de la marca, no negro puro.
    · Sol (claro): .pz[data-tema="sol"], para pistas con mucha luz.
@@ -626,6 +626,8 @@ button.pz-ini-sec { width: 100%; text-align: left; cursor: pointer; }
 .pz-ib.icono .pz-ico { color: var(--texto-3); }
 .pz-ib:active { transform: scale(.97); filter: brightness(1.12); }
 
+/* Interruptor clásico/nuevo: SE PODRÁ BORRAR. Desde el 15/12/2026 no hay
+   interruptor (lib/aspecto.ts) y ya no se pinta nada con esta clase. */
 .pz-ini-aspecto {
   margin-top: auto; padding-top: 28px; display: flex; align-items: center; justify-content: center;
   gap: 8px 12px; flex-wrap: wrap; color: var(--texto-3); font-size: 12px;
@@ -1158,3 +1160,89 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
 .pz-tot-cerrar-inf .ok { font-weight: 700; color: var(--ok); margin-bottom: 6px; }
 .pz-tot-cerrar-inf ul { margin: 4px 0 0 18px; list-style: disc; }
 .pz-tot-cerrar-inf b { color: var(--texto); }
+
+/* ── PANTALLAS VACÍAS (23/11/2026, components/PantallaVacia.tsx) ─────────
+   «No hay partido en curso» (directo), «No hay partido para resumir»
+   (resumen), «No hay ningún partido abierto» (informe) y sus «Cargando…».
+   Mismo dibujo que el inicio: capa centrada, icono en círculo, título en
+   Barlow y dos salidas grandes (la principal, rellena con el color del club). */
+.pz-vac {
+  min-height: calc(100vh - env(safe-area-inset-top, 0px)); /* Safari < 15.4: sin dvh */
+  min-height: calc(100dvh - env(safe-area-inset-top, 0px));
+  position: relative; color: var(--texto); font-size: 15px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; padding: 72px 16px 28px;
+}
+.pz-vac.cargando { gap: 14px; padding: 16px; }
+.pz-vac-sol { position: absolute; top: 18px; right: 18px; }
+.pz-vac-caja {
+  width: 100%; max-width: 560px; padding: 32px 28px 28px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.pz-vac-ic {
+  width: 76px; height: 76px; border-radius: 50%; display: inline-flex; align-items: center;
+  justify-content: center; background: var(--capa-3); color: var(--texto-2); margin-bottom: 18px;
+}
+.pz-vac-ic .pz-ico { width: 38px; height: 38px; stroke-width: 1.8; }
+.pz-vac-tit { font: 800 30px/1.05 var(--f-num); letter-spacing: .04em; text-transform: uppercase; }
+.pz-vac-ayuda { color: var(--texto-2); font-size: 15px; line-height: 1.45; margin-top: 10px; max-width: 400px; }
+.pz-vac-acc { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+.pz-vac-btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 60px;
+  padding: 0 18px; border-radius: 14px; background: var(--capa-2); border: 1px solid var(--linea);
+  color: var(--texto); font: 700 19px/1.1 var(--f-num); letter-spacing: .06em; text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.pz-vac-btn .pz-ico { color: var(--texto-2); }
+.pz-vac-btn span { white-space: nowrap; }
+.pz-vac-btn.lleno {
+  min-height: 72px; background: var(--nos); border-color: transparent; color: var(--sobre-nos);
+  font-size: 24px; font-weight: 800;
+}
+.pz-vac-btn.lleno .pz-ico { color: var(--sobre-nos); width: 26px; height: 26px; stroke-width: 2.6; }
+.pz-vac-btn:active { transform: scale(.98); filter: brightness(1.1); }
+.pz-vac-pie { display: flex; align-items: center; gap: 10px; color: var(--texto-3); font-size: 12.5px; }
+.pz-vac-logo { width: 96px; height: 52px; color: var(--texto-3); }
+.pz-vac-cargando {
+  font: 700 18px/1 var(--f-num); letter-spacing: .08em; text-transform: uppercase; color: var(--texto-3);
+}
+
+/* ── Pantalla de CONTRASEÑA (components/PantallaVacia.tsx → PantallaClave,
+   23/11/2026). La misma caja que las vacías, con el escudo del club arriba,
+   un campo grande para el dedo y el botón principal en el color del club.
+   Sin color-mix (iPads con Safari < 16.2). ── */
+.pz-clave { max-width: 520px; padding-top: 30px; }
+.pz-clave-escudo { width: 104px; height: 112px; margin-bottom: 16px; }
+.pz-clave-form { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.pz-clave-campo {
+  position: relative; display: flex; align-items: center; min-height: 68px;
+  border-radius: 14px; background: var(--capa-3); border: 2px solid var(--linea);
+}
+.pz-clave-campo:focus-within { border-color: var(--nos); box-shadow: 0 0 0 4px var(--nos-suave); }
+.pz-clave-campo.mal { border-color: var(--mal); }
+.pz-clave-candado { position: absolute; left: 18px; width: 24px; height: 24px; color: var(--texto-3); pointer-events: none; }
+.pz-clave-campo input {
+  flex: 1; min-width: 0; height: 64px; padding: 0 64px; background: transparent; border: 0;
+  color: var(--texto); font: 700 24px/1 var(--f-num); letter-spacing: .12em; text-align: center;
+  -webkit-appearance: none; appearance: none;
+}
+.pz-clave-campo input:focus { outline: none; }
+.pz-clave-campo input::placeholder { color: var(--texto-3); letter-spacing: .06em; font-weight: 600; text-transform: uppercase; font-size: 18px; }
+.pz-clave-ver {
+  position: absolute; right: 6px; width: 56px; height: 56px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center; color: var(--texto-2);
+  background: transparent; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.pz-clave-ver .pz-ico { width: 24px; height: 24px; }
+.pz-clave-ver:active { background: var(--capa-2); }
+.pz-clave-error {
+  display: flex; align-items: flex-start; gap: 12px; text-align: left; padding: 12px 14px;
+  border-radius: 12px; background: rgba(255,77,77,.12); border: 1px solid rgba(255,77,77,.35);
+}
+.pz-clave-error .pz-ico { flex: none; width: 22px; height: 22px; color: var(--mal); margin-top: 1px; }
+.pz-clave-error b { display: block; color: var(--mal); font-size: 16px; }
+.pz-clave-error span { display: block; color: var(--texto-2); font-size: 14px; margin-top: 2px; }
+.pz-clave-entrar { margin-top: 4px; cursor: pointer; }
+.pz-clave-entrar:disabled { opacity: .45; cursor: default; transform: none; filter: none; }
+.pz-clave-olvido { color: var(--texto-3); font-size: 13.5px; margin-top: 18px; }
+@media (max-height: 640px) { .pz-clave-escudo { width: 72px; height: 78px; margin-bottom: 10px; } }

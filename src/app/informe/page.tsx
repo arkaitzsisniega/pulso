@@ -38,6 +38,8 @@ import { MARCA_INFORME } from "@/lib/marca";
 import { disparosPorSituacion } from "@/lib/situacionesNumericas";
 import { TablaSituaciones } from "@/components/SituacionesInforme";
 import { useAspecto } from "@/lib/aspecto";
+import { PantallaVacia, PantallaCargando, SALIDA_INICIO, SALIDA_NUEVO } from "@/components/PantallaVacia";
+import { Ico } from "@/components/DirectoNuevo";
 import {
   CSS_NUEVO, GolesNuevo, Icono, InformeNuevoCtx, MapasNuevo, Tarjeta, cortesDePartes,
   fijarPiel, iconoSeccion, useInformeNuevo,
@@ -301,9 +303,9 @@ function porterosDelRoster(p: { config?: { pista_inicial?: { portero?: string } 
 /** Qué informe enseña este build lo decide `clientes.ts`. Inter y filial: el de
  *  siempre, el de aquí abajo, sin tocar. PULSO: el completo, en su componente. */
 export default function InformePage() {
-  // Con el aspecto NUEVO activado en el aparato, el informe sale con el lenguaje
-  // del rediseño (23/11/2026), en claro porque va a papel. Con el clásico, el de
-  // siempre, sin tocar una coma.
+  // El informe sale con el lenguaje del rediseño (23/11/2026), en claro porque
+  // va a papel. Desde el 15/12/2026 SIEMPRE (useAspecto() es siempre "nuevo",
+  // lib/aspecto.ts); la rama `nuevo=false` (el de siempre) ya no se alcanza.
   const nuevo = useAspecto() === "nuevo";
   fijarPiel(nuevo);
   return CLIENTE.informeCompleto
@@ -327,10 +329,21 @@ function InformeClasico(props: { nuevo: boolean }) {
     return () => window.clearTimeout(id);
   }, [cargado, partido]);
 
-  if (!cargado) return <main className="p-6 text-zinc-400">{t("inf_cargando")}</main>;
+  // Aspecto nuevo: «Cargando…» y «No hay ningún partido abierto» con el mismo
+  // dibujo que el resto (components/PantallaVacia.tsx, 23/11/2026).
+  if (!cargado) {
+    if (nuevo) return <PantallaCargando texto="inf_cargando" />;
+    return <main className="p-6 text-zinc-400">{t("inf_cargando")}</main>;
+  }
 
   const inf = partido ? construirInforme(partido, { nombreCorto: NOMBRE_CORTO_TC, roster: ROSTER }) : null;
   if (!inf) {
+    if (nuevo) {
+      return (
+        <PantallaVacia icono={<Ico.doc />} titulo="inf_sin_partido" ayuda="vac_inf_ayuda"
+          principal={SALIDA_INICIO} secundaria={SALIDA_NUEVO} />
+      );
+    }
     return (
       <main className="p-6 text-zinc-300">
         <p>{t("inf_sin_partido")}</p>

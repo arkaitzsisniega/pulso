@@ -23,6 +23,8 @@ import { usePartido } from "@/lib/store";
 import { CLIENTE, ROSTER } from "@/lib/clientes";
 import { idiomaActivo, labelCompeticion, t, useIdioma } from "@/lib/i18n";
 import { MARCA_INFORME } from "@/lib/marca";
+import { PantallaVacia, PantallaCargando, SALIDA_INICIO, SALIDA_NUEVO } from "@/components/PantallaVacia";
+import { Ico } from "@/components/DirectoNuevo";
 import {
   COLUMNAS_MATRIZ, construirInformeCompleto, minSeg, offsetsDeParte,
   type Cronograma, type FilaPase, type InformeCompleto as Informe,
@@ -1330,7 +1332,12 @@ export default function InformeCompleto(props: { nuevo?: boolean }) {
     return () => window.clearTimeout(id);
   }, [cargado, partido]);
 
-  if (!cargado) return <main className="p-6 text-zinc-400">{t("inf_cargando")}</main>;
+  // Aspecto nuevo: «Cargando…» y «No hay ningún partido abierto» con el mismo
+  // dibujo que el resto (components/PantallaVacia.tsx, 23/11/2026).
+  if (!cargado) {
+    if (nuevo) return <PantallaCargando texto="inf_cargando" />;
+    return <main className="p-6 text-zinc-400">{t("inf_cargando")}</main>;
+  }
 
   const inf = partido
     ? construirInformeCompleto(partido, {
@@ -1340,6 +1347,12 @@ export default function InformeCompleto(props: { nuevo?: boolean }) {
       })
     : null;
   if (!inf) {
+    if (nuevo) {
+      return (
+        <PantallaVacia icono={<Ico.doc />} titulo="inf_sin_partido" ayuda="vac_inf_ayuda"
+          principal={SALIDA_INICIO} secundaria={SALIDA_NUEVO} />
+      );
+    }
     return (
       <main className="p-6 text-zinc-300">
         <p>{t("inf_sin_partido")}</p>
