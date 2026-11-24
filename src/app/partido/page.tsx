@@ -23,6 +23,7 @@ import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { huecoFlotante, MARGEN_CAPA } from "@/lib/huecoFlotante";
 import { elegirRival, rgba } from "@/lib/tema";
 import { estadoFin } from "@/lib/finPartido";
+import { pjRivalActivo } from "@/lib/situacionesNumericas";
 import {
   CabeceraNueva, BotonTiempoNuevo, HerramientasNueva, PistaNueva, BanquilloNuevo,
   BotonNuevo, Ico, NuevoCtx, useNuevo, useIc, conIconos, iconoDeTexto, sinEmojis,
@@ -417,6 +418,20 @@ export default function PartidoPage() {
   const verFin = (fin.terminado || fin.motivo === "empate_pendiente")
     && finDescartado !== claveFin && !hayOtraVentana;
   const sFalt = partido.stats.faltas[p];
+  // PORTERO-JUGADOR DEL RIVAL (24/11/2026). Sus cambios no se apuntan, así que
+  // la única forma de saber cuándo juegan sin portero es este interruptor: un
+  // toque lo enciende (`portero_jugador` RIVAL «inicio») y otro lo apaga
+  // («fin»). Solo mira la parte en curso: no sobrevive al descanso, igual que
+  // en las cuentas del informe (lib/situacionesNumericas.ts).
+  const pjRival = pjRivalActivo(partido.eventos, p);
+  const segPjRival = pjRival ? Math.max(0, segParte - pjRival.desde) : 0;
+  const alternarPjRival = () => {
+    registrarEvento({ tipo: "portero_jugador", equipo: "RIVAL",
+                      estado: pjRival ? "fin" : "inicio" } as any);
+    mostrarAviso(t(pjRival ? "aviso_pj_rival_off" : "aviso_pj_rival_on", { rival: cfg.rival }));
+  };
+  const etiquetaPjRival = pjRival
+    ? t("btn_pj_rival_on", { min: formatMMSS(segPjRival) }) : t("btn_pj_rival");
   // AMARILLAS: se guardan por parte (para el informe), pero se MUESTRAN
   // acumuladas de TODO el partido — una amarilla no caduca al cambiar de
   // parte, prórroga o penaltis (regla del reglamento; pedido Arkaitz 16/8).
@@ -674,6 +689,15 @@ export default function PartidoPage() {
         </div>
       )}
 
+      {/* PORTERO-JUGADOR RIVAL ENCENDIDO — que no se olvide apagarlo. */}
+      {pjRival && (
+        <div className={nuevo
+          ? "pz-aviso-falta bg-amber-600 flex-none"
+          : "bg-amber-600/90 border-2 border-amber-300 rounded-lg px-3 py-1 flex-none text-sm font-bold leading-tight"}>
+          {ic(t("part_pj_rival", { rival: cfg.rival }))}
+        </div>
+      )}
+
       {/* REINCORPORAR TRAS INFERIORIDAD — cuando una sanción termina (2 min
           cumplidos o gol del rival) queda un hueco en pista. Aquí se ofrece
           meter a un jugador del banquillo de un toque (rápido para el live). */}
@@ -890,13 +914,16 @@ export default function PartidoPage() {
           <BotonNuevo label={t("btn_tm")} color="var(--tm)" icono={<Ico.reloj />} onClick={() => setModalTM(true)} />
           <BotonNuevo label={t("btn_pen10m")} color="var(--balon)" icono={<Ico.porteria />} onClick={() => setModalPen(true)} />
         </div>
-        <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-[22] min-h-0`}>
+        <div className={`grid ${cfg.permiteTanda ? "grid-cols-8" : "grid-cols-7"} gap-1.5 flex-[22] min-h-0`}>
           <BotonNuevo label={t("btn_recuperacion_equipo")} color="var(--ok)" icono={<Ico.check />}
             onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "robos");
                              mostrarAviso(t("aviso_recuperacion_equipo")); }} />
           <BotonNuevo label={t("btn_perdida_equipo")} color="var(--mal)" icono={<Ico.cruz />}
             onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "pf");
                              mostrarAviso(t("aviso_perdida_equipo")); }} />
+          {/* Interruptor del portero-jugador rival: relleno mientras está encendido. */}
+          <BotonNuevo label={etiquetaPjRival} color="var(--aviso)" icono={<Ico.guante />}
+            tipo={pjRival ? "lleno" : undefined} onClick={alternarPjRival} />
           <BotonNuevo label={t("btn_deshacer")} color="var(--texto-2)" tipo="nav" icono={<Ico.deshacer />}
             onClick={() => {
               const ultimo = partido.eventos[partido.eventos.length - 1];
@@ -1061,7 +1088,7 @@ export default function PartidoPage() {
           guardan como "#EQUIPO") + navegación, TODO en una fila para no
           consumir altura. Pérdida de EQUIPO = SIEMPRE forzada (pf); la no
           forzada siempre es de un jugador (decisión Arkaitz 10/8). */}
-      <div className={`grid ${cfg.permiteTanda ? "grid-cols-7" : "grid-cols-6"} gap-1.5 flex-[20] min-h-0`}>
+      <div className={`grid ${cfg.permiteTanda ? "grid-cols-8" : "grid-cols-7"} gap-1.5 flex-[20] min-h-0`}>
         <button onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "robos");
                                  mostrarAviso(t("aviso_recuperacion_equipo")); }}
           className="h-full min-h-[44px] py-1 px-0.5 bg-green-800 hover:bg-green-700 active:bg-green-500
@@ -1073,6 +1100,14 @@ export default function PartidoPage() {
           className="h-full min-h-[44px] py-1 px-0.5 bg-rose-900 hover:bg-rose-800 active:bg-rose-600
                      active:scale-95 transition rounded-lg text-lg font-bold leading-none leading-tight">
           {ic(t("btn_perdida_equipo"))}
+        </button>
+        {/* Interruptor del portero-jugador rival: ámbar fuerte mientras está encendido. */}
+        <button onClick={alternarPjRival} aria-pressed={!!pjRival}
+          className={`h-full min-h-[44px] py-1 px-0.5 rounded-lg text-lg font-bold leading-none leading-tight ${
+            pjRival
+              ? "bg-amber-500 hover:bg-amber-400 text-zinc-950 ring-4 ring-amber-200"
+              : "bg-amber-900 hover:bg-amber-800"}`}>
+          {ic(etiquetaPjRival)}
         </button>
         <button onClick={() => {
                   const ultimo = partido.eventos[partido.eventos.length - 1];
@@ -1695,6 +1730,9 @@ function describirEvento(ev: Evento | undefined, rival: string): string {
     case "fsb":       return t("ud_fsb", { q: quien(e.tirador) });
     case "incorporacion_rival":
       return t("ud_incorporacion", { rival });
+    case "portero_jugador":
+      if (e.equipo !== "RIVAL") return t("ev_portero_jugador");
+      return t(e.estado === "inicio" ? "ud_pj_rival_inicio" : "ud_pj_rival_fin", { rival });
     case "accion_individual": {
       const acc: Record<string, string> = {
         pf: t("ud_acc_pf"), pnf: t("ud_acc_pnf"), robos: t("ud_acc_robo"),

@@ -29,6 +29,8 @@ import {
   type Matriz, type Reparto,
 } from "@/lib/informeCompleto";
 import type { ParteId } from "@/lib/db";
+import { disparosPorSituacion, type CuadroSituaciones } from "@/lib/situacionesNumericas";
+import { TablaSituaciones } from "@/components/SituacionesInforme";
 import {
   CSS_NUEVO, GolesNuevo, Icono, MapasNuevo, cortesDePartes, iconoSeccion, piel,
 } from "@/components/InformeNuevo";
@@ -352,6 +354,18 @@ function Equipo(props: { inf: Informe }) {
         {inf.hayProrroga ? ` ${t("ic_eq_nota_pr")}` : ""}
         {inf.hayVideo ? ` ${t("ic_eq_nota_video")}` : ""}
       </p>
+    </section>
+  );
+}
+
+/** «Disparos por situación» (24/11/2026): las cuentas en
+ *  `lib/situacionesNumericas.ts`, la tabla en `SituacionesInforme.tsx`. */
+function Situaciones(props: { inf: Informe; cuadro: CuadroSituaciones }) {
+  return (
+    <section className="ic-sec">
+      <Titulo clave="inf_sec_situaciones" />
+      <TablaSituaciones cuadro={props.cuadro} nos={props.inf.cabecera.nombreCorto}
+                        rival={props.inf.cabecera.rival} color={COLOR} />
     </section>
   );
 }
@@ -1334,6 +1348,9 @@ export default function InformeCompleto(props: { nuevo?: boolean }) {
     );
   }
 
+  const porteros = new Set(ROSTER.filter((j) => j.posicion === "PORTERO").map((j) => j.nombre));
+  if (partido?.config?.pista_inicial?.portero) porteros.add(partido.config.pista_inicial.portero);
+  const situaciones = partido ? disparosPorSituacion(partido, porteros) : null;
   const ahora = new Date();
   const dosCifras = (x: number) => String(x).padStart(2, "0");
   // ── Aspecto nuevo: goles y mapas como en el PDF del club ─────────────────
@@ -1455,6 +1472,9 @@ export default function InformeCompleto(props: { nuevo?: boolean }) {
       {inf.cuartetos.filas.length > 0 && <div className="ic-pag"><Cuartetos inf={inf} /></div>}
 
       <div className={inf.tanda ? "ic-pag" : undefined}>
+        {/* La última hoja, que solo llevaba los tiempos muertos y el pie: aquí
+            la tabla no abre una página medio vacía. */}
+        {situaciones && <Situaciones inf={inf} cuadro={situaciones} />}
         <Tanda inf={inf} />
         <TiemposMuertos inf={inf} />
         <p className="ic-pie">

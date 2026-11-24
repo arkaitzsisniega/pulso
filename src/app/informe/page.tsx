@@ -35,6 +35,8 @@ import {
   construirInforme, mmss, type FilaJugador, type Informe,
 } from "@/lib/informe";
 import { MARCA_INFORME } from "@/lib/marca";
+import { disparosPorSituacion } from "@/lib/situacionesNumericas";
+import { TablaSituaciones } from "@/components/SituacionesInforme";
 import { useAspecto } from "@/lib/aspecto";
 import {
   CSS_NUEVO, GolesNuevo, Icono, InformeNuevoCtx, MapasNuevo, Tarjeta, cortesDePartes,
@@ -286,6 +288,15 @@ function GolesTramo(props: { tramos: Informe["golesPorTramo"] }) {
   );
 }
 
+/** Los porteros para «Disparos por situación»: los de la plantilla y, por si
+ *  la plantilla no lo dice, el que salió de inicio. */
+function porterosDelRoster(p: { config?: { pista_inicial?: { portero?: string } } | null }): Set<string> {
+  const s = new Set(ROSTER.filter((j) => j.posicion === "PORTERO").map((j) => j.nombre));
+  const pi = p.config?.pista_inicial?.portero;
+  if (pi) s.add(pi);
+  return s;
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 /** Qué informe enseña este build lo decide `clientes.ts`. Inter y filial: el de
  *  siempre, el de aquí abajo, sin tocar. PULSO: el completo, en su componente. */
@@ -331,6 +342,7 @@ function InformeClasico(props: { nuevo: boolean }) {
   }
 
   const c = inf.cabecera;
+  const situaciones = partido ? disparosPorSituacion(partido, porterosDelRoster(partido)) : null;
   const totalDivididos = (inf.nosotros.divididosGanados ?? 0)
     + (inf.nosotros.divididosPerdidos ?? 0);
   const local = c.local;
@@ -500,6 +512,16 @@ function InformeClasico(props: { nuevo: boolean }) {
           ))}
         </div>
       </Seccion>
+
+      {/* ── Disparos por situación (24/11/2026): portero-jugador nuestro y
+          suyo, y con uno menos / uno más por expulsión. Partido sin ninguna
+          de esas situaciones → no sale. ───────────────────────────────── */}
+      {situaciones && (
+        <Seccion titulo={t("inf_sec_situaciones")} corta ico="inf_sec_situaciones">
+          <TablaSituaciones cuadro={situaciones} nos={c.nosotros} rival={c.rival}
+                            color={MARCA_INFORME.color} />
+        </Seccion>
+      )}
 
       {/* ── Valoración del partido ────────────────────────────────────── */}
       {inf.valoraciones.length > 0 && (

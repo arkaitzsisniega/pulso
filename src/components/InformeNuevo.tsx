@@ -132,6 +132,7 @@ const ICONO_SECCION: Record<string, string> = {
   inf_sec_jugadas: "barras", inf_sec_tramos: "reloj", inf_sec_tanda: "diana",
   inf_sec_zonas: "mapa", inf_sec_mapas_juego: "mapa", inf_sec_video: "video",
   inf_sec_otros: "tarjeta",
+  inf_sec_situaciones: "diana",
 };
 export function iconoSeccion(clave: string): string { return ICONO_SECCION[clave] ?? "barras"; }
 

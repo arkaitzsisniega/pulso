@@ -312,6 +312,29 @@ export const CATALOGO: Record<string, Entrada> = {
     it: "Il quartetto sono i quattro di movimento, senza il portiere: il portiere cambia per motivi che non riguardano il gioco e falserebbe il confronto.",
   },
   inf_sec_tramos: { es: "Cuándo se marcaron los goles", en: "When the goals came", it: "Quando sono arrivati i gol" },
+  inf_sec_situaciones: { es: "Disparos por situación", en: "Shots by game state", it: "Tiri per situazione" },
+  sit_situacion: { es: "Situación", en: "Situation", it: "Situazione" },
+  sit_tiempo: { es: "Tiempo", en: "Time", it: "Tempo" },
+  sit_favor: { es: "A favor", en: "For", it: "A favore" },
+  sit_contra: { es: "En contra", en: "Against", it: "Contro" },
+  sit_cab_disp: { es: "Disp.", en: "Shots", it: "Tiri" },
+  sit_cab_puerta: { es: "A puerta", en: "On target", it: "In porta" },
+  sit_cab_goles: { es: "Goles", en: "Goals", it: "Gol" },
+  sit_pj_nuestro: { es: "Nuestro portero-jugador", en: "Our flying goalkeeper", it: "Nostro portiere di movimento" },
+  sit_pj_rival: { es: "Portero-jugador rival", en: "Opponent flying goalkeeper", it: "Portiere di movimento avversario" },
+  sit_exp_nuestra: { es: "Con uno menos (expulsión nuestra)", en: "Down a player (our red card)", it: "In inferiorità (nostra espulsione)" },
+  sit_exp_rival: { es: "Con uno más (expulsión suya)", en: "Up a player (their red card)", it: "In superiorità (loro espulsione)" },
+  sit_resto: { es: "Resto del partido", en: "Rest of the match", it: "Resto della partita" },
+  sit_nota: {
+    es: "Tiempo: lo que duró cada situación. Portero-jugador nuestro, solo el rato sin portero en pista; el suyo, lo marcado con el botón PJ RIVAL. Expulsión: 2 minutos o hasta el gol del que tiene uno más.",
+    en: "Time: how long each situation lasted. Our flying goalkeeper counts only the time with no keeper on court; theirs, what was marked with the OPP. 5v4 button. Red card: 2 minutes or until the side with the extra player scores.",
+    it: "Tempo: quanto è durata ogni situazione. Il nostro portiere di movimento conta solo il tempo senza portiere in campo; il loro, quanto segnato col pulsante PORT. MOV. AVV. Espulsione: 2 minuti o fino al gol di chi è in superiorità.",
+  },
+  sit_nota_solape: {
+    es: "Hubo situaciones a la vez: un disparo en ese rato cuenta en las dos filas.",
+    en: "Some situations overlapped: a shot in that spell counts in both rows.",
+    it: "Alcune situazioni si sono sovrapposte: un tiro in quel momento conta in entrambe le righe.",
+  },
   inf_nota_tramos: {
     es: "Goles por tramos de cinco minutos. En verde los nuestros, en rojo los del rival.",
     en: "Goals in five-minute blocks. Ours in green, the opponent's in red.",
@@ -549,6 +572,11 @@ export const CATALOGO: Record<string, Entrada> = {
     it: "Termina dopo 2 min o se l'avversario segna.",
   },
   part_superioridad: { es: "SUPERIORIDAD · rival {jugador} fuera", en: "UP A PLAYER · opponent {jugador} off", it: "SUPERIORITÀ NUMERICA · avversario {jugador} fuori" },
+  part_pj_rival: {
+    es: "{rival} juega con PORTERO-JUGADOR — toca «PJ RIVAL» cuando vuelva a poner portero",
+    en: "{rival} is playing with a FLYING GOALKEEPER — tap «OPP. 5v4» when the keeper is back",
+    it: "{rival} gioca con il PORTIERE DI MOVIMENTO — tocca «PORT. MOV. AVV.» quando rimette il portiere",
+  },
   part_superioridad_nota: {
     es: "Acaba a los 2 min o si nosotros metemos gol.",
     en: "Ends after 2 min or if we score.",
@@ -618,6 +646,10 @@ export const CATALOGO: Record<string, Entrada> = {
   btn_gol: { ico: "⚽", es: "GOL", en: "GOAL", it: "GOL" },
   btn_disp_rival: { ico: "🎯", es: "DISP. RIVAL", en: "OPP. SHOT", it: "TIRO AVV." },
   btn_incorporacion: { ico: "🧤", es: "INCORP.", en: "KEEPER UP", it: "PORT. ALTO" },
+  // Portero-jugador del RIVAL (24/11/2026): se enciende al sacarlo y se apaga
+  // al volver a poner portero. Guarda `portero_jugador` inicio / fin.
+  btn_pj_rival: { ico: "🧍", es: "PJ RIVAL", en: "OPP. 5v4", it: "PORT. MOV. AVV." },
+  btn_pj_rival_on: { ico: "🧍", es: "PJ RIVAL · {min}", en: "OPP. 5v4 · {min}", it: "PORT. MOV. AVV. · {min}" },
   part_direccion: { es: "Atacamos", en: "Attacking", it: "Attacchiamo" },
   part_direccion_nota: {
     es: "Hacia dónde ataca el equipo en ESTA parte. Tócalo para cambiarlo (en la 2ª parte se invierte solo).",
@@ -1852,6 +1884,10 @@ export const CATALOGO: Record<string, Entrada> = {
   ud_penalti: { es: "penalti{q}", en: "penalty{q}", it: "rigore{q}" },
   ud_fsb: { es: "FSB{q}", en: "no-wall free kick{q}", it: "tiro senza barriera{q}" },
   ud_incorporacion: { es: "incorporación del portero de {rival}", en: "{rival} fly goalkeeper", it: "portiere di movimento di {rival}" },
+  ud_pj_rival_inicio: { es: "portero-jugador de {rival} (inicio)", en: "{rival} flying goalkeeper (start)", it: "portiere di movimento di {rival} (inizio)" },
+  ud_pj_rival_fin: { es: "portero-jugador de {rival} (fin)", en: "{rival} flying goalkeeper (end)", it: "portiere di movimento di {rival} (fine)" },
+  aviso_pj_rival_on: { es: "Portero-jugador de {rival}: ENCENDIDO", en: "{rival} flying goalkeeper: ON", it: "Portiere di movimento di {rival}: ATTIVO" },
+  aviso_pj_rival_off: { es: "Portero-jugador de {rival}: APAGADO", en: "{rival} flying goalkeeper: OFF", it: "Portiere di movimento di {rival}: DISATTIVATO" },
   ud_acc_pf: { es: "pérdida forzada", en: "forced turnover", it: "palla persa forzata" },
   ud_acc_pnf: { es: "pérdida no forzada", en: "unforced turnover", it: "palla persa non forzata" },
   ud_acc_robo: { es: "robo", en: "steal", it: "recupero" },
