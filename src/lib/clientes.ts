@@ -27,6 +27,7 @@
  * varias por si algún club quiere una por persona del cuerpo técnico.
  */
 import { ROSTER_DEMO, type Jugador } from "@/lib/roster";
+import { estadoDe, leerGuardada, leerSobre, type EstadoPlantilla, type PlantillaGuardada } from "@/lib/plantillaCifrada";
 import type { ParColor } from "@/lib/tema";
 
 export type IdiomaId = "es" | "en" | "it";
@@ -97,23 +98,24 @@ export const URL_SERVIDOR: string =
 const VERDE_INTER: ParColor = { oscuro: "#34d27b", sol: "#0f7a43" };
 const AZUL_PULSO: ParColor = { oscuro: "#4ea8ff", sol: "#0b5fd1" };
 
-// Contraseñas: aquí SOLO va el SHA-256. La contraseña en claro NO se escribe,
-// ni siquiera en un comentario — este repositorio es público y hasta el
-// 31/8/2026 las tres estaban aquí escritas, con lo que el trabajo de que el
-// hash de un club no viaje en el paquete de otro no servía de nada.
+// Contraseñas. La contraseña en claro NO se escribe aquí, ni siquiera en un
+// comentario — este repositorio es público y hasta el 31/8/2026 estaban aquí
+// escritas.
 //
 // Cada club tiene la suya y son distintas a propósito: con la del filial NO se
 // entra en el del primer equipo, ni al revés.
 //
-// Cambiar una:  printf %s "LA NUEVA" | shasum -a 256   → pegar aquí → desplegar.
-const HASH_INTER =
-  "d2ea257fef5e9345397cd65007d2eb74dc42dfabbdb5846e49fb9b24d10aef1e";
+// · La DEMO (y un club dado de alta con scripts_dev/alta_club.py, con plantilla
+//   pública): su SHA-256 aquí. Cambiar una:
+//     printf %s "LA NUEVA" | shasum -a 256   → pegar aquí → desplegar.
+// · Inter, filial y juvenil (plantilla real, CIFRADA desde el 25/11/2026):
+//   NINGÚN hash aquí ni en el paquete. Su contraseña se comprueba abriendo la
+//   plantilla cifrada (lib/plantillaCifrada.ts): si abre, es la buena. Un
+//   SHA-256 se prueba a miles de millones por segundo y dejaría el cifrado en
+//   nada. Cambiar una: ver cifrarPlantilla.mjs (VERIFICADORES) y
+//   scripts/clave_club.mjs.
 const HASH_PULSO =
   "397e2dbe0f909d0b308b380fd0b8d4848b15ea3720808b623c2e76cc381371e0";
-const HASH_FILIAL =
-  "8ad4e4694e52b70556564de4a6e81dbaf21e06ebd24f8d162911aae05cab4d4f";
-const HASH_JUVENIL =
-  "346e72ff767ae7d38759b51ea30da888e936b2bca3206db9be99230ae57694a9";
 
 const CLIENTES: Record<string, ConfigCliente> = {
   inter: {
@@ -193,13 +195,12 @@ const CLIENTES: Record<string, ConfigCliente> = {
  * Roster del cliente ACTIVO.
  *
  * La plantilla REAL (Inter, filial, juvenil) ya no está en el código: el
- * repositorio es público (decisión de Arkaitz, 23/11/2026). La mete
- * `next.config.ts` en build, como texto JSON en `process.env.CRONO_ROSTER_PRIVADO`
- * (ver `cargarRoster.mjs`), y SOLO la del club que se construye. Next sustituye
- * esa variable por el texto, así que el paquete la lleva dentro y el iPad la
- * tiene SIN conexión, exactamente igual que antes. Sin ella el build ni empieza
- * (lo para next.config.ts): no hay forma de publicar un crono de un club con la
- * plantilla vacía o inventada.
+ * repositorio es público (decisión de Arkaitz, 23/11/2026). Y desde el
+ * 25/11/2026 tampoco va EN CLARO en el paquete publicado: `next.config.ts` la
+ * mete CIFRADA (SOBRE_PLANTILLA, abajo) y solo la del club que se construye.
+ * Para esos clubes ROSTER_ACTIVO empieza vacío y lo rellena la plantilla que el
+ * aparato abrió con la contraseña (instalarPlantilla). Sin plantilla o sin
+ * contraseña el build ni empieza (lo para next.config.ts).
  *
  * Con ternario sobre `process.env.NEXT_PUBLIC_CLIENTE`, por el mismo motivo que
  * PASS_HASHES (justo debajo): en la demo se pliega y solo queda ROSTER_DEMO; en
@@ -212,7 +213,20 @@ const CLIENTES: Record<string, ConfigCliente> = {
 const ROSTER_ACTIVO: Jugador[] =
   process.env.NEXT_PUBLIC_CLIENTE === "pulso"
     ? ROSTER_DEMO
-    : (JSON.parse(process.env.CRONO_ROSTER_PRIVADO || "[]") as Jugador[]);
+    : [];
+
+/**
+ * Plantilla CIFRADA de este build (25/11/2026; revisión legal del 24/11).
+ *
+ * Desde el 25/11 la plantilla real ya NO viaja en claro: `next.config.ts` mete
+ * en `process.env.CRONO_ROSTER_CIFRADO` un sobre cifrado con la contraseña del
+ * club (cifrarPlantilla.mjs). El aparato lo abre al entrar (AuthGate) y se
+ * guarda la plantilla abierta en su localStorage; desde ahí, en cada arranque,
+ * se rellena ROSTER aquí mismo, al cargar este módulo y ANTES que ningún otro,
+ * así que todo lo que lo usa (con red o sin ella) la encuentra ya puesta. En la
+ * demo el sobre va vacío y ROSTER es ROSTER_DEMO, como siempre.
+ */
+export const SOBRE_PLANTILLA = leerSobre(process.env.CRONO_ROSTER_CIFRADO || "");
 
 /**
  * Hashes de contraseña del cliente ACTIVO.
@@ -228,11 +242,7 @@ const ROSTER_ACTIVO: Jugador[] =
 const PASS_HASHES: string[] =
   process.env.NEXT_PUBLIC_CLIENTE === "pulso"
     ? [HASH_PULSO]
-    : process.env.NEXT_PUBLIC_CLIENTE === "filial"
-      ? [HASH_FILIAL]
-      : process.env.NEXT_PUBLIC_CLIENTE === "juvenil"
-        ? [HASH_JUVENIL]
-        : [HASH_INTER];
+    : []; // Inter, filial y juvenil: sin hash, se comprueba abriendo SOBRE_PLANTILLA
 
 const _ID = (process.env.NEXT_PUBLIC_CLIENTE || "inter").toLowerCase();
 
@@ -259,10 +269,40 @@ export const SERVIDOR_ACTIVO: boolean =
 // Sale de ROSTER_ACTIVO y NO de CLIENTE.roster: ver el comentario de arriba.
 export const ROSTER: Jugador[] = ROSTER_ACTIVO;
 
-/** Hashes SHA-256 válidos para el login de ESTE build (ver PASS_HASHES). */
+/** Hashes SHA-256 válidos para el login de ESTE build (ver PASS_HASHES).
+ *  Vacío en los clubes con plantilla cifrada. */
 export const PASS_HASHES_CLIENTE: string[] = PASS_HASHES;
 export const PORTEROS: Jugador[] = ROSTER.filter((j) => j.posicion === "PORTERO");
 export const CAMPO: Jugador[] = ROSTER.filter((j) => j.posicion === "CAMPO");
+
+/**
+ * Pone una plantilla en ROSTER / PORTEROS / CAMPO SIN cambiar los arrays (se
+ * vacían y se rellenan): los módulos que ya los importaron ven la nueva.
+ * Solo tiene sentido en los clubes con plantilla cifrada.
+ */
+export function instalarPlantilla(jugadores: Jugador[]): void {
+  if (!SOBRE_PLANTILLA) return;
+  ROSTER.splice(0, ROSTER.length, ...jugadores);
+  PORTEROS.splice(0, PORTEROS.length, ...jugadores.filter((j) => j.posicion === "PORTERO"));
+  CAMPO.splice(0, CAMPO.length, ...jugadores.filter((j) => j.posicion === "CAMPO"));
+}
+
+/** Estado de la plantilla en este aparato (ver lib/plantillaCifrada.ts). */
+export function estadoPlantilla(): EstadoPlantilla {
+  return estadoDe(SOBRE_PLANTILLA, leerGuardada(CLIENTE_ID));
+}
+
+/** La guardada en el aparato (o null). */
+export function plantillaGuardada(): PlantillaGuardada | null {
+  return SOBRE_PLANTILLA ? leerGuardada(CLIENTE_ID) : null;
+}
+
+// Al cargar el módulo (solo en el navegador): la plantilla que ya tenga
+// guardada el aparato, para que esté en ROSTER antes de pintar nada.
+if (SOBRE_PLANTILLA && typeof window !== "undefined") {
+  const g = leerGuardada(CLIENTE_ID);
+  if (g) instalarPlantilla(g.jugadores);
+}
 
 /**
  * Variante title-case del nombre corto para etiquetas dentro de texto normal

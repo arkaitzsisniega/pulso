@@ -52,8 +52,11 @@ const TIPOS: Evento["tipo"][] = [
 const RES_DISPARO = ["PUERTA", "PALO", "FUERA", "BLOQUEADO"];
 const RES_PENALTI = ["GOL", "PARADA", "POSTE", "FUERA"];
 
-const NOMBRES = ROSTER.map((j) => j.nombre);
-const NOMBRES_PORTERO = PORTEROS.map((j) => j.nombre);
+// Funciones y no constantes (25/11/2026): en los clubes con plantilla cifrada
+// ROSTER se rellena DESPUÉS de cargar este módulo, la primera vez que se entra
+// con la contraseña (clientes.ts → instalarPlantilla).
+const nombres = () => ROSTER.map((j) => j.nombre);
+const nombresPortero = () => PORTEROS.map((j) => j.nombre);
 
 function emoji(tipo: Evento["tipo"]): string {
   return { gol: "⚽", falta: "⚠️", amarilla: "🟨", roja: "🟥", tiempo_muerto: "🛑",
@@ -315,7 +318,7 @@ export function EditorEventos(props: {
     // Por defecto, el del RIVAL: para nosotros el crono ya lo sabe por los
     // `cambio`, y lo que de verdad no hay forma de deducir es el suyo.
     if (tipo === "portero_jugador") return { ...base, equipo: "RIVAL", estado: "inicio" };
-    if (tipo === "accion_individual") return { ...base, jugador: NOMBRES[0] ?? "", accion: "robos" };
+    if (tipo === "accion_individual") return { ...base, jugador: nombres()[0] ?? "", accion: "robos" };
     return base;
   }
 
@@ -357,8 +360,8 @@ export function EditorEventos(props: {
 
   const optEquipo = [{ v: "INTER", lbl: NOMBRE_CORTO_TC }, { v: "RIVAL", lbl: rival }];
   const optJugador = (conVacio: boolean) =>
-    (conVacio ? [{ v: "", lbl: t("sin_asignar_min") }] : []).concat(NOMBRES.map((n) => ({ v: n, lbl: n })));
-  const optPortero = [{ v: "", lbl: t("sin_asignar_min") }].concat(NOMBRES_PORTERO.map((n) => ({ v: n, lbl: n })));
+    (conVacio ? [{ v: "", lbl: t("sin_asignar_min") }] : []).concat(nombres().map((n) => ({ v: n, lbl: n })));
+  const optPortero = [{ v: "", lbl: t("sin_asignar_min") }].concat(nombresPortero().map((n) => ({ v: n, lbl: n })));
 
   const set = (k: string, v: any) => setDraft((d) => (d ? { ...d, [k]: v } : d));
 

@@ -18,6 +18,15 @@
 # Si falta, ESE build falla y no se publica (el iPad se queda con el anterior);
 # los demás siguen. La demo no lleva secreto. Cambiar un secreto NO vuelve a
 # publicar: después, «Run workflow» en la pestaña Actions (o un push).
+#
+# PLANTILLA CIFRADA (25/11/2026, revisión legal del 24/11): además, el build
+# mete esa plantilla CIFRADA con la contraseña del club (cifrarPlantilla.mjs),
+# así que en la web publicada no queda ningún nombre en claro. Necesita la
+# contraseña de entrada al crono de cada club, en OTRO secreto:
+#   CRONO_CLAVE_INTER · CRONO_CLAVE_FILIAL · CRONO_CLAVE_JUVENIL
+# (el texto de la contraseña tal cual, una línea). Sin él, o si no coincide con
+# el verificador del club en cifrarPlantilla.mjs, ESE build falla y no se
+# publica. Tras construir, se comprueba que en `out/` no hay ni un nombre real.
 
 name: Deploy crono a GitHub Pages
 
@@ -46,18 +55,22 @@ jobs:
             secreto: ROSTER_INTER
             carpeta: crono
             basepath: /pulso/crono
+            clave: CRONO_CLAVE_INTER
           - cliente: pulso
             secreto: ""
             carpeta: crono-demo
             basepath: /pulso/crono-demo
+            clave: ""
           - cliente: filial
             secreto: ROSTER_FILIAL
             carpeta: crono-filial
             basepath: /pulso/crono-filial
+            clave: CRONO_CLAVE_FILIAL
           - cliente: juvenil
             secreto: ROSTER_JUVENIL
             carpeta: crono-juvenil
             basepath: /pulso/crono-juvenil
+            clave: CRONO_CLAVE_JUVENIL
 
     steps:
       - name: Checkout main
@@ -88,6 +101,8 @@ jobs:
           # La plantilla real de ESTE club, desde su secreto (vacío en la demo).
           # Sin ella next.config.ts para el build con un mensaje claro.
           CRONO_ROSTER_JSON: ${{ matrix.secreto && secrets[matrix.secreto] || '' }}
+          # Y la contraseña del club, para cifrarla (vacía en la demo).
+          CRONO_CLAVE: ${{ matrix.clave && secrets[matrix.clave] || '' }}
           NEXT_EXPORT: "1"
           # Explícito SIEMPRE, también para el Inter: Next solo sustituye
           # process.env.NEXT_PUBLIC_* por un literal si la variable EXISTE. Sin
@@ -102,6 +117,17 @@ jobs:
           # necesita para registrar SU service worker y no el de otro cliente.
           NEXT_PUBLIC_BASEPATH: ${{ matrix.basepath }}
         run: npm run build
+
+      # Lo que se va a publicar, mirado fichero a fichero: ni un nombre de las
+      # tres plantillas reales en claro (en el registro, público, no se
+      # escriben). Si sale alguno, no se publica.
+      - name: Sin nombres reales en la web construida (${{ matrix.cliente }})
+        env:
+          CRONO_ROSTER_JSON_INTER: ${{ secrets.ROSTER_INTER }}
+          CRONO_ROSTER_JSON_FILIAL: ${{ secrets.ROSTER_FILIAL }}
+          CRONO_ROSTER_JSON_JUVENIL: ${{ secrets.ROSTER_JUVENIL }}
+          CRONO_COMPROBAR_BUILD: out
+        run: node --experimental-strip-types --no-warnings src/lib/sinNombresReales.test.ts
 
       # Sella el service worker con el SHA. Sin esto sw.js es idéntico byte a
       # byte en cada despliegue, el navegador NO instala el SW nuevo y el iPad

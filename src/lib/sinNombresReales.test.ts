@@ -16,11 +16,17 @@
  *      entera) ni un nombre completo del filial. Los que coinciden con uno
  *      de la demo (que es inventada) no cuentan.
  *
- * Sin la plantilla privada, la parte 2 se OMITE avisando (no puede saber qué
- * nombres buscar sin escribirlos aquí, que es justo lo que no se quiere).
+ *   3. (25/11/2026) Si se le dice qué builds mirar —variable
+ *      `CRONO_COMPROBAR_BUILD` con una o varias carpetas `out/` separadas por
+ *      comas—: ningún fichero de la web construida (JS, HTML, JSON…) lleva un
+ *      nombre de la plantilla real en claro, ni la plantilla en JSON. Es lo
+ *      que se publica: desde el 25/11 la plantilla va CIFRADA.
+ *
+ * Sin la plantilla privada, las partes 2 y 3 se OMITEN avisando (no puede saber
+ * qué nombres buscar sin escribirlos aquí, que es justo lo que no se quiere).
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buscarRosterPrivado, carpetaSecretos, CLIENTES_PRIVADOS } from "../../cargarRoster.mjs";
@@ -58,6 +64,10 @@ console.log("── 1 · Las plantillas reales no vuelven al código ──");
     "la carpeta local roster-privado/ está en .gitignore");
 }
 
+const letra = "A-Za-zÀ-ÖØ-öø-ÿ";
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+let buscarGlobal: { n: string; re: RegExp }[] = [];
+
 console.log("── 2 · Ningún nombre real en ningún fichero ──");
 {
   const DEMO = new Set(ROSTER_DEMO.map((j) => j.nombre));
@@ -79,14 +89,13 @@ console.log("── 2 · Ningún nombre real en ningún fichero ──");
     console.log(`     ${carpetaSecretos()}), así que no sé qué nombres buscar.`);
   } else {
     console.log(`  (plantillas: ${encontradas.join(", ")} — ${nombres.size} nombres; ${completos.length} nombres completos)`);
-    const letra = "A-Za-zÀ-ÖØ-öø-ÿ";
-    const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const reNombre = (n: string) => new RegExp(`(?<![${letra}])${esc(n)}(?![${letra}])`);
     const reCompleto = (n: string) => new RegExp(`(?<![${letra}])${esc(n)}(?![${letra}])`, "i");
     const buscar = [
       ...[...nombres].map((n) => ({ n, re: reNombre(n) })),
       ...completos.map((n) => ({ n, re: reCompleto(n) })),
     ];
+    buscarGlobal = buscar;
     let hallazgos = 0;
     for (const { f, t } of textos) {
       const lineas = t.split("\n");
@@ -98,6 +107,47 @@ console.log("── 2 · Ningún nombre real en ningún fichero ──");
       }
     }
     ok(hallazgos === 0, `ningún nombre real en los ${textos.length} ficheros de texto del repo`);
+  }
+}
+
+console.log("── 3 · La web construida no lleva la plantilla en claro ──");
+{
+  const carpetas = (process.env.CRONO_COMPROBAR_BUILD || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (carpetas.length === 0) {
+    console.log("  (sin CRONO_COMPROBAR_BUILD: no se mira ningún build)");
+  } else if (buscarGlobal.length === 0) {
+    console.log("  ⚠️  OMITIDO: sin plantilla privada no sé qué nombres buscar en el build.");
+  } else {
+    for (const c of carpetas) {
+      const raiz = c.startsWith("/") ? c : join(process.cwd(), c);
+      if (!existsSync(raiz)) { ok(false, `existe la carpeta del build ${c}`); continue; }
+      const todos: string[] = [];
+      const recorrer = (d: string) => {
+        for (const e of readdirSync(d)) {
+          const r = join(d, e);
+          if (statSync(r).isDirectory()) recorrer(r); else todos.push(r);
+        }
+      };
+      recorrer(raiz);
+      const legibles = todos.filter((f) => !BINARIO.test(f));
+      let hallazgos = 0;
+      for (const f of legibles) {
+        const txt = readFileSync(f, "utf8");
+        const rel = f.slice(raiz.length + 1);
+        for (const { n, re } of buscarGlobal) {
+          if (!re.test(txt)) continue;
+          hallazgos += 1;
+          ok(false, `${c}/${rel} lleva un nombre de la plantilla real${EN_CI ? "" : ` («${n}»)`}`);
+        }
+        // La plantilla tal como la metía el build antes del 25/11 (JSON:
+        // claves entre comillas). La demo va como objeto JS (sin comillas).
+        if (/\{\\?"dorsal\\?":\\?"\d/.test(txt)) {
+          hallazgos += 1;
+          ok(false, `${c}/${rel} lleva una plantilla en JSON (dorsal + nombre) en claro`);
+        }
+      }
+      ok(hallazgos === 0, `${c}: ningún nombre real en claro en los ${legibles.length} ficheros de texto del build`);
+    }
   }
 }
 

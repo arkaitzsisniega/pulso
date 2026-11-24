@@ -37,7 +37,7 @@ inventados (la demo, en `src/lib/roster.ts`, y unas plantillas de ejemplo en
 
 | Dónde | Qué |
 |---|---|
-| GitHub Actions | Secretos del repositorio `ROSTER_INTER`, `ROSTER_FILIAL`, `ROSTER_JUVENIL` |
+| GitHub Actions | Secretos del repositorio `ROSTER_INTER`, `ROSTER_FILIAL`, `ROSTER_JUVENIL` (y, para cifrarla, `CRONO_CLAVE_INTER`, `CRONO_CLAVE_FILIAL`, `CRONO_CLAVE_JUVENIL`) |
 | Este ordenador | `~/Desktop/Claude/pulso_secretos/roster_<cliente>.json` (fuera del repo; vale para todas las copias de trabajo) o `roster-privado/<cliente>.json` (dentro, ignorado por git) |
 
 El contenido es el JSON de `roster-privado.ejemplo/inter.json`:
@@ -48,10 +48,29 @@ cambian por motes.
 - **Sin plantilla, el build del Inter, el filial o el juvenil FALLA** con un
   mensaje que dice dónde ponerla. Nunca se publica un crono de un club con
   nombres inventados. La demo (`npm run demo`) no necesita nada.
-- **Lo que esto consigue y lo que no**: la plantilla ya no está en el código
-  ni en su historial a partir de ahora. Pero la web publicada de cada club
-  (`/pulso/crono/`, etc.) **la sigue llevando dentro**, como antes: el iPad la
-  necesita sin conexión. Quien abra los ficheros de esa web la puede leer.
+- **Desde el 25/11/2026 la web publicada la lleva CIFRADA** (revisión legal
+  del 24/11, RGPD art. 25.2; detalle en `cifrarPlantilla.mjs` y
+  `src/lib/plantillaCifrada.ts`): PBKDF2-SHA256 (600.000 iteraciones, sal
+  aleatoria por build) + AES-256-GCM con la **contraseña de entrada al crono**
+  de ese club. En los ficheros publicados no queda ningún nombre ni ningún hash
+  de esa contraseña. El aparato la abre al entrar y la guarda abierta en su
+  almacenamiento local: después funciona sin red y sin volver a pedirla.
+  - El build necesita la contraseña en claro: secretos
+    `CRONO_CLAVE_INTER`, `CRONO_CLAVE_FILIAL`, `CRONO_CLAVE_JUVENIL` (Actions)
+    o `~/Desktop/Claude/pulso_secretos/clave_<cliente>.txt` (una línea). Se
+    comprueba contra `VERIFICADORES` de `cifrarPlantilla.mjs`; sin ella o con
+    una errata, ese build falla.
+  - **Cambiar la contraseña de un club**: nueva en `clave_<cliente>.txt` →
+    `node scripts/clave_club.mjs <cliente>` → pegar el verificador en
+    `cifrarPlantilla.mjs` → `gh secret set CRONO_CLAVE_<CLUB> <
+    ~/Desktop/Claude/pulso_secretos/clave_<cliente>.txt` → publicar. Los
+    aparatos ya dentro no la piden (la plantilla guardada sigue valiendo).
+  - Aparato que ya estaba dentro con una versión anterior: la primera vez pide
+    la contraseña UNA vez; si hay un partido a medias, se puede seguir sin ella
+    con los convocados de ese partido. Alta o baja de un jugador: el aparato
+    sigue con la plantilla de antes y avisa en el inicio para cargar la nueva.
+  - Ficheros viejos con la plantilla en claro que quedan en `gh-pages`
+    (`keep_files`): `scripts/limpiar_gh_pages.mjs`, después de publicar.
 - **Alta o baja de un jugador**: se cambia el JSON en
   `~/Desktop/Claude/pulso_secretos/`, se sube al secreto
   (`gh secret set ROSTER_INTER < ~/Desktop/Claude/pulso_secretos/roster_inter.json`)

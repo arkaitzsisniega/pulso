@@ -460,6 +460,34 @@ export const CATALOGO: Record<string, Entrada> = {
     en: "If you forgot it, ask Arkaitz.",
     it: "Se l'hai dimenticata, chiedi ad Arkaitz.",
   },
+  // Plantilla cifrada (25/11/2026): el aparato ya estaba dentro, pero esta
+  // versión trae la plantilla cifrada y hay que abrirla una vez.
+  plant_titulo: { es: "Una sola vez: escribe la contraseña", en: "Just once: enter the password", it: "Una sola volta: inserisci la password" },
+  plant_explica: {
+    es: "Esta versión del crono guarda la plantilla protegida. Escribe la contraseña de siempre para cargarla en este aparato: después funciona sin conexión y no se vuelve a pedir.",
+    en: "This version of the timer keeps the squad protected. Enter the usual password to load it on this device: after that it works offline and is not asked again.",
+    it: "Questa versione del cronometro tiene la rosa protetta. Inserisci la solita password per caricarla su questo dispositivo: poi funziona senza connessione e non viene più chiesta.",
+  },
+  plant_cargar: { es: "Cargar la plantilla", en: "Load the squad", it: "Carica la rosa" },
+  plant_partido_titulo: { es: "Hay un partido a medias", en: "There is a match in progress", it: "C'è una partita in corso" },
+  plant_partido_explica: {
+    es: "Contra {rival}. Puedes seguirlo ahora sin contraseña, con los jugadores convocados de ese partido. Escribe la contraseña cuando acabe.",
+    en: "Against {rival}. You can carry on now without the password, with that match's squad. Enter the password when it ends.",
+    it: "Contro {rival}. Puoi continuare ora senza password, con i convocati di quella partita. Inserisci la password alla fine.",
+  },
+  plant_partido_seguir: { es: "Seguir el partido sin contraseña", en: "Carry on without the password", it: "Continua senza password" },
+  plant_aviso_vieja: {
+    es: "Hay una plantilla nueva en esta versión. Escribe la contraseña para cargarla (mientras, sigue la de antes).",
+    en: "This version has a new squad. Enter the password to load it (until then, the previous one is used).",
+    it: "Questa versione ha una nuova rosa. Inserisci la password per caricarla (nel frattempo resta quella precedente).",
+  },
+  plant_aviso_provisional: {
+    es: "Plantilla provisional: solo los convocados del partido a medias, sin dorsales. Escribe la contraseña para cargar la de verdad.",
+    en: "Temporary squad: only the players of the match in progress, without numbers. Enter the password to load the real one.",
+    it: "Rosa provvisoria: solo i convocati della partita in corso, senza numeri. Inserisci la password per caricare quella vera.",
+  },
+  plant_aviso_boton: { es: "Escribir la contraseña", en: "Enter the password", it: "Inserisci la password" },
+  plant_cerrar: { es: "Ahora no", en: "Not now", it: "Non ora" },
 
   // ══════════════════ NUEVO PARTIDO (nuevo/page.tsx) ══════════════════
   nuevo_titulo: { ico: "⚽", es: "Nuevo partido", en: "New match", it: "Nuova partita" },
