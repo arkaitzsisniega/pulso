@@ -103,7 +103,7 @@ const AZUL_PULSO: ParColor = { oscuro: "#4ea8ff", sol: "#0b5fd1" };
 const HASH_INTER =
   "d2ea257fef5e9345397cd65007d2eb74dc42dfabbdb5846e49fb9b24d10aef1e";
 const HASH_PULSO =
-  "e1152d88d11a421c08846c836010ca89d156a9ce9721226ef9784285a5899b32";
+  "397e2dbe0f909d0b308b380fd0b8d4848b15ea3720808b623c2e76cc381371e0";
 const HASH_FILIAL =
   "8ad4e4694e52b70556564de4a6e81dbaf21e06ebd24f8d162911aae05cab4d4f";
 const HASH_JUVENIL =
