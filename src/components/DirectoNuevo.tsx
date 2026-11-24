@@ -76,6 +76,10 @@ export const Ico = {
   calendario: (p: IcoProps) => <Svg {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></Svg>,
   subir: (p: IcoProps) => <Svg {...p}><path d="M12 15V3M7 8l5-5 5 5" /><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" /></Svg>,
   bajar: (p: IcoProps) => <Svg {...p}><path d="M12 3v12M7 10l5 5 5-5" /><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" /></Svg>,
+  nube: (p: IcoProps) => <Svg {...p}><path d="M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z" /></Svg>,
+  nubeSube: (p: IcoProps) => <Svg {...p}><path d="M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z" /><path d="M12 16v-5M9.5 13l2.5-2.5 2.5 2.5" /></Svg>,
+  nubeOk: (p: IcoProps) => <Svg {...p}><path d="M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z" /><path d="M9.5 13.5l2 2 3.5-3.5" /></Svg>,
+  ojo: (p: IcoProps) => <Svg {...p}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Svg>,
   carpeta: (p: IcoProps) => <Svg {...p}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></Svg>,
   pin: (p: IcoProps) => <Svg {...p}><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></Svg>,
   rayo: (p: IcoProps) => <Svg {...p}><path d="M13 2L4 14h7l-1 8 9-12h-7z" /></Svg>,
@@ -136,6 +140,7 @@ export const EMOJI_ICONO: Record<string, DefIcono> = {
   "✏": { ico: "lapiz" },
   "✈": { ico: "avion" },
   "📥": { ico: "bajar" },
+  "☁": { ico: "nube" },
 };
 
 export const RE_EMOJI = /(\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)/u;

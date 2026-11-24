@@ -5,6 +5,7 @@
  */
 import Dexie, { type Table } from "dexie";
 import { CLIENTE_ID } from "@/lib/clientes";
+import type { FichaSubida } from "@/lib/colaSubida";
 
 export type ParteId = "1T" | "2T" | "PR1" | "PR2";
 
@@ -479,10 +480,23 @@ const NOMBRE_DB =
 
 class CronoDB extends Dexie {
   partidos!: Table<Partido, string>;
+  /** Cola de subida al servidor del club (versión 2, 21/11/2026;
+   *  lib/colaSubida.ts). Una fila por partido: si está subido, pendiente…
+   *  Solo se usa con `servidor` encendido para el club; si no, queda vacía. */
+  subidas!: Table<FichaSubida, string>;
   constructor() {
     super(NOMBRE_DB);
     this.version(1).stores({
       partidos: "id, estado, actualizado",
+    });
+    // Versión 2: SOLO añade la tabla `subidas`. `partidos` se queda igual
+    // (mismo esquema, mismos índices), así que la base sube de versión sin
+    // tocar ni un partido. Y si algún día se volviera a un crono de antes,
+    // Dexie 4 abre una base más nueva que la que declara (reintenta con la
+    // versión instalada al dar VersionError): no se queda sin abrir.
+    this.version(2).stores({
+      partidos: "id, estado, actualizado",
+      subidas: "id, estado",
     });
   }
 }

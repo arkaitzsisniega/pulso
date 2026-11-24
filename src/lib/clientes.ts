@@ -78,7 +78,19 @@ export interface ConfigCliente {
    *  el informe usa `escudo`. El Inter la usa: su escudo verde no se lee en el
    *  modo Pabellón (oscuro), pero es el de sus documentos en papel. */
   escudoInforme?: string;
+  /** Servidor de partidos del club (fase 2, 21/11/2026; lib/servidor.ts):
+   *  true = cada partido se sube solo a `URL_SERVIDOR` en cuanto hay red y
+   *  sale «Partidos del club» en el inicio. false = el crono de siempre, sin
+   *  una sola petición al servidor. Se enciende club a club (demo → juvenil →
+   *  filial → Inter, y el Inter con permiso): desde el 25/11/2026, SOLO la demo. */
+  servidor: boolean;
 }
+
+/** Dónde vive el servidor de partidos (el mismo para todos los clubes: cada
+ *  uno entra con su contraseña y solo ve lo suyo). Para probar en local:
+ *  NEXT_PUBLIC_SERVIDOR_URL=http://127.0.0.1:8790 al construir. */
+export const URL_SERVIDOR: string =
+  (process.env.NEXT_PUBLIC_SERVIDOR_URL || "https://datos.pulso-futsal.com").replace(/\/+$/, "");
 
 // Colores de club para el aspecto nuevo. El verde del Inter lo llevan los tres
 // equipos del club; la demo, el azul de PULSO.
@@ -118,6 +130,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
     escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
+    servidor: false,
   },
   // Filial (28/8/2026). MISMO código que el Inter, otro build: su roster, su
   // contraseña, su URL (/crono-filial/) y su base local. No comparte NADA con
@@ -137,6 +150,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
     escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
+    servidor: false,
   },
   // Juvenil División de Honor (11/11/2026). Igual que el filial: mismo código,
   // otro build, con su plantilla, su contraseña, su URL (/crono-juvenil/) y su
@@ -156,6 +170,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     aspectoPorDefecto: "clasico",
     escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
     escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
+    servidor: false,
   },
   pulso: {
     id: "pulso",
@@ -170,6 +185,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     colorPropio: AZUL_PULSO,
     aspectoPorDefecto: "nuevo",
     escudo: "escudos/pulso.png", // la demo no es un club: lleva el logo de PULSO
+    servidor: true, // 25/11/2026: la demo es la primera con servidor
   },
 };
 
@@ -231,6 +247,12 @@ export function nombreClub(id: string): string {
 
 /** Configuración del cliente activo. Fallback a Inter si el id no existe. */
 export const CLIENTE: ConfigCliente = CLIENTES[_ID] ?? CLIENTES.inter;
+
+/** ¿Sube este crono los partidos al servidor? Lo dice `servidor` del club.
+ *  NEXT_PUBLIC_SERVIDOR=1 lo enciende en un build de PRUEBA (local) sin tocar
+ *  la tabla; el workflow de publicar no la pone nunca. */
+export const SERVIDOR_ACTIVO: boolean =
+  CLIENTE.servidor || process.env.NEXT_PUBLIC_SERVIDOR === "1";
 
 // Roster activo y derivados (lo que consumen los componentes). Reemplaza a los
 // antiguos exports de `roster.ts` (que ahora solo guarda los datos crudos).

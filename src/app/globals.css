@@ -62,3 +62,10 @@ body {
   .informe thead { display: table-header-group; }
   @page { size: A4; margin: 14mm 12mm; }
 }
+
+/* SOLO MIRAR (servidor de partidos, fase 3 · 21/11/2026): la pantalla del
+   partido que apunta OTRO aparato no se puede tocar. Va con `inert` en el
+   contenedor; esto es la red para navegadores sin `inert` (Safari < 15.5). La
+   franja de abajo (BannerSoloMirar) va FUERA del contenedor y sí se toca. */
+[data-solo-mirar], [data-solo-mirar] * { pointer-events: none !important; }
+[data-solo-mirar] button, [data-solo-mirar] [role="button"] { cursor: default; }

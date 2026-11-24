@@ -5,6 +5,7 @@ import "./globals.css";
 import "./tema-nuevo.css";
 import AuthGate from "@/components/AuthGate";
 import SWRegister from "@/components/SWRegister";
+import { SincronizadorServidor } from "@/components/ServidorClub";
 import SelectorIdioma from "@/components/SelectorIdioma";
 import { CLIENTE } from "@/lib/clientes";
 import { rutaEscudo } from "@/lib/escudo";
@@ -114,6 +115,9 @@ export default function RootLayout({
           <link rel="preload" as="image" href={rutaEscudo(BP, ficheroEscudoInforme(CLIENTE))} />
         )}
         <SWRegister />
+        {/* Subida de los partidos al servidor del club (fase 2, 21/11/2026).
+            Con `servidor` apagado para el club no hace nada. */}
+        <SincronizadorServidor />
         <AuthGate>{children}</AuthGate>
         <SelectorIdioma />
       </body>

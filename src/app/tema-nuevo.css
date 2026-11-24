@@ -532,6 +532,13 @@
 /* Partido que entró por «Importar partido» (19/11/2026). */
 .pz-chip.importado { background: rgba(155,120,255,.16); color: #b9a2ff; }
 .pz[data-tema="sol"] .pz-chip.importado { color: #5b3bc4; background: rgba(110,70,220,.10); }
+/* Estado de subida al servidor del club (21/11/2026, ServidorClub.tsx). */
+button.pz-chip.subida { border: 0; cursor: pointer; padding: 2px 8px; }
+.pz-chip.subida.subido { background: rgba(34,197,94,.14); color: var(--ok); }
+.pz-chip.subida.pendiente, .pz-chip.subida.subiendo { background: rgba(245,183,10,.15); color: var(--aviso); }
+.pz-chip.subida.error { background: rgba(230,57,70,.16); color: var(--mal); }
+.pz-chip.subida.ajeno { background: rgba(140,140,160,.16); color: var(--texto-2); }
+.pz-ini-club-linea { margin: -4px 4px 0; font-size: 13px; color: var(--texto-3); }
 .pz-sol-ini { flex: none; width: 44px; min-height: 44px; height: 44px; }
 
 /* ── INICIO ───────────────────────────────────────────────────────────── */

@@ -21,6 +21,7 @@ import { type Aspecto } from "@/lib/aspecto";
 import { variablesEquipos } from "@/lib/tema";
 import { Ico, sinEmojis } from "@/components/DirectoNuevo";
 import { Escudo } from "@/components/Escudo";
+import { IconoSubida } from "@/components/ServidorClub";
 
 /** El logo de PULSO (la línea del pulso). Dibujo, sin imágenes. */
 export function LogoPulso(props: { className?: string; aro?: boolean }) {
@@ -61,6 +62,9 @@ export function InicioNuevo(props: {
   onFinalizar: (p: Partido) => void;
   /** «Importar partido»: abre el selector de archivo (19/11/2026). */
   onImportar: () => void;
+  /** «Partidos del club» (servidor de partidos, 21/11/2026): null = el club
+   *  no lo tiene encendido (SERVIDOR_ACTIVO) y no se pinta nada. */
+  servidor: { onAbrir: () => void; linea: string | null } | null;
   /** La ventana de «rehacer con vídeo» (la misma del clásico). */
   ventana: ReactNode;
 }) {
@@ -103,6 +107,17 @@ export function InicioNuevo(props: {
             <Ico.chevron className="pz-ico fl" />
           </button>
 
+          {props.servidor && (
+            <>
+              <button type="button" className="pz-ini-sec" onClick={props.servidor.onAbrir} data-club-boton="">
+                <Ico.nube />
+                <span>{sinEmojis(t("sv_club"))}</span>
+                <Ico.chevron className="pz-ico fl" />
+              </button>
+              <p className="pz-ini-club-linea" data-club-linea="">{props.servidor.linea}</p>
+            </>
+          )}
+
           <p className="pz-ini-offline">
             <LogoPulso className="pz-ini-logo" aro />
             <span>{t("home_offline")}</span>
@@ -137,6 +152,7 @@ export function InicioNuevo(props: {
                         {CLIENTE.partidoEjemplo && p.id === ID_PARTIDO_EJEMPLO && (
                           <span className="pz-chip ejemplo">{t("home_ejemplo")}</span>
                         )}
+                        {props.servidor && <IconoSubida id={p.id} nuevo />}
                         {p.importado && (
                           <span className="pz-chip importado" data-importado="">
                             <Ico.bajar className="pz-ico mini" />
