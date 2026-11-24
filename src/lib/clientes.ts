@@ -26,13 +26,7 @@
  * (ver PASS_HASHES más abajo). Una por club por defecto; la lista admite
  * varias por si algún club quiere una por persona del cuerpo técnico.
  */
-import {
-  ROSTER_REAL,
-  ROSTER_DEMO,
-  ROSTER_FILIAL,
-  ROSTER_JUVENIL,
-  type Jugador,
-} from "@/lib/roster";
+import { ROSTER_DEMO, type Jugador } from "@/lib/roster";
 import type { ParColor } from "@/lib/tema";
 
 export type IdiomaId = "es" | "en" | "it";
@@ -182,26 +176,27 @@ const CLIENTES: Record<string, ConfigCliente> = {
 /**
  * Roster del cliente ACTIVO.
  *
- * Con ternarios sobre `process.env.NEXT_PUBLIC_CLIENTE` y NO dentro del
- * registro CLIENTES, por el mismo motivo que PASS_HASHES (ver justo debajo):
- * Next sustituye esa variable por un literal en build, el minificador pliega el
- * ternario y los rosters de los OTROS clientes desaparecen del bundle.
+ * La plantilla REAL (Inter, filial, juvenil) ya no está en el código: el
+ * repositorio es público (decisión de Arkaitz, 23/11/2026). La mete
+ * `next.config.ts` en build, como texto JSON en `process.env.CRONO_ROSTER_PRIVADO`
+ * (ver `cargarRoster.mjs`), y SOLO la del club que se construye. Next sustituye
+ * esa variable por el texto, así que el paquete la lleva dentro y el iPad la
+ * tiene SIN conexión, exactamente igual que antes. Sin ella el build ni empieza
+ * (lo para next.config.ts): no hay forma de publicar un crono de un club con la
+ * plantilla vacía o inventada.
  *
- * Metido en CLIENTES viajaban los tres en los tres builds — comprobado el
- * 25/9/2026: el paquete de la DEMO llevaba dentro la plantilla REAL del Inter
- * (JUGADOR, JUGADOR, JUGADOR…). No se veía en pantalla, pero cualquiera que
- * abriese los ficheros del sitio la leía, y la demo existe justamente para
- * enseñar el crono a otros clubes SIN exponer nombres reales. El 28/8 se
- * arregló esto mismo para las contraseñas y no se aplicó a los rosters.
+ * Con ternario sobre `process.env.NEXT_PUBLIC_CLIENTE`, por el mismo motivo que
+ * PASS_HASHES (justo debajo): en la demo se pliega y solo queda ROSTER_DEMO; en
+ * los otros, ROSTER_DEMO no viaja.
+ *
+ * (25/9/2026: cuando los rosters iban dentro de CLIENTES, el paquete de la DEMO
+ * llevaba la plantilla real entera. No se veía en pantalla, pero cualquiera que
+ * abriese los ficheros del sitio la leía.)
  */
 const ROSTER_ACTIVO: Jugador[] =
   process.env.NEXT_PUBLIC_CLIENTE === "pulso"
     ? ROSTER_DEMO
-    : process.env.NEXT_PUBLIC_CLIENTE === "filial"
-      ? ROSTER_FILIAL
-      : process.env.NEXT_PUBLIC_CLIENTE === "juvenil"
-        ? ROSTER_JUVENIL
-        : ROSTER_REAL;
+    : (JSON.parse(process.env.CRONO_ROSTER_PRIVADO || "[]") as Jugador[]);
 
 /**
  * Hashes de contraseña del cliente ACTIVO.

@@ -21,7 +21,7 @@ registerHooks({
 });
 const { reconstruirAgregados, recomputarMinutos } = await import("./reconstruir.ts");
 
-const esPortero = (n: string) => n === "JUGADOR";
+const esPortero = (n: string) => n === "REYES";
 
 function base(eventos: Evento[]): Partido {
   return {
@@ -30,7 +30,7 @@ function base(eventos: Evento[]): Partido {
     config: {
       rival: "RIVAL FC", fecha: "2026-06-13", hora: "18:00", lugar: "X",
       competicion: "LIGA", local: true, partido_id: "TEST", convocados: [],
-      pista_inicial: { portero: "JUGADOR", pista1: "A", pista2: "B", pista3: "C", pista4: "D" },
+      pista_inicial: { portero: "REYES", pista1: "A", pista2: "B", pista3: "C", pista4: "D" },
       duracionParte: { "1T": 1200, "2T": 1200, PR1: 0, PR2: 0 },
       permiteTanda: false, direccionInter1T: "der",
     },
@@ -76,7 +76,7 @@ const eventos: Evento[] = [
   ev({ id: "p6", tipo: "penalti", parte: "1T", segundosParte: 360, equipo: "INTER", tirador: "A", portero: "GK_RIVAL", resultado: "GOL", golId: "g6" } as any),
   ev({ tipo: "accion_individual", parte: "2T", segundosParte: 50, jugador: "C", accion: "robos" } as any),
   ev({ tipo: "accion_individual", parte: "2T", segundosParte: 55, jugador: "C", accion: "antM" } as any),
-  ev({ tipo: "accion_individual", parte: "2T", segundosParte: 70, jugador: "JUGADOR", accion: "antB" } as any),
+  ev({ tipo: "accion_individual", parte: "2T", segundosParte: 70, jugador: "REYES", accion: "antB" } as any),
   // Pase de gol (18/9/2026): con su flecha, que tiene que sobrevivir al recálculo.
   ev({ id: "pg1", tipo: "accion_individual", parte: "2T", segundosParte: 80, jugador: "C", accion: "paseGol",
        zonaCampo: "A8", zonaDestino: "A1", flecha: { x0: 0.62, y0: 0.3, x1: 0.93, y1: 0.46 } } as any),
@@ -103,7 +103,7 @@ check("A.dpp (gol + penalti, sin doble conteo)", r.acciones.porJugador["A"]?.dpp
 check("B.dpf", r.acciones.porJugador["B"]?.dpf, 1);
 check("C.robos", r.acciones.porJugador["C"]?.robos, 1);
 check("C.antM (anticipación mala)", r.acciones.porJugador["C"]?.antM, 1);
-check("JUGADOR.antB (el portero también)", r.acciones.porJugador["JUGADOR"]?.antB, 1);
+check("REYES.antB (el portero también)", r.acciones.porJugador["REYES"]?.antB, 1);
 check("C.paseGol (pase de gol)", r.acciones.porJugador["C"]?.paseGol, 1);
 {
   const pg = r.eventos.find((e) => e.id === "pg1") as any;
@@ -115,8 +115,8 @@ check("C.paseGol (pase de gol)", r.acciones.porJugador["C"]?.paseGol, 1);
   check("la flecha de la asistencia sobrevive al recálculo", g1?.flechaAsistencia, { x0: 0.62, y0: 0.3, x1: 0.93, y1: 0.46 });
   check("y sus dos zonas", [g1?.zonaAsistencia, g1?.zonaAsistenciaDestino], ["A8", "A1"]);
 }
-check("JUGADOR.golesEncajados", r.acciones.porJugador["JUGADOR"]?.golesEncajados, 1);
-check("JUGADOR.paradas", r.acciones.porJugador["JUGADOR"]?.paradas, 1);
+check("REYES.golesEncajados", r.acciones.porJugador["REYES"]?.golesEncajados, 1);
+check("REYES.paradas", r.acciones.porJugador["REYES"]?.paradas, 1);
 check("disparosRival.puerta", r.disparosRival.puerta, 2);
 // El hijo penalti NO debe haber sumado marcador extra (ya contado por el gol).
 check("orden: primer evento es 1T@60", `${r.eventos[0].parte}@${r.eventos[0].segundosParte}`, "1T@60");
@@ -133,17 +133,17 @@ check("snapshot p6 = snapshot g6", p6.marcador, { inter: 1, rival: 1 });
 {
   const rf = reconstruirAgregados(base([
     ev({ id: "f1", tipo: "fsb", parte: "1T", segundosParte: 100, equipo: "INTER", tirador: "B", portero: "", resultado: "GOL" } as any),
-    ev({ id: "f2", tipo: "fsb", parte: "1T", segundosParte: 200, equipo: "RIVAL", tirador: "", portero: "JUGADOR", resultado: "PARADA" } as any),
+    ev({ id: "f2", tipo: "fsb", parte: "1T", segundosParte: 200, equipo: "RIVAL", tirador: "", portero: "REYES", resultado: "PARADA" } as any),
     ev({ id: "gf", tipo: "gol", parte: "2T", segundosParte: 300, equipo: "INTER", goleador: "C", accion: "FSB", cuarteto: [], penaltiId: "f3" } as any),
     ev({ id: "f3", tipo: "fsb", parte: "2T", segundosParte: 300, equipo: "INTER", tirador: "C", portero: "", resultado: "GOL", golId: "gf" } as any),
-    ev({ id: "f4", tipo: "fsb", parte: "2T", segundosParte: 400, equipo: "RIVAL", tirador: "", portero: "JUGADOR", resultado: "GOL" } as any),
+    ev({ id: "f4", tipo: "fsb", parte: "2T", segundosParte: 400, equipo: "RIVAL", tirador: "", portero: "REYES", resultado: "GOL" } as any),
   ]), esPortero);
   console.log("\nTest FSB (falta sin barrera):");
   check("FSB: marcador (el suelto y el del gol cuentan una vez; el del rival, también)", rf.marcador, { inter: 2, rival: 1 });
   check("FSB: el tirador del suelto suma su tiro a puerta", rf.acciones.porJugador["B"]?.dpp, 1);
   check("FSB: el gemelo de un gol no duplica el tiro", rf.acciones.porJugador["C"]?.dpp, 1);
-  check("FSB parado por nuestro portero", rf.acciones.porJugador["JUGADOR"]?.paradas, 1);
-  check("FSB del rival que entra: gol encajado", rf.acciones.porJugador["JUGADOR"]?.golesEncajados, 1);
+  check("FSB parado por nuestro portero", rf.acciones.porJugador["REYES"]?.paradas, 1);
+  check("FSB del rival que entra: gol encajado", rf.acciones.porJugador["REYES"]?.golesEncajados, 1);
   check("FSB: disparos del rival a puerta (parado + gol)", rf.disparosRival.puerta, 2);
   const gf = rf.eventos.find((e) => e.id === "gf")!;
   const f3 = rf.eventos.find((e) => e.id === "f3")!;
@@ -151,8 +151,8 @@ check("snapshot p6 = snapshot g6", p6.marcador, { inter: 1, rival: 1 });
 }
 
 // ── Test recomputarMinutos (opción D) ──────────────────────────────────────
-// 2×20' (1200s/parte). Pista inicial JUGADOR,A,B,C,D. Cambio 1T@600: sale A, entra E.
-// → A juega 0-600 (600); E entra y sigue toda la 2ª parte; B/C/D/JUGADOR completos.
+// 2×20' (1200s/parte). Pista inicial REYES,A,B,C,D. Cambio 1T@600: sale A, entra E.
+// → A juega 0-600 (600); E entra y sigue toda la 2ª parte; B/C/D/REYES completos.
 const pMin = base([
   ev({ tipo: "cambio", parte: "1T", segundosParte: 600, sale: "A", entra: "E" } as any),
 ]);
@@ -161,7 +161,7 @@ console.log("\nTest recomputarMinutos:");
 check("A total = 600 (sale al min 10)", tm["A"]?.totalSegundos, 600);
 check("E total = 1800 (entra min 10 + toda la 2ª)", tm["E"]?.totalSegundos, 1800);
 check("B total = 2400 (completo)", tm["B"]?.totalSegundos, 2400);
-check("JUGADOR total = 2400", tm["JUGADOR"]?.totalSegundos, 2400);
+check("REYES total = 2400", tm["REYES"]?.totalSegundos, 2400);
 check("A en 2T = 0", tm["A"]?.porParte["2T"], 0);
 check("E en 1T = 600", tm["E"]?.porParte["1T"], 600);
 check("E en 2T = 1200", tm["E"]?.porParte["2T"], 1200);

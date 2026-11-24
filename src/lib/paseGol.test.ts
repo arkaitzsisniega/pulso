@@ -38,9 +38,9 @@ function ev(e: Partial<Evento> & { tipo: Evento["tipo"] }): Evento {
   return { id: `e${n}`, parte: "1T", segundosParte: 0, segundosPartido: 0,
            timestampReal: n, marcador: { inter: 0, rival: 0 }, ...e } as Evento;
 }
-const pase = (parte: "1T" | "2T", s: number, jugador = "JUGADOR") =>
+const pase = (parte: "1T" | "2T", s: number, jugador = "SOTO") =>
   ev({ tipo: "accion_individual", parte, segundosParte: s, jugador, accion: "paseGol" } as never);
-const golNuestro = (parte: "1T" | "2T", s: number, goleador = "JUGADOR", asistente?: string) =>
+const golNuestro = (parte: "1T" | "2T", s: number, goleador = "DUARTE", asistente?: string) =>
   ev({ tipo: "gol", equipo: "INTER", parte, segundosParte: s, goleador, asistente, cuarteto: [] } as never);
 
 console.log("── Pase de gol pegado a un gol ──");
@@ -51,14 +51,14 @@ igual(VENTANA_PASE_GOL_SEG, 20, "la ventana es de 20 segundos");
 {
   const evs = [
     pase("1T", 748),                // 12:28, 2 s antes del gol de las 12:30
-    pase("1T", 730, "JUGADOR"),     // 20 s justos antes
-    pase("1T", 729, "JUGADOR"),        // 21 s antes: ya es otra jugada
-    pase("2T", 748, "JUGADOR"),      // mismo minuto, OTRA parte
-    pase("1T", 755, "JUGADOR"),        // después del gol: otro saque, otra jugada
-    ev({ tipo: "accion_individual", parte: "1T", segundosParte: 749, jugador: "JUGADOR", accion: "robos" } as never),
+    pase("1T", 730, "PRIETO"),     // 20 s justos antes
+    pase("1T", 729, "LARA"),        // 21 s antes: ya es otra jugada
+    pase("2T", 748, "NEGRO"),      // mismo minuto, OTRA parte
+    pase("1T", 755, "PARRA"),        // después del gol: otro saque, otra jugada
+    ev({ tipo: "accion_individual", parte: "1T", segundosParte: 749, jugador: "SOTO", accion: "robos" } as never),
   ];
   const cerca = pasesGolCerca(evs, "1T", 750);
-  igual(cerca.map((e) => (e as { jugador: string }).jugador), ["JUGADOR", "JUGADOR"],
+  igual(cerca.map((e) => (e as { jugador: string }).jugador), ["SOTO", "PRIETO"],
         "salen el de 2 s antes y el de 20 s justos, el más reciente primero");
   igual(pasesGolCerca(evs, "1T", 900), [], "un gol de mucho después no ve ninguno");
   igual(pasesGolCerca([], "1T", 750), [], "un partido sin pases de gol, sin aviso");
@@ -67,7 +67,7 @@ igual(VENTANA_PASE_GOL_SEG, 20, "la ventana es de 20 segundos");
 // 2 · Al guardar un pase de gol: un gol nuestro a ±20 s
 {
   const evs = [
-    golNuestro("1T", 750, "JUGADOR", "JUGADOR"),
+    golNuestro("1T", 750, "DUARTE", "SOTO"),
     ev({ tipo: "gol", equipo: "RIVAL", parte: "1T", segundosParte: 700, goleador: "", cuarteto: [] } as never),
   ];
   ok(golNuestroCerca(evs, "1T", 735)?.id === evs[0].id, "un pase 15 s antes del gol lo ve");
@@ -83,22 +83,22 @@ igual(VENTANA_PASE_GOL_SEG, 20, "la ventana es de 20 segundos");
 // 3 · Qué cuenta como gol nuestro
 {
   ok(esGolNuestro(golNuestro("1T", 1)), "el gol del botón GOL");
-  ok(esGolNuestro(ev({ tipo: "penalti", equipo: "INTER", resultado: "GOL", tirador: "JUGADOR", portero: "" } as never)),
+  ok(esGolNuestro(ev({ tipo: "penalti", equipo: "INTER", resultado: "GOL", tirador: "LARA", portero: "" } as never)),
      "un penalti metido con su botón (no tiene evento gol)");
-  ok(!esGolNuestro(ev({ tipo: "penalti", equipo: "INTER", resultado: "GOL", tirador: "JUGADOR", portero: "", golId: "g1" } as never)),
+  ok(!esGolNuestro(ev({ tipo: "penalti", equipo: "INTER", resultado: "GOL", tirador: "LARA", portero: "", golId: "g1" } as never)),
      "el gemelo de un gol no se cuenta dos veces");
-  ok(!esGolNuestro(ev({ tipo: "diezm", equipo: "INTER", resultado: "PARADA", tirador: "JUGADOR", portero: "" } as never)),
+  ok(!esGolNuestro(ev({ tipo: "diezm", equipo: "INTER", resultado: "PARADA", tirador: "LARA", portero: "" } as never)),
      "un 10 m parado no es gol");
-  ok(!esGolNuestro(ev({ tipo: "disparo", equipo: "INTER", resultado: "PUERTA", jugador: "JUGADOR" } as never)),
+  ok(!esGolNuestro(ev({ tipo: "disparo", equipo: "INTER", resultado: "PUERTA", jugador: "LARA" } as never)),
      "un disparo no es gol");
   // FSB, falta sin barrera (26/9/2026): cuenta igual que el 10 m.
-  ok(esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "GOL", tirador: "JUGADOR", portero: "" } as never)),
+  ok(esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "GOL", tirador: "LARA", portero: "" } as never)),
      "un FSB metido con su botón (sin evento gol) es gol nuestro");
-  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "GOL", tirador: "JUGADOR", portero: "", golId: "g1" } as never)),
+  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "GOL", tirador: "LARA", portero: "", golId: "g1" } as never)),
      "el FSB gemelo de un gol no se cuenta dos veces");
-  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "RIVAL", resultado: "GOL", tirador: "", portero: "JUGADOR" } as never)),
+  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "RIVAL", resultado: "GOL", tirador: "", portero: "REYES" } as never)),
      "un FSB que nos meten no es gol nuestro");
-  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "POSTE", tirador: "JUGADOR", portero: "" } as never)),
+  ok(!esGolNuestro(ev({ tipo: "fsb", equipo: "INTER", resultado: "POSTE", tirador: "LARA", portero: "" } as never)),
      "un FSB al poste no es gol");
 }
 

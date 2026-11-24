@@ -11,3 +11,6 @@
 *.log
 .env*.local
 /tsconfig.tsbuildinfo
+
+# Plantillas REALES de los clubes (24/11/2026): nunca al repo. Ver cargarRoster.mjs.
+/roster-privado/

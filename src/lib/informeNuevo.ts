@@ -47,7 +47,7 @@ export interface GolNuevo {
 
 const ENLACES = new Set(["DE", "DEL", "LA", "LAS", "LOS", "EL", "Y"]);
 
-/** «JUGADOR» → «Jugador», «J.JUGADOR» → «J.Jugador», «CD SERENO» → «CD
+/** «BALDOMERO» → «Baldomero», «J.REYES» → «J.Reyes», «CD SERENO» → «CD
  *  Sereno» (las siglas de dos letras se quedan: CD, FS, UD…), «PUERTA DE
  *  HIERRO» → «Puerta de Hierro». Lo que ya viene con minúsculas (un nombre
  *  escrito a mano) se respeta. */

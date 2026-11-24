@@ -1,0 +1,143 @@
+{
+  "cliente": "inter",
+  "jugadores": [
+    {
+      "dorsal": "1",
+      "nombre": "AGUIRRE",
+      "posicion": "PORTERO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "2",
+      "nombre": "BLASCO",
+      "posicion": "PORTERO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "3",
+      "nombre": "CUESTA",
+      "posicion": "PORTERO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "4",
+      "nombre": "ESTEBAN",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "5",
+      "nombre": "FUENTES",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "6",
+      "nombre": "GALLEGO",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "7",
+      "nombre": "HIDALGO",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "8",
+      "nombre": "IGLESIAS",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "9",
+      "nombre": "JURADO",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "10",
+      "nombre": "LOZANO",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "11",
+      "nombre": "MACIAS",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "12",
+      "nombre": "NAVARRO",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "13",
+      "nombre": "OCHOA",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "14",
+      "nombre": "PEÑA",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "15",
+      "nombre": "QUINTANA",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "16",
+      "nombre": "RIVAS",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "17",
+      "nombre": "TEJADA",
+      "posicion": "CAMPO",
+      "equipo": "PRIMER"
+    },
+    {
+      "dorsal": "18",
+      "nombre": "URIBE",
+      "posicion": "PORTERO",
+      "equipo": "FILIAL"
+    },
+    {
+      "dorsal": "19",
+      "nombre": "VALLE",
+      "posicion": "PORTERO",
+      "equipo": "FILIAL"
+    },
+    {
+      "dorsal": "20",
+      "nombre": "ZAMORA",
+      "posicion": "CAMPO",
+      "equipo": "FILIAL"
+    },
+    {
+      "dorsal": "21",
+      "nombre": "BRAVO",
+      "posicion": "CAMPO",
+      "equipo": "FILIAL"
+    },
+    {
+      "dorsal": "22",
+      "nombre": "CORTES",
+      "posicion": "CAMPO",
+      "equipo": "FILIAL"
+    },
+    {
+      "dorsal": "23",
+      "nombre": "SALINAS",
+      "posicion": "CAMPO",
+      "equipo": "FILIAL"
+    }
+  ]
+}

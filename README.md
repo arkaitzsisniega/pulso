@@ -26,6 +26,41 @@ equipos en el mismo iPad no se mezclan ni ven los partidos del otro.
 
 > Antes de mayo… ⚠️ **El crono del Inter no se toca el día antes de un partido.**
 
+## Plantillas privadas
+
+Desde el 24/11/2026 **la plantilla real del Inter, del filial y del juvenil no
+está en el código**: este repositorio es público y aquí solo hay datos
+inventados (la demo, en `src/lib/roster.ts`, y unas plantillas de ejemplo en
+`roster-privado.ejemplo/`). La real se le da al build desde fuera y
+`next.config.ts` la mete en el paquete **de ese club y solo de ese club**
+(detalle en `cargarRoster.mjs`):
+
+| Dónde | Qué |
+|---|---|
+| GitHub Actions | Secretos del repositorio `ROSTER_INTER`, `ROSTER_FILIAL`, `ROSTER_JUVENIL` |
+| Este ordenador | `~/Desktop/Claude/pulso_secretos/roster_<cliente>.json` (fuera del repo; vale para todas las copias de trabajo) o `roster-privado/<cliente>.json` (dentro, ignorado por git) |
+
+El contenido es el JSON de `roster-privado.ejemplo/inter.json`:
+`{"cliente": "inter", "jugadores": [{"dorsal": "1", "nombre": "…", "posicion": "PORTERO", "equipo": "PRIMER"}, …]}`.
+Los nombres son los canónicos del club (los que lee el importador): no se
+cambian por motes.
+
+- **Sin plantilla, el build del Inter, el filial o el juvenil FALLA** con un
+  mensaje que dice dónde ponerla. Nunca se publica un crono de un club con
+  nombres inventados. La demo (`npm run demo`) no necesita nada.
+- **Lo que esto consigue y lo que no**: la plantilla ya no está en el código
+  ni en su historial a partir de ahora. Pero la web publicada de cada club
+  (`/pulso/crono/`, etc.) **la sigue llevando dentro**, como antes: el iPad la
+  necesita sin conexión. Quien abra los ficheros de esa web la puede leer.
+- **Alta o baja de un jugador**: se cambia el JSON en
+  `~/Desktop/Claude/pulso_secretos/`, se sube al secreto
+  (`gh secret set ROSTER_INTER < ~/Desktop/Claude/pulso_secretos/roster_inter.json`)
+  y se vuelve a publicar (Actions → «Deploy crono a GitHub Pages» → *Run
+  workflow*). Cambiar un secreto no publica nada por sí solo.
+- `src/lib/sinNombresReales.test.ts` falla si un nombre de la plantilla real
+  vuelve a aparecer en cualquier fichero del repo. Corre en cada despliegue y
+  conviene pasarlo antes de cada commit.
+
 ## Trabajar en local
 
 ```bash

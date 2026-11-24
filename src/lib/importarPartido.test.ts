@@ -19,7 +19,7 @@ import {
   paraExportar, validarArchivo, aplicarDecision, deducirClub, pararReloj,
   contarAcciones, FORMATO_EXPORTACION, APP_EXPORTACION,
 } from "./importarPartido.ts";
-import { ROSTER_DEMO, ROSTER_REAL, ROSTER_FILIAL, ROSTER_JUVENIL } from "./roster.ts";
+import { ROSTER_DEMO } from "./roster.ts";
 
 let fallos = 0;
 function ok(cond: boolean, msg: string) {
@@ -34,9 +34,15 @@ function igual(a: unknown, b: unknown, msg: string) {
 const leer = (f: string) => readFileSync(new URL(f, import.meta.url), "utf8");
 const nombres = (r: { nombre: string }[]) => r.map((j) => j.nombre);
 const DEMO = nombres(ROSTER_DEMO);
-const INTER = nombres(ROSTER_REAL);
-const FILIAL = nombres(ROSTER_FILIAL);
-const JUVENIL = nombres(ROSTER_JUVENIL);
+// Las plantillas reales ya no están en el repo (24/11/2026): estas son las
+// INVENTADAS de ejemplo, con la misma forma (y, como las de verdad, el filial y
+// el juvenil comparten unos chavales).
+const ejemploPrivado = (c: string) =>
+  (JSON.parse(leer(`../../roster-privado.ejemplo/${c}.json`)) as { jugadores: { nombre: string }[] }).jugadores;
+const INTER = nombres(ejemploPrivado("inter"));
+const FILIAL = nombres(ejemploPrivado("filial"));
+const JUVENIL = nombres(ejemploPrivado("juvenil"));
+const [P1, P2] = INTER.slice(0, 2); // dos porteros del Inter de ejemplo
 
 /** El partido de ejemplo de la demo: terminado, en vídeo, con 244 acciones
  *  (inventado a partir de uno de verdad con scripts/generar_partido_demo.ts).
@@ -50,7 +56,7 @@ const sinMarca = (p: Partido) => { const { importado, ...r } = p; return r; };
 /** Un partido del Inter montado a mano (para los casos de club y de reloj). */
 function partidoInter(): Partido {
   const p = ejemplo();
-  const conv = ["JUGADOR", "JUGADOR", ...INTER.filter((n) => n !== "JUGADOR" && n !== "JUGADOR").slice(0, 10)];
+  const conv = [P1, P2, ...INTER.filter((n) => n !== P1 && n !== P2).slice(0, 10)];
   return {
     ...p, id: "p_inter_1", estado: "en_curso",
     config: { ...p.config!, partido_id: "J8.ELPOZO", rival: "ELPOZO", convocados: conv,
