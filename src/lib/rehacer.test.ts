@@ -25,8 +25,8 @@ function igual(a: unknown, b: unknown, msg: string) {
 const original = (): ConfigPartido => ({
   rival: "JAEN", fecha: "2026-09-26", hora: "12:00", lugar: "Jaén",
   competicion: "LIGA", local: true, partido_id: "J3.JAEN",
-  convocados: ["JUGADOR", "JUGADOR", "JUGADOR", "JUGADOR", "JUGADOR"],
-  pista_inicial: { portero: "JUGADOR", pista1: "JUGADOR", pista2: "JUGADOR", pista3: "JUGADOR", pista4: "JUGADOR" },
+  convocados: ["REYES", "LARA", "NEGRO", "PRIETO", "DUARTE"],
+  pista_inicial: { portero: "REYES", pista1: "LARA", pista2: "NEGRO", pista3: "PRIETO", pista4: "DUARTE" },
   duracionParte: { "1T": 1200, "2T": 1200, PR1: 0, PR2: 0 },
   permiteTanda: false, direccionInter1T: "der",
 });

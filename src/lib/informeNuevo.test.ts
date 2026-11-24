@@ -33,11 +33,11 @@ function ok(cond: boolean, msg: string) {
 const igual = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 console.log("── Nombres y minutos ──");
-ok(nombreBonito("JUGADOR") === "Jugador", "«JUGADOR» → «Jugador»");
-ok(nombreBonito("J.JUGADOR") === "J.Jugador", "«J.JUGADOR» → «J.Jugador»");
+ok(nombreBonito("BALDOMERO") === "Baldomero", "«BALDOMERO» → «Baldomero»");
+ok(nombreBonito("J.REYES") === "J.Reyes", "«J.REYES» → «J.Reyes»");
 ok(nombreBonito("CD SERENO") === "CD Sereno", "las siglas de dos letras se quedan");
 ok(nombreBonito("PUERTA DE HIERRO") === "Puerta de Hierro", "«de», «la»… en minúscula");
-ok(nombreBonito("Jugador") === "Jugador", "lo que ya viene con minúsculas se respeta");
+ok(nombreBonito("Íñigo") === "Íñigo", "lo que ya viene con minúsculas se respeta");
 ok(nombreBonito("") === "", "vacío sigue vacío");
 ok(minutoAbs(65) === "01:05" && minutoAbs(2399.6) === "40:00", "minutos con dos cifras");
 

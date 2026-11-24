@@ -6,8 +6,18 @@
 # así que dos pushes seguidos CANCELABAN el que esperaba y un cliente se
 # quedaba un commit atrás en silencio. Pasó el 30/8 con la demo.
 #
-# Cada cliente cambia SOLO en tres cosas: NEXT_PUBLIC_CLIENTE (su plantilla, su
-# contraseña, su marca), CRONO_BASEPATH (su carpeta) y dónde se publica.
+# Cada cliente cambia SOLO en cuatro cosas: NEXT_PUBLIC_CLIENTE (su contraseña,
+# su marca), su plantilla (secreto), CRONO_BASEPATH (su carpeta) y dónde se
+# publica.
+#
+# PLANTILLAS PRIVADAS (24/11/2026): la plantilla real del Inter, del filial y
+# del juvenil NO está en el código (el repo es público). Cada build la recibe de
+# SU secreto del repositorio (Settings → Secrets and variables → Actions):
+#   ROSTER_INTER · ROSTER_FILIAL · ROSTER_JUVENIL
+# con el JSON de cargarRoster.mjs ({"cliente": "...", "jugadores": [...]}).
+# Si falta, ESE build falla y no se publica (el iPad se queda con el anterior);
+# los demás siguen. La demo no lleva secreto. Cambiar un secreto NO vuelve a
+# publicar: después, «Run workflow» en la pestaña Actions (o un push).
 
 name: Deploy crono a GitHub Pages
 
@@ -33,15 +43,19 @@ jobs:
       matrix:
         include:
           - cliente: inter
+            secreto: ROSTER_INTER
             carpeta: crono
             basepath: /pulso/crono
           - cliente: pulso
+            secreto: ""
             carpeta: crono-demo
             basepath: /pulso/crono-demo
           - cliente: filial
+            secreto: ROSTER_FILIAL
             carpeta: crono-filial
             basepath: /pulso/crono-filial
           - cliente: juvenil
+            secreto: ROSTER_JUVENIL
             carpeta: crono-juvenil
             basepath: /pulso/crono-juvenil
 
@@ -59,8 +73,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Antes de nada: que ningún nombre de la plantilla real haya vuelto al
+      # código. Con los tres secretos sabe qué buscar; en el registro (público)
+      # dice el fichero y la línea, nunca el nombre.
+      - name: Sin nombres reales en el código
+        env:
+          CRONO_ROSTER_JSON_INTER: ${{ secrets.ROSTER_INTER }}
+          CRONO_ROSTER_JSON_FILIAL: ${{ secrets.ROSTER_FILIAL }}
+          CRONO_ROSTER_JSON_JUVENIL: ${{ secrets.ROSTER_JUVENIL }}
+        run: node --experimental-strip-types --no-warnings src/lib/sinNombresReales.test.ts
+
       - name: Build static export (${{ matrix.cliente }})
         env:
+          # La plantilla real de ESTE club, desde su secreto (vacío en la demo).
+          # Sin ella next.config.ts para el build con un mensaje claro.
+          CRONO_ROSTER_JSON: ${{ matrix.secreto && secrets[matrix.secreto] || '' }}
           NEXT_EXPORT: "1"
           # Explícito SIEMPRE, también para el Inter: Next solo sustituye
           # process.env.NEXT_PUBLIC_* por un literal si la variable EXISTE. Sin

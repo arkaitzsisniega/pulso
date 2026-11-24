@@ -298,7 +298,7 @@ export default function PartidoPage() {
   };
 
   // Guarda el pase de gol con su flecha (la zona de salida y la de llegada
-  // salen de ella) y lo dice: «Pase de gol de JUGADOR (A8 → A2)». «Deshacer» lo
+  // salen de ella) y lo dice: «Pase de gol de SOTO (A8 → A2)». «Deshacer» lo
   // quita como a cualquier otra acción.
   const guardarPaseGol = (jugador: string, flecha: Flecha) => {
     const { origen, destino } = zonasDeFlecha(flecha);
