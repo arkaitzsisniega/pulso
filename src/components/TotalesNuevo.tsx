@@ -14,11 +14,11 @@
 import Link from "next/link";
 import { type ReactNode } from "react";
 import { CLIENTE } from "@/lib/clientes";
-import { formatMinutos, type Totales } from "@/lib/totales";
+import { type Totales } from "@/lib/totales";
 import { t, labelCompeticionCorta } from "@/lib/i18n";
 import { Ico, sinEmojis } from "@/components/DirectoNuevo";
 import { BotonSol } from "@/components/InicioNuevo";
-import { estiloPP, icPP } from "@/components/ResumenNuevo";
+import { estiloPP } from "@/components/ResumenNuevo";
 import { Escudo } from "@/components/Escudo";
 
 /** «*texto*» del catálogo → negrita (igual que en el clásico). */
@@ -36,6 +36,8 @@ export function TotalesNuevo(props: {
   filtro?: ReactNode;
   /** «Liga · 9 partidos»: lo que se está sumando. */
   subtitulo?: string;
+  /** Las tablas por jugador en pestañas (25/11/2026, TotalesAmpliados.tsx). */
+  ampliados?: ReactNode;
   /** ¿Hay algún partido finalizado? (si lo hay y no sale nada, es el filtro). */
   hayPartidos?: boolean;
   sol: boolean;
@@ -98,76 +100,7 @@ export function TotalesNuevo(props: {
                 ))}
               </section>
 
-              <section className="pz-capa pz-tot-sec">
-                <h2 className="pz-res-h3"><Ico.persona className="pz-ico" />{t("tot_por_jugador")}</h2>
-                <div className="pz-tot-scroll">
-                  <table className="pz-tot-tabla">
-                    <thead>
-                      <tr>
-                        <th>{t("tot_th_num")}</th><th className="izq">{t("tot_th_jugador")}</th>
-                        <th>{t("tot_th_pj")}</th><th>{t("tot_th_min")}</th>
-                        <th title={t("tot_goles")}>{icPP("⚽")}</th><th>{t("tot_th_asist")}</th>
-                        <th>{t("tot_th_disp")}</th><th>{t("tot_th_robos")}</th>
-                        <th>{t("tot_th_cortes")}</th><th>{t("tot_th_perd")}</th>
-                        <th title={t("inf_amarillas")}>{icPP("🟨")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tot.jugadores.map((j) => (
-                        <tr key={j.nombre}>
-                          <td className="dorsal pz-num">{j.dorsal}</td>
-                          <td className="izq nombre">{j.nombre}</td>
-                          <td className="pz-num">{j.jugados}</td>
-                          <td className="pz-num">{formatMinutos(j.segundos)}</td>
-                          <td className="pz-num fuerte">{j.goles || ""}</td>
-                          <td className="pz-num">{j.asistencias || ""}</td>
-                          <td className="pz-num">{(j.aPuerta + j.fuera + j.palo + j.bloqueados) || ""}</td>
-                          <td className="pz-num">{j.robos || ""}</td>
-                          <td className="pz-num">{j.cortes || ""}</td>
-                          <td className="pz-num">{j.perdidas || ""}</td>
-                          <td className="pz-num">{j.amarillas || ""}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="pz-tot-nota">{t("tot_nota_pj")}</p>
-              </section>
-
-              {tot.jugadores.some((j) => j.paradas + j.golesEncajados > 0) && (
-                <section className="pz-capa pz-tot-sec">
-                  <h2 className="pz-res-h3"><Ico.guante className="pz-ico" />{t("tot_porteros")}</h2>
-                  <table className="pz-tot-tabla">
-                    <thead>
-                      <tr>
-                        <th>{t("tot_th_num")}</th><th className="izq">{t("tot_th_portero")}</th>
-                        <th>{t("tot_th_pj")}</th><th>{t("tot_th_min")}</th>
-                        <th>{t("tot_th_paradas")}</th>
-                        <th>{t("tot_th_encajados")}</th>
-                        <th>{t("tot_th_pct")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tot.jugadores.filter((j) => j.paradas + j.golesEncajados > 0).map((j) => {
-                        const tiros = j.paradas + j.golesEncajados;
-                        return (
-                          <tr key={j.nombre}>
-                            <td className="dorsal pz-num">{j.dorsal}</td>
-                            <td className="izq nombre">{j.nombre}</td>
-                            <td className="pz-num">{j.jugados}</td>
-                            <td className="pz-num">{formatMinutos(j.segundos)}</td>
-                            <td className="pz-num">{j.paradas}</td>
-                            <td className="pz-num">{j.golesEncajados}</td>
-                            <td className="pz-num fuerte">
-                              {tiros ? `${Math.round((j.paradas / tiros) * 100)}%` : ""}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </section>
-              )}
+              {props.ampliados}
 
               <section className="pz-capa pz-tot-sec">
                 <h2 className="pz-res-h3"><Ico.calendario className="pz-ico" />{t("tot_por_partido")}</h2>

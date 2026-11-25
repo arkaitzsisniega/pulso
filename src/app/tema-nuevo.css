@@ -1182,3 +1182,68 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
 .pz-tot-cerrar-inf .ok { font-weight: 700; color: var(--ok); margin-bottom: 6px; }
 .pz-tot-cerrar-inf ul { margin: 4px 0 0 18px; list-style: disc; }
 .pz-tot-cerrar-inf b { color: var(--texto); }
+
+/* ── Totales ampliados por jugador (25/11/2026, components/TotalesAmpliados.tsx) ──
+   La misma tabla para los dos aspectos. En el nuevo, los colores salen del
+   `.pz` que la envuelve; en el clásico, de estas variables (los zinc de siempre). */
+.ta-clasico {
+  --capa: #18181b; --capa-2: #27272a; --capa-3: #3f3f46; --linea: #27272a;
+  --texto: #f4f4f5; --texto-2: #a1a1aa; --texto-3: #71717a;
+  --nos: #10b981; --nos-suave: rgba(16,185,129,.15); --ok: #34d399; --mal: #f87171;
+  --f-num: ui-monospace, "SF Mono", Menlo, monospace; --f-txt: inherit;
+  background: var(--capa); border-radius: 12px; padding: 12px; margin-bottom: 24px; color: var(--texto);
+}
+.ta-nuevo { padding: 16px 18px; margin-bottom: 12px; }
+.ta-cab { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.ta-h2 { font: 800 14px/1 var(--f-txt); text-transform: uppercase; letter-spacing: .07em; color: var(--nos); }
+.ta-nuevo .ta-h2 { font-size: 16px; color: var(--texto); }
+.ta-modo, .ta-pest { display: flex; gap: 6px; flex-wrap: wrap; }
+.ta-modo button, .ta-pest button, .ta-chips button {
+  height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--linea);
+  background: var(--capa-2); color: var(--texto-2); font: 700 14px/1 var(--f-txt);
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; white-space: nowrap;
+}
+.ta-modo button { height: 36px; padding: 0 12px; font-size: 13px; }
+.ta-modo button.on, .ta-pest button.on, .ta-chips button.on {
+  background: var(--nos-suave, var(--capa-3)); border: 2px solid var(--nos); color: var(--texto);
+}
+.ta-pest { margin-bottom: 12px; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+.ta-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.ta-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+.ta-tabla { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; }
+.ta-clasico .ta-tabla { font-size: 13px; }
+.ta-tabla th {
+  font: 700 11px/1.1 var(--f-txt); color: var(--texto-3); text-transform: uppercase; letter-spacing: .05em;
+  text-align: right; border-bottom: 1px solid var(--linea); white-space: nowrap; padding: 0;
+  background: var(--capa);
+}
+.ta-tabla th button {
+  display: block; width: 100%; min-height: 40px; padding: 6px 8px; text-align: inherit; font: inherit;
+  color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; background: none; border: 0;
+}
+.ta-tabla th[aria-sort] { color: var(--nos); }
+.ta-tabla td {
+  text-align: right; padding: 8px 8px; border-bottom: 1px solid var(--linea); white-space: nowrap;
+  font-family: var(--f-num); font-variant-numeric: tabular-nums;
+}
+.ta-nuevo .ta-tabla td { font-size: 16px; }
+.ta-tabla .izq { text-align: left; }
+.ta-tabla td.nombre { font: 700 15px/1.1 var(--f-txt); }
+.ta-clasico .ta-tabla td.nombre { font-size: 13px; }
+.ta-tabla td.nombre .dorsal { display: inline-block; min-width: 26px; color: var(--nos); font-family: var(--f-num); }
+.ta-tabla td.fuerte { font-weight: 800; }
+.ta-tabla td.mas { color: var(--ok); }
+.ta-tabla td.menos { color: var(--mal); }
+/* Primera columna FIJA: el nombre no se va al desplazar la tabla. */
+.ta-tabla .fija { position: sticky; left: 0; z-index: 1; background: var(--capa); box-shadow: 1px 0 0 var(--linea); }
+.ta-tabla th.fija { z-index: 2; }
+.ta-tabla tfoot td { border-top: 2px solid var(--linea); border-bottom: none; font-weight: 800; color: var(--texto); background: var(--capa-2); }
+.ta-tabla tfoot td.fija { background: var(--capa-2); }
+.ta-sit-eq tbody tr { cursor: pointer; }
+.ta-sit-eq tr.elegida td { background: var(--nos-suave, var(--capa-3)); }
+.ta-nota { color: var(--texto-3); font-size: 12px; line-height: 1.4; margin-top: 10px; }
+/* La barra de desplazamiento del iPad/Chrome, a juego con el fondo (si no, sale blanca). */
+.ta-clasico, .pz .ta { color-scheme: dark; }
+.pz[data-tema="sol"] .ta { color-scheme: light; }
+.ta-sit-eq th { padding: 8px; }
+.ta-sit-eq { margin-bottom: 4px; }

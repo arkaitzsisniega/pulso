@@ -18,8 +18,8 @@ import { listarPartidos, cerrarTerminados } from "@/lib/store";
 import { repasarSinCerrar } from "@/lib/finPartido";
 import { BloqueCerrarTerminados, textoMotivoFin, nombrePartido, type InformeCierre } from "@/components/FinPartido";
 import { db, type Partido } from "@/lib/db";
-import { CLIENTE } from "@/lib/clientes";
-import { calcularTotales, formatMinutos, partidosQueCuentan } from "@/lib/totales";
+import { CLIENTE, ROSTER } from "@/lib/clientes";
+import { calcularTotales, partidosQueCuentan } from "@/lib/totales";
 import { ordenarPartidos } from "@/lib/ordenPartidos";
 import {
   type FiltroTotales as Filtro, describirFiltro, incluido, leerFiltro, limpiarFiltro, FILTRO_TODO,
@@ -28,6 +28,8 @@ import { FiltroTotales, textoFiltro } from "@/components/FiltroTotales";
 import { t, useIdioma, labelCompeticionCorta } from "@/lib/i18n";
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { TotalesNuevo } from "@/components/TotalesNuevo";
+import { TotalesAmpliados } from "@/components/TotalesAmpliados";
+import { calcularTotalesAmpliados, partidosDeTotales } from "@/lib/totalesJugador";
 
 /** «*texto*» del catálogo → negrita. */
 function conNegritas(frase: string) {
@@ -53,6 +55,16 @@ export default function TotalesPage() {
   const filtroVivo = useMemo(() => (dup ? limpiarFiltro(dup.cuentan, filtro) : filtro), [dup, filtro]);
   const tot = useMemo(
     () => (todos ? calcularTotales(todos, (p) => incluido(p, filtroVivo)) : null),
+    [todos, filtroVivo],
+  );
+  // Las tablas por jugador, en pestañas (25/11/2026, lib/totalesJugador.ts):
+  // los MISMOS partidos que arriba (filtro incluido), sumando el informe de
+  // cada uno.
+  const amp = useMemo(
+    () => (todos ? calcularTotalesAmpliados(
+      partidosDeTotales(todos, (p) => incluido(p, filtroVivo)),
+      { nombreCorto: CLIENTE.nombreCorto, nombreLargo: CLIENTE.nombreLargo, roster: ROSTER, completo: CLIENTE.informeCompleto },
+    ) : null),
     [todos, filtroVivo],
   );
   const listaFiltro = useMemo(
@@ -173,7 +185,7 @@ export default function TotalesPage() {
   // de seguridad (guardarCopia / restaurar), otro dibujo.
   if (aspecto === "nuevo") {
     return (
-      <TotalesNuevo tot={tot} sinCerrar={sinCerrar} aviso={aviso} cerrar={bloqueCerrar(true)}
+      <TotalesNuevo tot={tot} ampliados={amp && <TotalesAmpliados nuevo datos={amp} />} sinCerrar={sinCerrar} aviso={aviso} cerrar={bloqueCerrar(true)}
         filtro={filtroUI(true)} subtitulo={subtitulo} hayPartidos={hayPartidos}
         sol={modoSol} onSol={() => setModoSol(!modoSol)}
         onGuardar={guardarCopia} onRestaurar={() => fichero.current?.click()}
@@ -192,7 +204,7 @@ export default function TotalesPage() {
   if (!tot) return (
     <div className="min-h-screen bg-zinc-950 p-6 text-zinc-400">{t("cargando")}</div>
   );
-  const { equipo: eq, jugadores, partidos } = tot;
+  const { equipo: eq, partidos } = tot;
 
   return (
     // El fondo oscuro va FUERA del ancho máximo: sin él, esta pantalla salía
@@ -246,84 +258,7 @@ export default function TotalesPage() {
             ))}
           </section>
 
-          <section className="mb-6">
-            <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-emerald-500">
-              {t("tot_por_jugador")}
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-zinc-700 text-left text-[10px] uppercase text-zinc-500">
-                    <th className="py-1">{t("tot_th_num")}</th><th>{t("tot_th_jugador")}</th>
-                    <th className="text-right">{t("tot_th_pj")}</th><th className="text-right">{t("tot_th_min")}</th>
-                    <th className="text-right">⚽</th><th className="text-right">{t("tot_th_asist")}</th>
-                    <th className="text-right">{t("tot_th_disp")}</th><th className="text-right">{t("tot_th_robos")}</th>
-                    <th className="text-right">{t("tot_th_cortes")}</th><th className="text-right">{t("tot_th_perd")}</th>
-                    <th className="text-right">🟨</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {jugadores.map((j) => (
-                    <tr key={j.nombre} className="border-b border-zinc-900">
-                      <td className="py-1 font-mono text-emerald-500">{j.dorsal}</td>
-                      <td>{j.nombre}</td>
-                      <td className="text-right">{j.jugados}</td>
-                      <td className="text-right font-mono">{formatMinutos(j.segundos)}</td>
-                      <td className="text-right">{j.goles || ""}</td>
-                      <td className="text-right">{j.asistencias || ""}</td>
-                      <td className="text-right">
-                        {(j.aPuerta + j.fuera + j.palo + j.bloqueados) || ""}
-                      </td>
-                      <td className="text-right">{j.robos || ""}</td>
-                      <td className="text-right">{j.cortes || ""}</td>
-                      <td className="text-right">{j.perdidas || ""}</td>
-                      <td className="text-right">{j.amarillas || ""}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-2 text-[10px] text-zinc-500">
-              {t("tot_nota_pj")}
-            </p>
-          </section>
-
-          {jugadores.some((j) => j.paradas + j.golesEncajados > 0) && (
-            <section className="mb-6">
-              <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-emerald-500">
-                {t("tot_porteros")}
-              </h2>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-zinc-700 text-left text-[10px] uppercase text-zinc-500">
-                    <th className="py-1">{t("tot_th_num")}</th><th>{t("tot_th_portero")}</th>
-                    <th className="text-right">{t("tot_th_pj")}</th><th className="text-right">{t("tot_th_min")}</th>
-                    <th className="text-right">{t("tot_th_paradas")}</th>
-                    <th className="text-right">{t("tot_th_encajados")}</th>
-                    <th className="text-right">{t("tot_th_pct")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {jugadores.filter((j) => j.paradas + j.golesEncajados > 0).map((j) => {
-                    const tiros = j.paradas + j.golesEncajados;
-                    return (
-                      <tr key={j.nombre} className="border-b border-zinc-900">
-                        <td className="py-1 font-mono text-emerald-500">{j.dorsal}</td>
-                        <td>{j.nombre}</td>
-                        <td className="text-right">{j.jugados}</td>
-                        <td className="text-right font-mono">{formatMinutos(j.segundos)}</td>
-                        <td className="text-right">{j.paradas}</td>
-                        <td className="text-right">{j.golesEncajados}</td>
-                        <td className="text-right">
-                          {tiros ? `${Math.round((j.paradas / tiros) * 100)}%` : ""}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </section>
-          )}
+          {amp && <TotalesAmpliados nuevo={false} datos={amp} />}
 
           <section className="mb-6">
             <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-emerald-500">
