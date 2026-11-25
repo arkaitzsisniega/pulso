@@ -2,4 +2,4 @@
 :HL["/pulso/crono/_next/static/chunks/0zrpv~1uzsp__.css","style"]
 :HL["/pulso/crono/escudos/inter.png","image"]
 :HL["/pulso/crono/escudos/inter-informe.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"6Wi0icFWAGS9_DrdyhrEW"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"r_D7rLRrBn236bvRTvTqh"}
