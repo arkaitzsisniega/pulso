@@ -365,7 +365,8 @@ function Situaciones(props: { inf: Informe; cuadro: CuadroSituaciones }) {
     <section className="ic-sec">
       <Titulo clave="inf_sec_situaciones" />
       <TablaSituaciones cuadro={props.cuadro} nos={props.inf.cabecera.nombreCorto}
-                        rival={props.inf.cabecera.rival} color={COLOR} />
+                        rival={props.inf.cabecera.rival} color="#fff" />
+      {/* blanco: en el clásico la cabecera ya va con el color del club de fondo (25/11) */}
     </section>
   );
 }
