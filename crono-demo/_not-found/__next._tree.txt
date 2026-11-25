@@ -1,4 +1,4 @@
-:HL["/pulso/crono-demo/_next/static/chunks/02awqva0wp4sf.css","style"]
-:HL["/pulso/crono-demo/_next/static/chunks/0zrpv~1uzsp__.css","style"]
+:HL["/pulso/crono-demo/_next/static/chunks/14hklcg252uh4.css","style"]
+:HL["/pulso/crono-demo/_next/static/chunks/0~o3eqow7zh9e.css","style"]
 :HL["/pulso/crono-demo/escudos/pulso.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"7L9bKk27Pe6CVjCRmWDoB"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"KiwBT6CIcEtWm4eifSYom"}
