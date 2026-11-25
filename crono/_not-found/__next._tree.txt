@@ -1,4 +1,4 @@
-:HL["/pulso/crono/_next/static/chunks/14hklcg252uh4.css","style"]
+:HL["/pulso/crono/_next/static/chunks/03vjmwlhqy2n1.css","style"]
 :HL["/pulso/crono/_next/static/chunks/0~o3eqow7zh9e.css","style"]
 :HL["/pulso/crono/escudos/inter-verde.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"8tabvGdneu-1y_0hO1_UC"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"M8QYEo6VWS2_L9GzCzDBf"}
