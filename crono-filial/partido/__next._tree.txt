@@ -9,4 +9,4 @@
 :HL["/pulso/crono-filial/_next/static/media/inter_latin_wght_normal-s.p.055ydel_y7o6i.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/pulso/crono-filial/escudos/inter.png","image"]
 :HL["/pulso/crono-filial/escudos/inter-informe.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"partido","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"l7FPeGRrhZUchORuYXSrG"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"partido","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"gMAtOKkxMJtJyDlkGbpMF"}
