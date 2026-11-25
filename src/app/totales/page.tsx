@@ -13,13 +13,18 @@
  * servidor, sin cuenta y sin mandarle el fichero a nadie.
  */
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listarPartidos, cerrarTerminados } from "@/lib/store";
 import { repasarSinCerrar } from "@/lib/finPartido";
 import { BloqueCerrarTerminados, textoMotivoFin, nombrePartido, type InformeCierre } from "@/components/FinPartido";
 import { db, type Partido } from "@/lib/db";
 import { CLIENTE } from "@/lib/clientes";
-import { calcularTotales, formatMinutos, type Totales } from "@/lib/totales";
+import { calcularTotales, formatMinutos, partidosQueCuentan } from "@/lib/totales";
+import { ordenarPartidos } from "@/lib/ordenPartidos";
+import {
+  type FiltroTotales as Filtro, describirFiltro, incluido, leerFiltro, limpiarFiltro, FILTRO_TODO,
+} from "@/lib/filtroTotales";
+import { FiltroTotales, textoFiltro } from "@/components/FiltroTotales";
 import { t, useIdioma, labelCompeticionCorta } from "@/lib/i18n";
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { TotalesNuevo } from "@/components/TotalesNuevo";
@@ -29,9 +34,44 @@ function conNegritas(frase: string) {
   return frase.split("*").map((trozo, i) => (i % 2 ? <b key={i}>{trozo}</b> : trozo));
 }
 
+/** La última elección del filtro, en ESTE aparato y para ESTE equipo. */
+const CLAVE_FILTRO = `${CLIENTE.id}_crono_totales_filtro`;
+
 export default function TotalesPage() {
   useIdioma();
-  const [tot, setTot] = useState<Totales | null>(null);
+  const [todos, setTodos] = useState<Partido[] | null>(null);
+  // Qué competiciones y partidos entran (25/11/2026, lib/filtroTotales.ts).
+  const [filtro, setFiltroEstado] = useState<Filtro>(FILTRO_TODO);
+  useEffect(() => {
+    try { setFiltroEstado(leerFiltro(localStorage.getItem(CLAVE_FILTRO))); } catch { /* sin almacenamiento: todo */ }
+  }, []);
+  const setFiltro = (f: Filtro) => {
+    setFiltroEstado(f);
+    try { localStorage.setItem(CLAVE_FILTRO, JSON.stringify(f)); } catch { /* no pasa nada: solo no se recuerda */ }
+  };
+  const dup = useMemo(() => (todos ? partidosQueCuentan(todos) : null), [todos]);
+  const filtroVivo = useMemo(() => (dup ? limpiarFiltro(dup.cuentan, filtro) : filtro), [dup, filtro]);
+  const tot = useMemo(
+    () => (todos ? calcularTotales(todos, (p) => incluido(p, filtroVivo)) : null),
+    [todos, filtroVivo],
+  );
+  const listaFiltro = useMemo(
+    () => (dup ? ordenarPartidos([...dup.cuentan, ...dup.directosFuera, ...dup.videosFuera]) : []),
+    [dup],
+  );
+  const fuera = useMemo(() => {
+    const m = new Map<string, "directo" | "video">();
+    dup?.directosFuera.forEach((p) => m.set(p.id, "directo"));
+    dup?.videosFuera.forEach((p) => m.set(p.id, "video"));
+    return m;
+  }, [dup]);
+  const subtitulo = dup && dup.cuentan.length
+    ? textoFiltro(describirFiltro(dup.cuentan, filtroVivo), dup.cuentan.length) : "";
+  const hayPartidos = !!dup?.cuentan.length;
+  const filtroUI = (nuevo: boolean) => dup && (
+    <FiltroTotales nuevo={nuevo} lista={listaFiltro} cuentan={dup.cuentan} fuera={fuera}
+      filtro={filtroVivo} onCambiar={setFiltro} />
+  );
   const [aviso, setAviso] = useState("");
   // Partidos guardados que NO están finalizados: no entran en estos totales
   // (uno a medias falsearía medias y resultados). El problema es que hasta el
@@ -48,10 +88,10 @@ export default function TotalesPage() {
   const modoSol = useModoSol();
 
   const recargar = async () => {
-    const todos = await listarPartidos();
-    setTot(calcularTotales(todos));
-    setSinCerrar(todos.filter((p) => p.estado !== "finalizado" && p.config).length);
-    setCerrables(repasarSinCerrar(todos).cerrar.length);
+    const lista = await listarPartidos();
+    setTodos(lista);
+    setSinCerrar(lista.filter((p) => p.estado !== "finalizado" && p.config).length);
+    setCerrables(repasarSinCerrar(lista).cerrar.length);
   };
 
   const cerrarLosAcabados = async () => {
@@ -134,6 +174,7 @@ export default function TotalesPage() {
   if (aspecto === "nuevo") {
     return (
       <TotalesNuevo tot={tot} sinCerrar={sinCerrar} aviso={aviso} cerrar={bloqueCerrar(true)}
+        filtro={filtroUI(true)} subtitulo={subtitulo} hayPartidos={hayPartidos}
         sol={modoSol} onSol={() => setModoSol(!modoSol)}
         onGuardar={guardarCopia} onRestaurar={() => fichero.current?.click()}
         fichero={
@@ -160,7 +201,10 @@ export default function TotalesPage() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
     <main className="mx-auto max-w-4xl p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-black">{t("tot_titulo")}</h1>
+        <div>
+          <h1 className="text-xl font-black">{t("tot_titulo")}</h1>
+          {subtitulo && <p className="text-sm text-emerald-400">{subtitulo}</p>}
+        </div>
         <Link href="/" className="rounded-lg bg-zinc-800 px-3 py-2 text-sm">{t("inicio")}</Link>
       </div>
 
@@ -180,10 +224,11 @@ export default function TotalesPage() {
         </p>
       )}
       {bloqueCerrar(false)}
+      {filtroUI(false)}
 
       {eq.partidos === 0 ? (
         <p className="text-zinc-400">
-          {t("tot_vacio")}
+          {hayPartidos ? t("tot_filtro_ninguno") : t("tot_vacio")}
         </p>
       ) : (
         <>

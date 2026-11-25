@@ -1774,6 +1774,20 @@ export const CATALOGO: Record<string, Entrada> = {
   tot_dup_directo_n: { ico: "ℹ️", es: "*{n} partidos en directo* no cuentan porque ya está su versión de vídeo.", en: "*{n} live matches* are not counted because their video version is already here.", it: "*{n} partite dal vivo* non vengono contate perché c'è già la loro versione video." },
   tot_dup_video_1: { ico: "ℹ️", es: "*1 versión de vídeo antigua* no cuenta: hay otra más reciente del mismo partido.", en: "*1 older video version* is not counted: there is a newer one of the same match.", it: "*1 versione video più vecchia* non viene contata: ce n'è una più recente della stessa partita." },
   tot_dup_video_n: { ico: "ℹ️", es: "*{n} versiones de vídeo antiguas* no cuentan: hay otra más reciente del mismo partido.", en: "*{n} older video versions* are not counted: there is a newer one of the same match.", it: "*{n} versioni video più vecchie* non vengono contate: ce n'è una più recente della stessa partita." },
+  // ── Filtro de Totales: qué competiciones y partidos entran (25/11/2026, lib/filtroTotales.ts) ──
+  tot_filtro_titulo: { es: "Qué partidos entran", en: "Which matches count", it: "Quali partite contano" },
+  tot_filtro_todas: { es: "Todas", en: "All", it: "Tutte" },
+  tot_filtro_solo_liga: { es: "Solo liga", en: "League only", it: "Solo campionato" },
+  tot_filtro_elegir: { es: "Elegir partidos ({n} de {total})", en: "Choose matches ({n} of {total})", it: "Scegli le partite ({n} di {total})" },
+  tot_filtro_fuera_directo: { es: "no cuenta: está su vídeo", en: "not counted: its video is here", it: "non conta: c'è il suo video" },
+  tot_filtro_fuera_video: { es: "no cuenta: hay un vídeo más reciente", en: "not counted: there is a newer video", it: "non conta: c'è un video più recente" },
+  tot_filtro_ninguno: { es: "No hay ningún partido marcado. Marca alguna competición o algún partido.", en: "No match is selected. Tick a competition or a match.", it: "Nessuna partita selezionata. Seleziona una competizione o una partita." },
+  tot_filtro_sin_comp: { es: "Sin competición", en: "No competition", it: "Senza competizione" },
+  tot_filtro_todas_comp: { es: "Todas las competiciones", en: "All competitions", it: "Tutte le competizioni" },
+  tot_filtro_n_1: { es: "1 partido", en: "1 match", it: "1 partita" },
+  tot_filtro_n: { es: "{n} partidos", en: "{n} matches", it: "{n} partite" },
+  tot_filtro_manual: { es: "selección a mano", en: "hand-picked", it: "selezione manuale" },
+  tot_filtro_dup: { es: "Si un partido está en directo y en vídeo, cuenta solo el de vídeo.", en: "If a match is saved both live and from video, only the video version counts.", it: "Se una partita è sia dal vivo sia da video, conta solo la versione video." },
   // ── Fin de partido (20/11/2026, lib/finPartido.ts) ──
   fin_titulo: { ico: "🏁", es: "Partido terminado", en: "Match over", it: "Partita finita" },
   fin_titulo_empate: { ico: "⏱️", es: "Fin del tiempo · empate", en: "Full time · draw", it: "Fine del tempo · pareggio" },
@@ -2033,6 +2047,14 @@ export function labelParte(parte: string): string {
 
 /** Competición en una lista o cabecera. Inter y filial siguen viendo el código
  *  (LIGA, COPA_REY…); la demo, el nombre en su idioma. */
+/** Nombre de la competición con palabras, en TODOS los clientes (las casillas
+ *  del filtro de Totales: «COPA_REY» no se lee bien en un botón). Lo que no
+ *  esté en el catálogo sale tal cual; sin competición, «Sin competición». */
+export function nombreCompeticion(codigo: string): string {
+  if (!codigo) return t("tot_filtro_sin_comp");
+  return texto(`compc_${codigo}`) ?? codigo;
+}
+
 export function labelCompeticionCorta(codigo: string): string {
   if (!CLIENTE.demo) return codigo;
   return texto(`compc_${codigo}`) ?? codigo;

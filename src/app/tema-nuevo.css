@@ -1126,6 +1126,30 @@ input[type="date"].pz-in { padding-top: 0; padding-bottom: 0; }
 .pz-tot-copia .txt b { color: var(--texto); }
 .pz-tot-copia .acc { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .pz-tot-msg { margin-top: 10px; color: var(--aviso); font-size: 14px; }
+/* Filtro de competiciones y partidos (25/11/2026, components/FiltroTotales.tsx) */
+.pz-tot-cab { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.pz-tot-sub { color: var(--nos); font: 700 14px/1.2 var(--f-txt); letter-spacing: .03em; }
+.pz-tot-filtro .atajos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.pz-tot-fbtn, .pz-tot-fcomp {
+  display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; border-radius: 10px;
+  background: var(--capa-2); border: 1px solid var(--linea); color: var(--texto-2); font: 700 15px/1 var(--f-txt);
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer;
+}
+.pz-tot-fbtn.on { background: var(--nos-suave); border: 2px solid var(--nos); color: var(--texto); }
+.pz-tot-fcomp.on { color: var(--texto); border-color: var(--nos); }
+.pz-tot-fcomp input, .pz-tot-flista input { width: 20px; height: 20px; accent-color: var(--nos); }
+.pz-tot-fcomp .n { color: var(--texto-3); font-size: 14px; }
+.pz-tot-flista { margin-top: 12px; }
+.pz-tot-flista summary { cursor: pointer; color: var(--texto-2); font: 700 15px/1.2 var(--f-txt); padding: 6px 2px; }
+.pz-tot-flista ul { list-style: none; margin-top: 6px; }
+.pz-tot-flista li { padding: 8px 2px; border-bottom: 1px solid var(--linea); }
+.pz-tot-flista li:last-child { border-bottom: none; }
+.pz-tot-flista label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.pz-tot-flista .fecha { color: var(--texto-3); font-size: 14px; }
+.pz-tot-flista .marc { flex: 1; min-width: 0; font: 700 16px/1.2 var(--f-num); letter-spacing: .03em; text-transform: uppercase; }
+.pz-tot-flista li.no .marc, .pz-tot-flista li.fuera .marc { color: var(--texto-3); }
+.pz-tot-flista li.fuera { opacity: .7; }
+.pz-tot-flista .porque { display: block; margin: 2px 0 0 30px; color: var(--texto-3); font-size: 12px; font-style: italic; }
 
 /* Iconos dentro de las marcas redondas del cronograma: en blanco, sobre su color */
 .pz-pp .rounded-full .pz-ti { color: #fff !important; margin: 0; }

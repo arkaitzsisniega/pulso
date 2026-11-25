@@ -13,7 +13,8 @@
  *
  * Solo cuenta partidos FINALIZADOS: uno a medias falsearía medias y resultados.
  * Y el mismo partido en directo y en vídeo cuenta UNA vez, el de vídeo
- * (20/11/2026, lib/duplicadosVideo.ts).
+ * (20/11/2026, lib/duplicadosVideo.ts). Desde el 25/11/2026 la pantalla elige
+ * además qué competiciones y partidos entran (lib/filtroTotales.ts).
  */
 import { JUGADOR_EQUIPO, type Partido, type Evento } from "@/lib/db";
 import { ROSTER } from "@/lib/clientes";
@@ -99,11 +100,21 @@ function sumaNuestra(por: Record<string, { inter: number; rival: number }> | und
   return Object.values(por).reduce((a, p) => a + (p?.inter ?? 0), 0);
 }
 
-export function calcularTotales(todos: Partido[]): Totales {
+/** Los finalizados, sin los duplicados de vídeo, y los que se quedan fuera
+ *  por estar repetidos. Es la lista entre la que se elige en el filtro de
+ *  Totales (lib/filtroTotales.ts). */
+export function partidosQueCuentan(todos: Partido[]) {
+  return quitarDuplicadosVideo(todos.filter((p) => p.estado === "finalizado" && p.config));
+}
+
+/** `incluir` (25/11/2026): el filtro de competiciones y partidos de la
+ *  pantalla. Se aplica DESPUÉS de quitar los duplicados de vídeo, así que un
+ *  partido sigue sin poder contar dos veces. Sin él, entra todo. */
+export function calcularTotales(todos: Partido[], incluir?: (p: Partido) => boolean): Totales {
   // Del más reciente al más antiguo: es el orden en que se mira una temporada
   // (el mismo que la lista del inicio: lib/ordenPartidos.ts).
-  const dup = quitarDuplicadosVideo(todos.filter((p) => p.estado === "finalizado" && p.config));
-  const finalizados = ordenarPartidos(dup.cuentan);
+  const dup = partidosQueCuentan(todos);
+  const finalizados = ordenarPartidos(incluir ? dup.cuentan.filter(incluir) : dup.cuentan);
 
   const dorsalDe = new Map(ROSTER.map((j) => [j.nombre, j.dorsal]));
   const porJugador = new Map<string, TotalesJugador>();

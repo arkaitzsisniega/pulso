@@ -32,6 +32,12 @@ export function TotalesNuevo(props: {
   aviso: string;
   /** «Dar por terminados los que ya acabaron» + su informe (20/11/2026). */
   cerrar?: ReactNode;
+  /** Qué competiciones y partidos entran (25/11/2026, FiltroTotales.tsx). */
+  filtro?: ReactNode;
+  /** «Liga · 9 partidos»: lo que se está sumando. */
+  subtitulo?: string;
+  /** ¿Hay algún partido finalizado? (si lo hay y no sale nada, es el filtro). */
+  hayPartidos?: boolean;
   sol: boolean;
   onSol: () => void;
   onGuardar: () => void;
@@ -44,7 +50,10 @@ export function TotalesNuevo(props: {
     <div className="pz pz-pp pz-tot" data-tema={props.sol ? "sol" : undefined} style={estiloPP(props.sol)}>
       <div className="pz-res-top">
         <Link href="/" className="pz-ib"><Ico.casa />{sinEmojis(t("inicio"))}</Link>
-        <h1 className="pz-tot-h1"><Escudo className="pz-tot-escudo" />{sinEmojis(t("tot_titulo"))}</h1>
+        <div className="pz-tot-cab">
+          <h1 className="pz-tot-h1"><Escudo className="pz-tot-escudo" />{sinEmojis(t("tot_titulo"))}</h1>
+          {props.subtitulo && <p className="pz-tot-sub">{props.subtitulo}</p>}
+        </div>
         <div className="der"><BotonSol sol={props.sol} onCambiar={props.onSol} /></div>
       </div>
 
@@ -69,9 +78,10 @@ export function TotalesNuevo(props: {
             </p>
           )}
           {props.cerrar}
+          {props.filtro}
 
           {tot.equipo.partidos === 0 ? (
-            <p className="pz-tot-vacio">{t("tot_vacio")}</p>
+            <p className="pz-tot-vacio">{props.hayPartidos ? t("tot_filtro_ninguno") : t("tot_vacio")}</p>
           ) : (
             <>
               <section className="pz-tot-kpis">
