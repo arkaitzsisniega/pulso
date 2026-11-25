@@ -962,9 +962,6 @@ export default function PartidoPage() {
           <BotonNuevo label={t("btn_perdida_equipo")} color="var(--mal)" icono={<Ico.cruz />}
             onClick={() => { registrarAccionIndividual(JUGADOR_EQUIPO, "pf");
                              mostrarAviso(t("aviso_perdida_equipo")); }} />
-          {/* Interruptor del portero-jugador rival: relleno mientras está encendido. */}
-          <BotonNuevo label={etiquetaPjRival} color="var(--aviso)" icono={<Ico.guante />}
-            tipo={pjRival ? "lleno" : undefined} onClick={alternarPjRival} />
           <BotonNuevo label={t("btn_deshacer")} color="var(--texto-2)" tipo="nav" icono={<Ico.deshacer />}
             onClick={() => {
               const ultimo = partido.eventos[partido.eventos.length - 1];
@@ -985,6 +982,9 @@ export default function PartidoPage() {
             onClick={() => router.push("/resumen")} />
           <BotonNuevo label={t("inicio")} color="var(--texto-2)" tipo="nav" icono={<Ico.casa />}
             onClick={() => router.push("/")} />
+          {/* Interruptor del portero-jugador rival — ABAJO A LA DERECHA (esquina), relleno mientras está encendido. */}
+          <BotonNuevo label={etiquetaPjRival} color="var(--aviso)" icono={<Ico.guante />}
+            tipo={pjRival ? "lleno" : undefined} onClick={alternarPjRival} />
         </div>
       </>)}
       {!nuevo && (<>
@@ -1147,14 +1147,6 @@ export default function PartidoPage() {
                      active:scale-95 transition rounded-lg text-lg font-bold leading-none leading-tight">
           {ic(t("btn_perdida_equipo"))}
         </button>
-        {/* Interruptor del portero-jugador rival: ámbar fuerte mientras está encendido. */}
-        <button onClick={alternarPjRival} aria-pressed={!!pjRival}
-          className={`h-full min-h-[44px] py-1 px-0.5 rounded-lg text-lg font-bold leading-none leading-tight ${
-            pjRival
-              ? "bg-amber-500 hover:bg-amber-400 text-zinc-950 ring-4 ring-amber-200"
-              : "bg-amber-900 hover:bg-amber-800"}`}>
-          {ic(etiquetaPjRival)}
-        </button>
         <button onClick={() => {
                   const ultimo = partido.eventos[partido.eventos.length - 1];
                   const desc = describirEvento(ultimo, cfg.rival);
@@ -1187,6 +1179,14 @@ export default function PartidoPage() {
         <button onClick={() => router.push("/")}
           className="h-full min-h-[44px] py-1 px-0.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-bold leading-none">
           {ic(t("inicio"))}
+        </button>
+        {/* Interruptor del portero-jugador rival — ABAJO A LA DERECHA (esquina), ámbar fuerte mientras está encendido. */}
+        <button onClick={alternarPjRival} aria-pressed={!!pjRival}
+          className={`h-full min-h-[44px] py-1 px-0.5 rounded-lg text-lg font-bold leading-none leading-tight ${
+            pjRival
+              ? "bg-amber-500 hover:bg-amber-400 text-zinc-950 ring-4 ring-amber-200"
+              : "bg-amber-900 hover:bg-amber-800"}`}>
+          {ic(etiquetaPjRival)}
         </button>
       </div>
       </>)}
