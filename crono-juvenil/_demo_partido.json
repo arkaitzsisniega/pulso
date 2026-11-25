@@ -1,0 +1,4303 @@
+{
+  "id": "demo_partido_1",
+  "estado": "finalizado",
+  "modo": "video",
+  "config": {
+    "rival": "CD SERENO",
+    "fecha": "2026-10-24",
+    "hora": "17:30",
+    "lugar": "Pulso Arena",
+    "competicion": "LIGA",
+    "local": true,
+    "partido_id": "DEMO 1",
+    "convocados": [
+      "MENDEZ",
+      "CALVO",
+      "MARIN",
+      "MOLINA",
+      "LARA",
+      "LEON",
+      "TORRES",
+      "NEGRO",
+      "PRIETO",
+      "SOTO",
+      "ARANDA",
+      "REYES",
+      "VEGA",
+      "ORTEGA"
+    ],
+    "pista_inicial": {
+      "portero": "MENDEZ",
+      "pista1": "SOTO",
+      "pista2": "LEON",
+      "pista3": "CALVO",
+      "pista4": "NEGRO"
+    },
+    "duracionParte": {
+      "1T": 1200,
+      "2T": 1200,
+      "PR1": 0,
+      "PR2": 0
+    },
+    "permiteTanda": false,
+    "direccionInter1T": "izq"
+  },
+  "cronometro": {
+    "parteActual": "2T",
+    "segundosParte": 0,
+    "ultimoStart": null,
+    "segundosGuardadosPorParte": {
+      "1T": 1200,
+      "2T": 1200,
+      "PR1": 0,
+      "PR2": 0
+    }
+  },
+  "enPista": [
+    "MENDEZ",
+    "MARIN",
+    "TORRES",
+    "ARANDA",
+    "LARA"
+  ],
+  "tiempos": {
+    "MENDEZ": {
+      "nombre": "MENDEZ",
+      "totalSegundos": 2400,
+      "porParte": {
+        "1T": 1200,
+        "2T": 1200,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "CALVO": {
+      "nombre": "CALVO",
+      "totalSegundos": 1166.455,
+      "porParte": {
+        "1T": 760.1589999999999,
+        "2T": 406.29599999999994,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "MARIN": {
+      "nombre": "MARIN",
+      "totalSegundos": 872.24,
+      "porParte": {
+        "1T": 439.84100000000007,
+        "2T": 432.3989999999999,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "MOLINA": {
+      "nombre": "MOLINA",
+      "totalSegundos": 1105.97,
+      "porParte": {
+        "1T": 462.354,
+        "2T": 643.6160000000001,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "LARA": {
+      "nombre": "LARA",
+      "totalSegundos": 691.5909999999999,
+      "porParte": {
+        "1T": 267.435,
+        "2T": 424.15599999999995,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "LEON": {
+      "nombre": "LEON",
+      "totalSegundos": 1112.519,
+      "porParte": {
+        "1T": 760.1589999999999,
+        "2T": 352.36000000000007,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "TORRES": {
+      "nombre": "TORRES",
+      "totalSegundos": 708.288,
+      "porParte": {
+        "1T": 203.73400000000004,
+        "2T": 504.554,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "NEGRO": {
+      "nombre": "NEGRO",
+      "totalSegundos": 941.219,
+      "porParte": {
+        "1T": 475.94,
+        "2T": 465.27900000000005,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "PRIETO": {
+      "nombre": "PRIETO",
+      "totalSegundos": 447.869,
+      "porParte": {
+        "1T": 147.32500000000005,
+        "2T": 300.544,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "SOTO": {
+      "nombre": "SOTO",
+      "totalSegundos": 1157.453,
+      "porParte": {
+        "1T": 737.646,
+        "2T": 419.8069999999999,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "ARANDA": {
+      "nombre": "ARANDA",
+      "totalSegundos": 814.694,
+      "porParte": {
+        "1T": 333.99500000000006,
+        "2T": 480.69899999999996,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "REYES": {
+      "nombre": "REYES",
+      "totalSegundos": 0,
+      "porParte": {
+        "1T": 0,
+        "2T": 0,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "VEGA": {
+      "nombre": "VEGA",
+      "totalSegundos": 241.3,
+      "porParte": {
+        "1T": 88.03999999999996,
+        "2T": 153.26000000000005,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    },
+    "ORTEGA": {
+      "nombre": "ORTEGA",
+      "totalSegundos": 340.40200000000004,
+      "porParte": {
+        "1T": 123.37199999999996,
+        "2T": 217.0300000000001,
+        "PR1": 0,
+        "PR2": 0
+      },
+      "segTurnoActual": null,
+      "turnoStart": null,
+      "ultimaSalida": null,
+      "segDescansoActual": null,
+      "descansoStart": null,
+      "segTurnoUltimo": null
+    }
+  },
+  "marcador": {
+    "inter": 5,
+    "rival": 3
+  },
+  "stats": {
+    "faltas": {
+      "1T": {
+        "inter": 6,
+        "rival": 4
+      },
+      "2T": {
+        "inter": 5,
+        "rival": 4
+      },
+      "PR1": {
+        "inter": 0,
+        "rival": 0
+      },
+      "PR2": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    "amarillas": {
+      "1T": {
+        "inter": 0,
+        "rival": 0
+      },
+      "2T": {
+        "inter": 0,
+        "rival": 0
+      },
+      "PR1": {
+        "inter": 0,
+        "rival": 0
+      },
+      "PR2": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    "tiemposMuerto": {
+      "1T": {
+        "inter": 0,
+        "rival": 1
+      },
+      "2T": {
+        "inter": 1,
+        "rival": 0
+      },
+      "PR1": {
+        "inter": 0,
+        "rival": 0
+      },
+      "PR2": {
+        "inter": 0,
+        "rival": 0
+      }
+    }
+  },
+  "eventos": [
+    {
+      "id": "e9kvbw4dmvmk4hx3",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 21.854,
+      "segundosPartido": 21.854,
+      "timestampReal": 1792855920567,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "NEGRO",
+      "accion": "robos",
+      "zonaCampo": "D4"
+    },
+    {
+      "id": "jwydu5k4mvmk4t5j",
+      "parte": "1T",
+      "segundosParte": 31.932,
+      "segundosPartido": 31.932,
+      "timestampReal": 1792855935127,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LEON",
+      "resultado": "PALO",
+      "zonaCampo": "A5"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "PUERTA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P7",
+      "id": "6y3d51t1mvmk5j56",
+      "parte": "1T",
+      "segundosParte": 55.407,
+      "segundosPartido": 55.407,
+      "timestampReal": 1792855968810,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "m777apg5mvmk5wj3",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 67.669,
+      "segundosPartido": 67.669,
+      "timestampReal": 1792855986159,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "CALVO",
+      "accion": "unoDef_p",
+      "zonaCampo": "D6"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "BLOQUEADO",
+      "portero": "MENDEZ",
+      "zonaCampo": "A4",
+      "id": "4h87yiqjmvmk5x27",
+      "parte": "1T",
+      "segundosParte": 67.669,
+      "segundosPartido": 67.669,
+      "timestampReal": 1792855986847,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "728ftq72mvmk67al",
+      "parte": "1T",
+      "segundosParte": 77.012,
+      "segundosPartido": 77.012,
+      "timestampReal": 1792856000109,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LEON",
+      "resultado": "FUERA",
+      "zonaCampo": "A8",
+      "id": "escz2tzwmvmk6oel",
+      "parte": "1T",
+      "segundosParte": 91.993,
+      "segundosPartido": 91.993,
+      "timestampReal": 1792856022285,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "fv0afqtpmvmk7aal",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 112.143,
+      "segundosPartido": 112.143,
+      "timestampReal": 1792856050653,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "NEGRO",
+      "accion": "robos",
+      "zonaCampo": "A8"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "PUERTA",
+      "zonaCampo": "A2",
+      "zonaPorteria": "P8",
+      "id": "hq73695bmvmk7ar4",
+      "parte": "1T",
+      "segundosParte": 112.143,
+      "segundosPartido": 112.143,
+      "timestampReal": 1792856051248,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "6c901anfmvmk7rpk",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 127.258,
+      "segundosPartido": 127.258,
+      "timestampReal": 1792856073224,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "LEON",
+      "accion": "pf",
+      "zonaCampo": "A5"
+    },
+    {
+      "id": "u0k83a01mvmk7t5d",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 127.258,
+      "segundosPartido": 127.258,
+      "timestampReal": 1792856075089,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "SOTO",
+      "accion": "ultCob",
+      "zonaCampo": "D1"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "FUERA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A8",
+      "id": "ewfkqoslmvmk7u82",
+      "parte": "1T",
+      "segundosParte": 129.421,
+      "segundosPartido": 129.421,
+      "timestampReal": 1792856076482,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "dc48x4d5mvmk7v40",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 129.421,
+      "segundosPartido": 129.421,
+      "timestampReal": 1792856077632,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "sale": "CALVO",
+      "entra": "LARA"
+    },
+    {
+      "id": "fhq445wgmvmk7w5j",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 129.421,
+      "segundosPartido": 129.421,
+      "timestampReal": 1792856078983,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "sale": "SOTO",
+      "entra": "MOLINA"
+    },
+    {
+      "id": "nekr3xu3mvmk7wpk",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 129.421,
+      "segundosPartido": 129.421,
+      "timestampReal": 1792856079704,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "sale": "LEON",
+      "entra": "ARANDA"
+    },
+    {
+      "id": "b2o1llj4mvmk7yee",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 129.421,
+      "segundosPartido": 129.421,
+      "timestampReal": 1792856081894,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "sale": "NEGRO",
+      "entra": "MARIN"
+    },
+    {
+      "id": "0gf7kd3kmvmk959k",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 171.794,
+      "segundosPartido": 171.794,
+      "timestampReal": 1792856137448,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "MENDEZ",
+      "accion": "cobBR",
+      "zonaCampo": "D5"
+    },
+    {
+      "id": "asaitvxnmvmk9osf",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 188.964,
+      "segundosPartido": 188.964,
+      "timestampReal": 1792856162751,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "MENDEZ",
+      "accion": "saqueB",
+      "zonaCampo": "D7"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "ARANDA",
+      "resultado": "PUERTA",
+      "zonaCampo": "A5",
+      "zonaPorteria": "P5",
+      "id": "pf5df2e1mvmk9q1e",
+      "parte": "1T",
+      "segundosParte": 190.013,
+      "segundosPartido": 190.013,
+      "timestampReal": 1792856164370,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "izfawnvbmvmk9v2l",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 195.089,
+      "segundosPartido": 195.089,
+      "timestampReal": 1792856170893,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "MENDEZ",
+      "accion": "cobBN",
+      "zonaCampo": "D4"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "FUERA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A5",
+      "id": "frsu9xk0mvmkahl4",
+      "parte": "1T",
+      "segundosParte": 215.049,
+      "segundosPartido": 215.049,
+      "timestampReal": 1792856200072,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "13wbvqhqmvmkb0pn",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 231.799,
+      "segundosPartido": 231.799,
+      "timestampReal": 1792856224859,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "MOLINA",
+      "accion": "robos",
+      "zonaCampo": "D7"
+    },
+    {
+      "id": "8pvzg5cfmvmkb471",
+      "parte": "1T",
+      "segundosParte": 234.882,
+      "segundosPartido": 234.882,
+      "timestampReal": 1792856229373,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "PUERTA",
+      "zonaCampo": "A2",
+      "zonaPorteria": "P3"
+    },
+    {
+      "id": "3sf1sb56mvmkbhuy",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 247.515,
+      "segundosPartido": 247.515,
+      "timestampReal": 1792856247082,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "MARIN",
+      "accion": "robos",
+      "zonaCampo": "D9"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LARA",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "hm0jwq62mvmkblfn",
+      "parte": "1T",
+      "segundosParte": 250.35,
+      "segundosPartido": 250.35,
+      "timestampReal": 1792856251715,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LARA",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "043iqnubmvmkbnca",
+      "parte": "1T",
+      "segundosParte": 252.187,
+      "segundosPartido": 252.187,
+      "timestampReal": 1792856254186,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "5f7ez5y4mvmkbp89",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 254.169,
+      "segundosPartido": 254.169,
+      "timestampReal": 1792856256633,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "LARA",
+      "accion": "robos",
+      "zonaCampo": "D7"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MARIN",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A6",
+      "id": "a482qah7mvmkbr9r",
+      "parte": "1T",
+      "segundosParte": 255.466,
+      "segundosPartido": 255.466,
+      "timestampReal": 1792856259279,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "dj49jj8fmvmkbvck",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 259.682,
+      "segundosPartido": 259.682,
+      "timestampReal": 1792856264564,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "MARIN",
+      "accion": "pnf",
+      "zonaCampo": "A5"
+    },
+    {
+      "id": "tytlqn0imvmkbvqz",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 259.682,
+      "segundosPartido": 259.682,
+      "timestampReal": 1792856265083,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "sale": "LARA",
+      "entra": "SOTO"
+    },
+    {
+      "id": "lkzn5huemvmkbx6x",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 259.682,
+      "segundosPartido": 259.682,
+      "timestampReal": 1792856266953,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "sale": "MOLINA",
+      "entra": "CALVO"
+    },
+    {
+      "id": "c0xd9dc7mvmkbyfx",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 259.682,
+      "segundosPartido": 259.682,
+      "timestampReal": 1792856268573,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "sale": "ARANDA",
+      "entra": "ORTEGA"
+    },
+    {
+      "id": "7o75dlnamvmkbzyz",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 259.682,
+      "segundosPartido": 259.682,
+      "timestampReal": 1792856270555,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "sale": "MARIN",
+      "entra": "LEON"
+    },
+    {
+      "id": "1czjuizgmvmkc6dh",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 269.311,
+      "segundosPartido": 269.311,
+      "timestampReal": 1792856278853,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "MENDEZ",
+      "accion": "saqueB",
+      "zonaCampo": "A7"
+    },
+    {
+      "id": "2t583jpsmvmkcf5l",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 276.783,
+      "segundosPartido": 276.783,
+      "timestampReal": 1792856290233,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "LEON",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "4mjvicu1mvmkcvep",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 291.471,
+      "segundosPartido": 291.471,
+      "timestampReal": 1792856311297,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "ORTEGA",
+      "accion": "robos",
+      "zonaCampo": "D9"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LEON",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A8",
+      "id": "ca8t5g1bmvmkcxd3",
+      "parte": "1T",
+      "segundosParte": 293.058,
+      "segundosPartido": 293.058,
+      "timestampReal": 1792856313831,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      }
+    },
+    {
+      "id": "c6p2khvhmvmkd9bv",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 303.981,
+      "segundosPartido": 303.981,
+      "timestampReal": 1792856329339,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "jugador": "SOTO",
+      "accion": "pf",
+      "zonaCampo": "A4"
+    },
+    {
+      "id": "6e1elyk4mvmkdajg",
+      "parte": "1T",
+      "segundosParte": 303.981,
+      "segundosPartido": 303.981,
+      "timestampReal": 1792856330908,
+      "marcador": {
+        "inter": 0,
+        "rival": 0
+      },
+      "tipo": "gol",
+      "equipo": "RIVAL",
+      "accion": "Falta",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P9"
+    },
+    {
+      "id": "akks3p9qmvmkdc42",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 306.769,
+      "segundosPartido": 306.769,
+      "timestampReal": 1792856332946,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "jugador": "MENDEZ",
+      "accion": "achique",
+      "zonaCampo": "D1"
+    },
+    {
+      "id": "qljsqut8mvmkde0m",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 308.276,
+      "segundosPartido": 308.276,
+      "timestampReal": 1792856335414,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "jugador": "CALVO",
+      "accion": "cortes",
+      "zonaCampo": "D4"
+    },
+    {
+      "id": "stt4fg3pmvmkdftz",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 308.276,
+      "segundosPartido": 308.276,
+      "timestampReal": 1792856337767,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "jugador": "CALVO",
+      "accion": "pnf",
+      "zonaCampo": "A10"
+    },
+    {
+      "id": "1lq2e7g6mvmkdl7a",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 314.912,
+      "segundosPartido": 314.912,
+      "timestampReal": 1792856344726,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "jugador": "SOTO",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "ORTEGA",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A3",
+      "id": "oy7r9z4jmvmkdwan",
+      "parte": "1T",
+      "segundosParte": 324.302,
+      "segundosPartido": 324.302,
+      "timestampReal": 1792856359103,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LEON",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "am6c22znmvmkdz4m",
+      "parte": "1T",
+      "segundosParte": 327.371,
+      "segundosPartido": 327.371,
+      "timestampReal": 1792856362774,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      }
+    },
+    {
+      "id": "oi5gpivimvmke7em",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 334.404,
+      "segundosPartido": 334.404,
+      "timestampReal": 1792856373502,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "jugador": "SOTO",
+      "accion": "robos",
+      "zonaCampo": "D7"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LEON",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A5",
+      "id": "23jrtdnamvmkegzb",
+      "parte": "1T",
+      "segundosParte": 342.923,
+      "segundosPartido": 342.923,
+      "timestampReal": 1792856385911,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "SOTO",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A5",
+      "id": "rssa5u7vmvmkeljd",
+      "parte": "1T",
+      "segundosParte": 346.984,
+      "segundosPartido": 346.984,
+      "timestampReal": 1792856391817,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      }
+    },
+    {
+      "id": "5j96haidmvmkf0im",
+      "parte": "1T",
+      "segundosParte": 360.629,
+      "segundosPartido": 360.629,
+      "timestampReal": 1792856411230,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "SOTO",
+      "zonaCampo": "A7"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "PUERTA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P2",
+      "id": "preeru88mvmkfgw8",
+      "parte": "1T",
+      "segundosParte": 375.276,
+      "segundosPartido": 375.276,
+      "timestampReal": 1792856432456,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      }
+    },
+    {
+      "id": "vksa6mtbmvmkfpga",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 383.054,
+      "segundosPartido": 383.054,
+      "timestampReal": 1792856443546,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "sale": "CALVO",
+      "entra": "LARA"
+    },
+    {
+      "id": "v13r7c6jmvmkfqs7",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 383.054,
+      "segundosPartido": 383.054,
+      "timestampReal": 1792856445271,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "sale": "SOTO",
+      "entra": "MOLINA"
+    },
+    {
+      "id": "tanc3vrcmvmkfsnh",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 383.054,
+      "segundosPartido": 383.054,
+      "timestampReal": 1792856447693,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "sale": "ORTEGA",
+      "entra": "MARIN"
+    },
+    {
+      "id": "flqy0rzvmvmkftdt",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 383.054,
+      "segundosPartido": 383.054,
+      "timestampReal": 1792856448641,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "sale": "LEON",
+      "entra": "PRIETO"
+    },
+    {
+      "id": "q214rtelmvmkfxxi",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 390.454,
+      "segundosPartido": 390.454,
+      "timestampReal": 1792856454534,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "jugador": "MOLINA",
+      "accion": "pf",
+      "zonaCampo": "A2"
+    },
+    {
+      "id": "zt213bfzmvmkg9py",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 400.86,
+      "segundosPartido": 400.86,
+      "timestampReal": 1792856469814,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "sale": "PRIETO",
+      "entra": "VEGA"
+    },
+    {
+      "id": "eby11c7gmvmkgb5h",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 401.065,
+      "segundosPartido": 401.065,
+      "timestampReal": 1792856471669,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "jugador": "VEGA",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "1nofbqp0mvmkh899",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 431.994,
+      "segundosPartido": 431.994,
+      "timestampReal": 1792856514573,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "jugador": "MARIN",
+      "accion": "robos",
+      "zonaCampo": "D2"
+    },
+    {
+      "id": "pnf382i1mvmkha5x",
+      "parte": "1T",
+      "segundosParte": 431.994,
+      "segundosPartido": 431.994,
+      "timestampReal": 1792856517045,
+      "marcador": {
+        "inter": 0,
+        "rival": 1
+      },
+      "tipo": "gol",
+      "equipo": "INTER",
+      "goleador": "MARIN",
+      "cuarteto": [
+        "MENDEZ",
+        "LARA",
+        "MOLINA",
+        "VEGA"
+      ],
+      "accion": "1x1 banda",
+      "zonaCampo": "A1",
+      "zonaPorteria": "P7"
+    },
+    {
+      "id": "wnbjaqmumvmkhlrt",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 443.735,
+      "segundosPartido": 443.735,
+      "timestampReal": 1792856532089,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "MOLINA",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "cmtg1jy9mvmkidkk",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 468.445,
+      "segundosPartido": 468.445,
+      "timestampReal": 1792856568116,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "MOLINA",
+      "accion": "pf",
+      "zonaCampo": "A8"
+    },
+    {
+      "id": "vp57g7pcmvmkivee",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 484.812,
+      "segundosPartido": 484.812,
+      "timestampReal": 1792856591222,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "MENDEZ",
+      "accion": "paseB",
+      "zonaCampo": "A9"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A2",
+      "id": "rgy2bsrymvmkiwy5",
+      "parte": "1T",
+      "segundosParte": 484.812,
+      "segundosPartido": 484.812,
+      "timestampReal": 1792856593229,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "LARA",
+      "zonaCampo": "A7",
+      "id": "ii4ohdtimvmkj00k",
+      "parte": "1T",
+      "segundosParte": 488.9,
+      "segundosPartido": 488.9,
+      "timestampReal": 1792856597204,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "id": "vn8cuviamvmkj0fg",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 488.9,
+      "segundosPartido": 488.9,
+      "timestampReal": 1792856597740,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "sale": "MOLINA",
+      "entra": "SOTO"
+    },
+    {
+      "id": "6a71vdinmvmkj1b7",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 488.9,
+      "segundosPartido": 488.9,
+      "timestampReal": 1792856598883,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "sale": "MARIN",
+      "entra": "CALVO"
+    },
+    {
+      "id": "eqfxfh3gmvmkj368",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 488.9,
+      "segundosPartido": 488.9,
+      "timestampReal": 1792856601296,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "sale": "VEGA",
+      "entra": "LEON"
+    },
+    {
+      "id": "nr3badw0mvmkj3y5",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 491.522,
+      "segundosPartido": 491.522,
+      "timestampReal": 1792856602301,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "CALVO",
+      "accion": "robos",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "udmvwb8nmvmkjk4h",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 506.584,
+      "segundosPartido": 506.584,
+      "timestampReal": 1792856623265,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "#EQUIPO",
+      "accion": "robos"
+    },
+    {
+      "id": "xfp8iek9mvmkjz12",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 520.228,
+      "segundosPartido": 520.228,
+      "timestampReal": 1792856642582,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "sale": "LARA",
+      "entra": "PRIETO"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "CALVO",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A1",
+      "id": "htgpnri4mvmkk83o",
+      "parte": "1T",
+      "segundosParte": 528.231,
+      "segundosPartido": 528.231,
+      "timestampReal": 1792856654340,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "id": "me4dlzqbmvmkkdvr",
+      "parte": "1T",
+      "segundosParte": 533.618,
+      "segundosPartido": 533.618,
+      "timestampReal": 1792856661831,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "tipo": "falta",
+      "equipo": "RIVAL",
+      "jugador": "SOTO",
+      "zonaCampo": "D8"
+    },
+    {
+      "id": "a3l1vr89mvmkkmjf",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 540.886,
+      "segundosPartido": 540.886,
+      "timestampReal": 1792856673051,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "PRIETO",
+      "accion": "unoDef_p",
+      "zonaCampo": "D10"
+    },
+    {
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "PRIETO",
+      "zonaCampo": "A7",
+      "id": "ase1r1ntmvmkknp7",
+      "parte": "1T",
+      "segundosParte": 540.886,
+      "segundosPartido": 540.886,
+      "timestampReal": 1792856674555,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "id": "04ytdlszmvmkl4hn",
+      "parte": "1T",
+      "segundosParte": 557.118,
+      "segundosPartido": 557.118,
+      "timestampReal": 1792856696315,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "PRIETO",
+      "resultado": "PUERTA",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P5"
+    },
+    {
+      "id": "o0iacsfimvmkl83v",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 560.418,
+      "segundosPartido": 560.418,
+      "timestampReal": 1792856701003,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "SOTO",
+      "accion": "robos",
+      "zonaCampo": "D8"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "CALVO",
+      "resultado": "FUERA",
+      "zonaCampo": "A9",
+      "id": "telcxnxvmvmkm0ji",
+      "parte": "1T",
+      "segundosParte": 585.873,
+      "segundosPartido": 585.873,
+      "timestampReal": 1792856737854,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "PRIETO",
+      "zonaCampo": "D5",
+      "id": "fs8kszb2mvmkmdho",
+      "parte": "1T",
+      "segundosParte": 597.427,
+      "segundosPartido": 597.427,
+      "timestampReal": 1792856754636,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "PRIETO",
+      "id": "a8uz4la2mvmkmeyn",
+      "parte": "1T",
+      "segundosParte": 597.427,
+      "segundosPartido": 597.427,
+      "timestampReal": 1792856756543,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "CALVO",
+      "id": "vy77uzf1mvmkmfop",
+      "parte": "1T",
+      "segundosParte": 597.87,
+      "segundosPartido": 597.87,
+      "timestampReal": 1792856757481,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "diezm",
+      "equipo": "RIVAL",
+      "tirador": "",
+      "portero": "MENDEZ",
+      "resultado": "PARADA",
+      "zonaPorteria": "P6",
+      "id": "h0dnfsosmvmkmgv4",
+      "parte": "1T",
+      "segundosParte": 597.87,
+      "segundosPartido": 597.87,
+      "timestampReal": 1792856759008,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "id": "klmmtyt6mvmkmn0v",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 606.139,
+      "segundosPartido": 606.139,
+      "timestampReal": 1792856766991,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "LEON",
+      "accion": "bdp",
+      "zonaCampo": "D4"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "CALVO",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A5",
+      "id": "1kyx3oxumvmknapt",
+      "parte": "1T",
+      "segundosParte": 627.234,
+      "segundosPartido": 627.234,
+      "timestampReal": 1792856797697,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "id": "qnki8nfamvmknb4r",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 627.234,
+      "segundosPartido": 627.234,
+      "timestampReal": 1792856798235,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "sale": "SOTO",
+      "entra": "MOLINA"
+    },
+    {
+      "id": "5kaulucemvmknzvr",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 649.747,
+      "segundosPartido": 649.747,
+      "timestampReal": 1792856830311,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "sale": "LEON",
+      "entra": "ARANDA"
+    },
+    {
+      "id": "mhgnxsqqmvmko0fb",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 649.747,
+      "segundosPartido": 649.747,
+      "timestampReal": 1792856831015,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "sale": "CALVO",
+      "entra": "MARIN"
+    },
+    {
+      "id": "kj5xoxncmvmko1sz",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 649.747,
+      "segundosPartido": 649.747,
+      "timestampReal": 1792856832803,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "sale": "PRIETO",
+      "entra": "TORRES"
+    },
+    {
+      "id": "js5y7cn6mvmkoffq",
+      "parte": "1T",
+      "segundosParte": 663.684,
+      "segundosPartido": 663.684,
+      "timestampReal": 1792856850470,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "tipo": "accion_individual",
+      "jugador": "TORRES",
+      "accion": "robos",
+      "zonaCampo": "D7"
+    },
+    {
+      "id": "233uwriimvmkoiql",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 666.241,
+      "segundosPartido": 666.241,
+      "timestampReal": 1792856854749,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "ARANDA",
+      "accion": "robos",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "bd40p6ncmvmkoq55",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 673.287,
+      "segundosPartido": 673.287,
+      "timestampReal": 1792856864345,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "TORRES",
+      "accion": "pf",
+      "zonaCampo": "A7"
+    },
+    {
+      "id": "fm66ewk3mvmkppxl",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 704.78,
+      "segundosPartido": 704.78,
+      "timestampReal": 1792856910729,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "MARIN",
+      "accion": "pf",
+      "zonaCampo": "A7"
+    },
+    {
+      "id": "dpamib3emvmkqazr",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 723.736,
+      "segundosPartido": 723.736,
+      "timestampReal": 1792856938023,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "MARIN",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MARIN",
+      "resultado": "FUERA",
+      "zonaCampo": "A1",
+      "id": "lhhbj0f6mvmkqfx9",
+      "parte": "1T",
+      "segundosParte": 728.03,
+      "segundosPartido": 728.03,
+      "timestampReal": 1792856944413,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "id": "0osxwgdmmvmkqgdu",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 728.733,
+      "segundosPartido": 728.733,
+      "timestampReal": 1792856945010,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      },
+      "jugador": "MARIN",
+      "accion": "cortes",
+      "zonaCampo": "A4"
+    },
+    {
+      "tipo": "gol",
+      "equipo": "INTER",
+      "goleador": "MARIN",
+      "cuarteto": [
+        "MENDEZ",
+        "TORRES",
+        "MOLINA",
+        "ARANDA"
+      ],
+      "accion": "Robo zona alta",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P6",
+      "id": "21zbqd15mvmkqhih",
+      "parte": "1T",
+      "segundosParte": 728.733,
+      "segundosPartido": 728.733,
+      "timestampReal": 1792856946473,
+      "marcador": {
+        "inter": 1,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "tiempo_muerto",
+      "equipo": "RIVAL",
+      "id": "6gtar7vomvmkqjcz",
+      "parte": "1T",
+      "segundosParte": 728.733,
+      "segundosPartido": 728.733,
+      "timestampReal": 1792856948867,
+      "marcador": {
+        "inter": 2,
+        "rival": 1
+      }
+    },
+    {
+      "id": "d0zto4ywmvmkqpmy",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 736.824,
+      "segundosPartido": 736.824,
+      "timestampReal": 1792856957002,
+      "marcador": {
+        "inter": 2,
+        "rival": 1
+      },
+      "jugador": "MENDEZ",
+      "accion": "cobBN",
+      "zonaCampo": "D4"
+    },
+    {
+      "id": "v7l6utccmvmkr0cf",
+      "parte": "1T",
+      "segundosParte": 746.523,
+      "segundosPartido": 746.523,
+      "timestampReal": 1792856970879,
+      "marcador": {
+        "inter": 2,
+        "rival": 1
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MARIN",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A1"
+    },
+    {
+      "id": "8r6dl4himvmkr5eh",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 751.125,
+      "segundosPartido": 751.125,
+      "timestampReal": 1792856977433,
+      "marcador": {
+        "inter": 2,
+        "rival": 1
+      },
+      "jugador": "ARANDA",
+      "accion": "unoDef_p",
+      "zonaCampo": "D4"
+    },
+    {
+      "id": "ip5y8lbwmvmkrjp9",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 763.696,
+      "segundosPartido": 763.696,
+      "timestampReal": 1792856995965,
+      "marcador": {
+        "inter": 2,
+        "rival": 1
+      },
+      "jugador": "TORRES",
+      "accion": "robos",
+      "zonaCampo": "A5"
+    },
+    {
+      "id": "96bk7chqmvmkrl37",
+      "parte": "1T",
+      "segundosParte": 763.696,
+      "segundosPartido": 763.696,
+      "timestampReal": 1792856997763,
+      "marcador": {
+        "inter": 2,
+        "rival": 1
+      },
+      "tipo": "gol",
+      "equipo": "INTER",
+      "goleador": "ARANDA",
+      "cuarteto": [
+        "MENDEZ",
+        "TORRES",
+        "MARIN",
+        "MOLINA"
+      ],
+      "accion": "Robo zona alta",
+      "zonaCampo": "A2",
+      "zonaPorteria": "P6",
+      "asistente": "MOLINA",
+      "zonaAsistencia": "D8"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "ARANDA",
+      "resultado": "FUERA",
+      "zonaCampo": "A4",
+      "id": "jivjqkrfmvmkrm1i",
+      "parte": "1T",
+      "segundosParte": 764.291,
+      "segundosPartido": 764.291,
+      "timestampReal": 1792856998998,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "5awp3qgdmvmks73y",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 784.865,
+      "segundosPartido": 784.865,
+      "timestampReal": 1792857026302,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "MOLINA",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "ayr32jrwmvmksbpm",
+      "parte": "1T",
+      "segundosParte": 789.077,
+      "segundosPartido": 789.077,
+      "timestampReal": 1792857032266,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "6apl0meemvmkt4ge",
+      "parte": "1T",
+      "segundosParte": 814.743,
+      "segundosPartido": 814.743,
+      "timestampReal": 1792857069518,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "FUERA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A5"
+    },
+    {
+      "id": "gxel77f1mvmktwlj",
+      "parte": "1T",
+      "segundosParte": 839.928,
+      "segundosPartido": 839.928,
+      "timestampReal": 1792857105991,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "tipo": "accion_individual",
+      "jugador": "ARANDA",
+      "accion": "robos",
+      "zonaCampo": "A8"
+    },
+    {
+      "id": "ci25q8zjmvmkubuu",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 853.481,
+      "segundosPartido": 853.481,
+      "timestampReal": 1792857125766,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "sale": "MOLINA",
+      "entra": "SOTO"
+    },
+    {
+      "id": "eeqixhbqmvmkucb9",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 853.481,
+      "segundosPartido": 853.481,
+      "timestampReal": 1792857126357,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "sale": "MARIN",
+      "entra": "CALVO"
+    },
+    {
+      "id": "2jbfh26gmvmkucwv",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 853.481,
+      "segundosPartido": 853.481,
+      "timestampReal": 1792857127135,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "sale": "ARANDA",
+      "entra": "LEON"
+    },
+    {
+      "id": "nvhmekt1mvmkud85",
+      "tipo": "cambio",
+      "parte": "1T",
+      "segundosParte": 853.481,
+      "segundosPartido": 853.481,
+      "timestampReal": 1792857127541,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "sale": "TORRES",
+      "entra": "NEGRO"
+    },
+    {
+      "id": "moqt8y40mvmkugc9",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 857.502,
+      "segundosPartido": 857.502,
+      "timestampReal": 1792857131577,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "NEGRO",
+      "accion": "cortes",
+      "zonaCampo": "A3"
+    },
+    {
+      "id": "7ptrfnvimvmkuzl2",
+      "parte": "1T",
+      "segundosParte": 874.382,
+      "segundosPartido": 874.382,
+      "timestampReal": 1792857156518,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "PUERTA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P2"
+    },
+    {
+      "id": "o3zcmy0dmvmkw1mk",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 908.747,
+      "segundosPartido": 908.747,
+      "timestampReal": 1792857205820,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "NEGRO",
+      "accion": "unoAtq_p",
+      "zonaCampo": "A7"
+    },
+    {
+      "id": "7z2zmuecmvmkw4qn",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 911.342,
+      "segundosPartido": 911.342,
+      "timestampReal": 1792857209855,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "MENDEZ",
+      "accion": "achique",
+      "zonaCampo": "D1"
+    },
+    {
+      "id": "60gcapb7mvmkwbph",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 917.383,
+      "segundosPartido": 917.383,
+      "timestampReal": 1792857218885,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "NEGRO",
+      "accion": "robos",
+      "zonaCampo": "D8"
+    },
+    {
+      "tipo": "falta",
+      "equipo": "RIVAL",
+      "jugador": "NEGRO",
+      "zonaCampo": "D9",
+      "id": "52nk7jg1mvmkwdez",
+      "parte": "1T",
+      "segundosParte": 917.383,
+      "segundosPartido": 917.383,
+      "timestampReal": 1792857221099,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "ueptzh3bmvmkxwc3",
+      "parte": "1T",
+      "segundosParte": 968.051,
+      "segundosPartido": 968.051,
+      "timestampReal": 1792857292275,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "PUERTA",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P8"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "CALVO",
+      "resultado": "PUERTA",
+      "zonaCampo": "A5",
+      "zonaPorteria": "P8",
+      "id": "rsb7zdndmvmky7gm",
+      "parte": "1T",
+      "segundosParte": 977.922,
+      "segundosPartido": 977.922,
+      "timestampReal": 1792857306694,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "ffw0285mmvmkyjse",
+      "parte": "1T",
+      "segundosParte": 989.405,
+      "segundosPartido": 989.405,
+      "timestampReal": 1792857322670,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "tipo": "falta",
+      "equipo": "RIVAL",
+      "jugador": "CALVO",
+      "zonaCampo": "D8"
+    },
+    {
+      "id": "vr1rpeqjmvmkzozn",
+      "parte": "1T",
+      "segundosParte": 1026.238,
+      "segundosPartido": 1026.238,
+      "timestampReal": 1792857376067,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "CALVO",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A6"
+    },
+    {
+      "id": "o50uh8simvml09wn",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 1044.757,
+      "segundosPartido": 1044.757,
+      "timestampReal": 1792857403175,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "MENDEZ",
+      "accion": "cobBR",
+      "zonaCampo": "D5"
+    },
+    {
+      "id": "2ml8hlhjmvml132z",
+      "parte": "1T",
+      "segundosParte": 1070.492,
+      "segundosPartido": 1070.492,
+      "timestampReal": 1792857440987,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "tipo": "falta",
+      "equipo": "RIVAL",
+      "jugador": "CALVO",
+      "zonaCampo": "A5"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "ovrlhq61mvml1u4t",
+      "parte": "1T",
+      "segundosParte": 1094.784,
+      "segundosPartido": 1094.784,
+      "timestampReal": 1792857476045,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "8vu91k7jmvml1vgq",
+      "tipo": "accion_individual",
+      "parte": "1T",
+      "segundosParte": 1094.784,
+      "segundosPartido": 1094.784,
+      "timestampReal": 1792857477770,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "NEGRO",
+      "accion": "unoAtq_g",
+      "zonaCampo": "A5"
+    },
+    {
+      "id": "1zpwhqzsmvml3vuw",
+      "parte": "1T",
+      "segundosParte": 1160.906,
+      "segundosPartido": 1160.906,
+      "timestampReal": 1792857571592,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "tipo": "accion_individual",
+      "jugador": "LEON",
+      "accion": "robos",
+      "zonaCampo": "D8"
+    },
+    {
+      "id": "c9ziyppkmvmlqnyo",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 4.627,
+      "segundosPartido": 4.627,
+      "timestampReal": 1792858634448,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "NEGRO",
+      "accion": "unoAtq_g",
+      "zonaCampo": "A4"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "PUERTA",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P5",
+      "id": "9fdai29smvmlqofu",
+      "parte": "2T",
+      "segundosParte": 4.627,
+      "segundosPartido": 4.627,
+      "timestampReal": 1792858635066,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "v6njap3mmvmlqtxt",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 10.201,
+      "segundosPartido": 10.201,
+      "timestampReal": 1792858642193,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "MENDEZ",
+      "accion": "paseB",
+      "zonaCampo": "D6"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A4",
+      "id": "uwqvcwo4mvmlqxxf",
+      "parte": "2T",
+      "segundosParte": 13.723,
+      "segundosPartido": 13.723,
+      "timestampReal": 1792858647363,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LEON",
+      "resultado": "PALO",
+      "zonaCampo": "D4",
+      "id": "o2qwxhyvmvmlr1e5",
+      "parte": "2T",
+      "segundosParte": 16.845,
+      "segundosPartido": 16.845,
+      "timestampReal": 1792858651853,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "aydecx6zmvmlrdzm",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 28.348,
+      "segundosPartido": 28.348,
+      "timestampReal": 1792858668178,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "NEGRO",
+      "accion": "pnf",
+      "zonaCampo": "A7"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LEON",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A5",
+      "id": "7a8tp98zmvmlrzds",
+      "parte": "2T",
+      "segundosParte": 47.087,
+      "segundosPartido": 47.087,
+      "timestampReal": 1792858695904,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "fy9b9v1kmvmls003",
+      "parte": "2T",
+      "segundosParte": 47.602,
+      "segundosPartido": 47.602,
+      "timestampReal": 1792858696707,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "wnqlrjq7mvmls8xh",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 55.84,
+      "segundosPartido": 55.84,
+      "timestampReal": 1792858708277,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "jugador": "LEON",
+      "accion": "cortes",
+      "zonaCampo": "D1"
+    },
+    {
+      "tipo": "falta",
+      "equipo": "RIVAL",
+      "jugador": "MENDEZ",
+      "zonaCampo": "D2",
+      "id": "b9k6oponmvmlsaey",
+      "parte": "2T",
+      "segundosParte": 55.84,
+      "segundosPartido": 55.84,
+      "timestampReal": 1792858710202,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "d80i16lomvmlsg00",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 61.86,
+      "segundosPartido": 61.86,
+      "timestampReal": 1792858717440,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "sale": "SOTO",
+      "entra": "MOLINA"
+    },
+    {
+      "id": "0y7lguqtmvmlshkd",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 61.86,
+      "segundosPartido": 61.86,
+      "timestampReal": 1792858719469,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "sale": "CALVO",
+      "entra": "LARA"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A5",
+      "id": "ngak3w3fmvmlsjm8",
+      "parte": "2T",
+      "segundosParte": 65.074,
+      "segundosPartido": 65.074,
+      "timestampReal": 1792858722128,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "f0ycj8p0mvmlsk27",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 65.074,
+      "segundosPartido": 65.074,
+      "timestampReal": 1792858722703,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "sale": "NEGRO",
+      "entra": "ORTEGA"
+    },
+    {
+      "id": "vxzgxsr8mvmlslbs",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 65.074,
+      "segundosPartido": 65.074,
+      "timestampReal": 1792858724344,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      },
+      "sale": "LEON",
+      "entra": "ARANDA"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LARA",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "hbfho2xtmvmlsmoj",
+      "parte": "2T",
+      "segundosParte": 66.416,
+      "segundosPartido": 66.416,
+      "timestampReal": 1792858726099,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "ARANDA",
+      "resultado": "FUERA",
+      "zonaCampo": "A1",
+      "id": "ki8hf9ogmvmlsyxa",
+      "parte": "2T",
+      "segundosParte": 79.225,
+      "segundosPartido": 79.225,
+      "timestampReal": 1792858741966,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "falta",
+      "equipo": "RIVAL",
+      "jugador": "ARANDA",
+      "zonaCampo": "D9",
+      "id": "cj8wfqvlmvmlszrq",
+      "parte": "2T",
+      "segundosParte": 79.225,
+      "segundosPartido": 79.225,
+      "timestampReal": 1792858743062,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "tipo": "gol",
+      "equipo": "RIVAL",
+      "accion": "Salida de presión",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P6",
+      "id": "b2iph70emvmlt4ku",
+      "parte": "2T",
+      "segundosParte": 83.878,
+      "segundosPartido": 83.878,
+      "timestampReal": 1792858749294,
+      "marcador": {
+        "inter": 3,
+        "rival": 1
+      }
+    },
+    {
+      "id": "8nj8pe5xmvmltbwr",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 90.476,
+      "segundosPartido": 90.476,
+      "timestampReal": 1792858758795,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "sale": "ORTEGA",
+      "entra": "VEGA"
+    },
+    {
+      "id": "fq95o2e5mvmltcuw",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 91.425,
+      "segundosPartido": 91.425,
+      "timestampReal": 1792858760024,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "VEGA",
+      "accion": "pf",
+      "zonaCampo": "D8"
+    },
+    {
+      "id": "n6p1h2d4mvmlte7f",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 91.425,
+      "segundosPartido": 91.425,
+      "timestampReal": 1792858761771,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "MENDEZ",
+      "accion": "paseB",
+      "zonaCampo": "D8"
+    },
+    {
+      "id": "t0c8uu7vmvmltnmt",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 101.022,
+      "segundosPartido": 101.022,
+      "timestampReal": 1792858773989,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "VEGA",
+      "accion": "pf",
+      "zonaCampo": "D9"
+    },
+    {
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "VEGA",
+      "zonaCampo": "A8",
+      "id": "x2v6aolqmvmlto1l",
+      "parte": "2T",
+      "segundosParte": 101.022,
+      "segundosPartido": 101.022,
+      "timestampReal": 1792858774521,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "FUERA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A8",
+      "id": "bl2h9naemvmltp19",
+      "parte": "2T",
+      "segundosParte": 102.017,
+      "segundosPartido": 102.017,
+      "timestampReal": 1792858775805,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      }
+    },
+    {
+      "id": "1tztbry2mvmlu0qc",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 112.903,
+      "segundosPartido": 112.903,
+      "timestampReal": 1792858790964,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "MENDEZ",
+      "accion": "saqueB",
+      "zonaCampo": "A8"
+    },
+    {
+      "id": "iw0m1hd2mvmluert",
+      "parte": "2T",
+      "segundosParte": 125.375,
+      "segundosPartido": 125.375,
+      "timestampReal": 1792858809161,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "VEGA",
+      "resultado": "FUERA",
+      "zonaCampo": "A5"
+    },
+    {
+      "id": "d4o67bw0mvmluvmj",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 140.493,
+      "segundosPartido": 140.493,
+      "timestampReal": 1792858831003,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "#EQUIPO",
+      "accion": "pf"
+    },
+    {
+      "id": "4cwn3ql8mvmluxk3",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 142.185,
+      "segundosPartido": 142.185,
+      "timestampReal": 1792858833507,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "sale": "VEGA",
+      "entra": "CALVO"
+    },
+    {
+      "id": "mes4oorrmvmluyyq",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 142.185,
+      "segundosPartido": 142.185,
+      "timestampReal": 1792858835330,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "sale": "LARA",
+      "entra": "NEGRO"
+    },
+    {
+      "id": "2toaragpmvmlv9lu",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 152.802,
+      "segundosPartido": 152.802,
+      "timestampReal": 1792858849122,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "NEGRO",
+      "accion": "robos",
+      "zonaCampo": "A6"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "PALO",
+      "zonaCampo": "A5",
+      "id": "5w3f7ny5mvmlvb4l",
+      "parte": "2T",
+      "segundosParte": 152.802,
+      "segundosPartido": 152.802,
+      "timestampReal": 1792858851093,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      }
+    },
+    {
+      "id": "d8ryn2tjmvmlvdbp",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 156.027,
+      "segundosPartido": 156.027,
+      "timestampReal": 1792858853941,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "sale": "MOLINA",
+      "entra": "SOTO"
+    },
+    {
+      "id": "hwn3c493mvmlvehu",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 156.027,
+      "segundosPartido": 156.027,
+      "timestampReal": 1792858855458,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "sale": "ARANDA",
+      "entra": "PRIETO"
+    },
+    {
+      "id": "40365jtqmvmlvgz7",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 159.701,
+      "segundosPartido": 159.701,
+      "timestampReal": 1792858858675,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "NEGRO",
+      "accion": "pnf",
+      "zonaCampo": "A10"
+    },
+    {
+      "id": "i8rjdgs1mvmlvtxg",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 170.869,
+      "segundosPartido": 170.869,
+      "timestampReal": 1792858875460,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "SOTO",
+      "accion": "ultCob",
+      "zonaCampo": "D6"
+    },
+    {
+      "id": "7wuaxwwqmvmlwb6q",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 186.226,
+      "segundosPartido": 186.226,
+      "timestampReal": 1792858897826,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "CALVO",
+      "accion": "robos",
+      "zonaCampo": "D6"
+    },
+    {
+      "id": "bilb1ahqmvmlwbya",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 186.226,
+      "segundosPartido": 186.226,
+      "timestampReal": 1792858898818,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "NEGRO",
+      "accion": "pnf",
+      "zonaCampo": "D7"
+    },
+    {
+      "id": "0vi87fiomvmlwy80",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 206.912,
+      "segundosPartido": 206.912,
+      "timestampReal": 1792858927680,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "CALVO",
+      "accion": "unoDef_p",
+      "zonaCampo": "A3"
+    },
+    {
+      "id": "akdpgx7ymvmlwzmf",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 206.912,
+      "segundosPartido": 206.912,
+      "timestampReal": 1792858929495,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "SOTO",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "4dfyw5iqmvmlxpa4",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 231.246,
+      "segundosPartido": 231.246,
+      "timestampReal": 1792858962748,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "sale": "PRIETO",
+      "entra": "MARIN"
+    },
+    {
+      "id": "qciu3jommvmlxpwi",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 231.246,
+      "segundosPartido": 231.246,
+      "timestampReal": 1792858963554,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "sale": "NEGRO",
+      "entra": "LARA"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "PUERTA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A5",
+      "zonaPorteria": "P9",
+      "id": "l49klt9kmvmlxqvk",
+      "parte": "2T",
+      "segundosParte": 232.525,
+      "segundosPartido": 232.525,
+      "timestampReal": 1792858964816,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      }
+    },
+    {
+      "id": "25g28ukkmvmly23o",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 242.934,
+      "segundosPartido": 242.934,
+      "timestampReal": 1792858979364,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "jugador": "SOTO",
+      "accion": "cortes",
+      "zonaCampo": "D5"
+    },
+    {
+      "id": "w8jk2cdnmvmlyjga",
+      "parte": "2T",
+      "segundosParte": 258.165,
+      "segundosPartido": 258.165,
+      "timestampReal": 1792859001850,
+      "marcador": {
+        "inter": 3,
+        "rival": 2
+      },
+      "tipo": "gol",
+      "equipo": "INTER",
+      "goleador": "MARIN",
+      "cuarteto": [
+        "MENDEZ",
+        "CALVO",
+        "LARA",
+        "SOTO"
+      ],
+      "accion": "Ataque posicional",
+      "zonaCampo": "A1",
+      "zonaPorteria": "P8"
+    },
+    {
+      "id": "qa3569cumvmlyk6z",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 258.165,
+      "segundosPartido": 258.165,
+      "timestampReal": 1792859002811,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "sale": "MARIN",
+      "entra": "PRIETO"
+    },
+    {
+      "id": "lj1z8iximvmlym4b",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 258.165,
+      "segundosPartido": 258.165,
+      "timestampReal": 1792859005307,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "sale": "LARA",
+      "entra": "NEGRO"
+    },
+    {
+      "id": "31xtzvwjmvmlyxtj",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 271.227,
+      "segundosPartido": 271.227,
+      "timestampReal": 1792859020471,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "sale": "CALVO",
+      "entra": "MARIN"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "PUERTA",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P8",
+      "id": "1rtfetvtmvmlz7vx",
+      "parte": "2T",
+      "segundosParte": 280.298,
+      "segundosPartido": 280.298,
+      "timestampReal": 1792859033517,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "PRIETO",
+      "resultado": "FUERA",
+      "zonaCampo": "A4",
+      "id": "5llv17p1mvmlzc2o",
+      "parte": "2T",
+      "segundosParte": 283.807,
+      "segundosPartido": 283.807,
+      "timestampReal": 1792859038944,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      }
+    },
+    {
+      "id": "qyxgquhbmvmlzwy6",
+      "parte": "2T",
+      "segundosParte": 302.175,
+      "segundosPartido": 302.175,
+      "timestampReal": 1792859065998,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "MARIN",
+      "zonaCampo": "D5"
+    },
+    {
+      "id": "6gya47bmmvmm04p0",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 309.304,
+      "segundosPartido": 309.304,
+      "timestampReal": 1792859076036,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "jugador": "MENDEZ",
+      "accion": "achique",
+      "zonaCampo": "D2"
+    },
+    {
+      "id": "geoutu7mmvmm0tpg",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 331.726,
+      "segundosPartido": 331.726,
+      "timestampReal": 1792859108452,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "jugador": "SOTO",
+      "accion": "robos",
+      "zonaCampo": "A8"
+    },
+    {
+      "id": "mrzyfmy3mvmm0vep",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 333.302,
+      "segundosPartido": 333.302,
+      "timestampReal": 1792859110657,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "sale": "NEGRO",
+      "entra": "TORRES"
+    },
+    {
+      "id": "0m3rn1ivmvmm1h4j",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 352.592,
+      "segundosPartido": 352.592,
+      "timestampReal": 1792859138803,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "sale": "SOTO",
+      "entra": "MOLINA"
+    },
+    {
+      "id": "5fgqf82smvmm1k4n",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 355.518,
+      "segundosPartido": 355.518,
+      "timestampReal": 1792859142695,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "jugador": "MOLINA",
+      "accion": "pf",
+      "zonaCampo": "D10"
+    },
+    {
+      "id": "4venoab9mvmm2e0n",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 381.837,
+      "segundosPartido": 381.837,
+      "timestampReal": 1792859181431,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "sale": "PRIETO",
+      "entra": "LEON"
+    },
+    {
+      "id": "a3l7vjqrmvmm2f0d",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 381.837,
+      "segundosPartido": 381.837,
+      "timestampReal": 1792859182717,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "sale": "LEON",
+      "entra": "PRIETO"
+    },
+    {
+      "id": "1gqvn95gmvmm2g6j",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 381.837,
+      "segundosPartido": 381.837,
+      "timestampReal": 1792859184235,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "sale": "MARIN",
+      "entra": "LEON"
+    },
+    {
+      "id": "rcrsb5oymvmm2w15",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 398.163,
+      "segundosPartido": 398.163,
+      "timestampReal": 1792859204777,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      },
+      "jugador": "TORRES",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "tipo": "gol",
+      "equipo": "INTER",
+      "goleador": "MOLINA",
+      "cuarteto": [
+        "MENDEZ",
+        "LEON",
+        "TORRES",
+        "PRIETO"
+      ],
+      "accion": "Contraataque",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P8",
+      "id": "2sly05l3mvmm2xxx",
+      "parte": "2T",
+      "segundosParte": 398.163,
+      "segundosPartido": 398.163,
+      "timestampReal": 1792859207253,
+      "marcador": {
+        "inter": 4,
+        "rival": 2
+      }
+    },
+    {
+      "id": "epazjo2kmvmm3qyi",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 425.845,
+      "segundosPartido": 425.845,
+      "timestampReal": 1792859244858,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "MOLINA",
+      "accion": "robos",
+      "zonaCampo": "D6"
+    },
+    {
+      "id": "yoke5v2lmvmm4acc",
+      "parte": "2T",
+      "segundosParte": 443.39,
+      "segundosPartido": 443.39,
+      "timestampReal": 1792859269980,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "TORRES",
+      "zonaCampo": "A7"
+    },
+    {
+      "id": "2kz9juvsmvmm5bew",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 476.066,
+      "segundosPartido": 476.066,
+      "timestampReal": 1792859318024,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "PRIETO",
+      "accion": "pf",
+      "zonaCampo": "D7"
+    },
+    {
+      "id": "ytiwev6xmvmm5chj",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 476.066,
+      "segundosPartido": 476.066,
+      "timestampReal": 1792859319415,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "PRIETO",
+      "entra": "ORTEGA"
+    },
+    {
+      "id": "puuq5uclmvmm6ar3",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 507.569,
+      "segundosPartido": 507.569,
+      "timestampReal": 1792859363823,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "MOLINA",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "jd271f4tmvmm7eg5",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 543.104,
+      "segundosPartido": 543.104,
+      "timestampReal": 1792859415269,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "#EQUIPO",
+      "accion": "robos"
+    },
+    {
+      "id": "6yx1f9wdmvmm7frq",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 543.104,
+      "segundosPartido": 543.104,
+      "timestampReal": 1792859416982,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "#EQUIPO",
+      "accion": "robos"
+    },
+    {
+      "id": "t8l48f62mvmm811m",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 563.412,
+      "segundosPartido": 563.412,
+      "timestampReal": 1792859444554,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "#EQUIPO",
+      "accion": "robos"
+    },
+    {
+      "id": "sm4nqyf2mvmm83gq",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 565.703,
+      "segundosPartido": 565.703,
+      "timestampReal": 1792859447690,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "LEON",
+      "accion": "unoAtq_g",
+      "zonaCampo": "A10"
+    },
+    {
+      "tipo": "falta",
+      "equipo": "RIVAL",
+      "jugador": "LEON",
+      "zonaCampo": "A5",
+      "id": "w797ypn2mvmm8dhg",
+      "parte": "2T",
+      "segundosParte": 574.629,
+      "segundosPartido": 574.629,
+      "timestampReal": 1792859460676,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      }
+    },
+    {
+      "id": "9jcsgmnrmvmm8e0d",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 574.629,
+      "segundosPartido": 574.629,
+      "timestampReal": 1792859461357,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "ORTEGA",
+      "entra": "LARA"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "PUERTA",
+      "zonaCampo": "A5",
+      "zonaPorteria": "P2",
+      "id": "c3ekc4eymvmm8ey7",
+      "parte": "2T",
+      "segundosParte": 576.058,
+      "segundosPartido": 576.058,
+      "timestampReal": 1792859462575,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      }
+    },
+    {
+      "id": "g78n0i3umvmm8fh8",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 576.058,
+      "segundosPartido": 576.058,
+      "timestampReal": 1792859463260,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "LARA",
+      "entra": "ORTEGA"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A4",
+      "id": "4aamg0cbmvmm8gmn",
+      "parte": "2T",
+      "segundosParte": 577.336,
+      "segundosPartido": 577.336,
+      "timestampReal": 1792859464751,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      }
+    },
+    {
+      "id": "5eh73fr8mvmm8h3r",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 577.336,
+      "segundosPartido": 577.336,
+      "timestampReal": 1792859465367,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "TORRES",
+      "entra": "ARANDA"
+    },
+    {
+      "id": "ab2q5nw7mvmm8pp2",
+      "parte": "2T",
+      "segundosParte": 585.608,
+      "segundosPartido": 585.608,
+      "timestampReal": 1792859476502,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "ARANDA",
+      "zonaCampo": "A5"
+    },
+    {
+      "id": "8iycb4sdmvmma0en",
+      "parte": "2T",
+      "segundosParte": 627.549,
+      "segundosPartido": 627.549,
+      "timestampReal": 1792859537039,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "tipo": "tiempo_muerto",
+      "equipo": "INTER"
+    },
+    {
+      "id": "5q1soqidmvmmahi8",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 642.568,
+      "segundosPartido": 642.568,
+      "timestampReal": 1792859559200,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "MOLINA",
+      "accion": "pf",
+      "zonaCampo": "D10"
+    },
+    {
+      "id": "fhsppmgbmvmmamil",
+      "parte": "2T",
+      "segundosParte": 646.905,
+      "segundosPartido": 646.905,
+      "timestampReal": 1792859565693,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LEON",
+      "resultado": "FUERA",
+      "zonaCampo": "A5"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "PUERTA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P7",
+      "id": "w0rcdyigmvmmaub5",
+      "parte": "2T",
+      "segundosParte": 653.785,
+      "segundosPartido": 653.785,
+      "timestampReal": 1792859575793,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "FUERA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A5",
+      "id": "e1ele2cumvmmb0kw",
+      "parte": "2T",
+      "segundosParte": 659.511,
+      "segundosPartido": 659.511,
+      "timestampReal": 1792859583920,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      }
+    },
+    {
+      "id": "k95ow42rmvmmbaw8",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 669.123,
+      "segundosPartido": 669.123,
+      "timestampReal": 1792859597288,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "MOLINA",
+      "entra": "SOTO"
+    },
+    {
+      "id": "a500qtavmvmmbbd4",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 669.123,
+      "segundosPartido": 669.123,
+      "timestampReal": 1792859597896,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "ORTEGA",
+      "entra": "CALVO"
+    },
+    {
+      "id": "wcd90qmcmvmmbcfy",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 669.123,
+      "segundosPartido": 669.123,
+      "timestampReal": 1792859599294,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "LEON",
+      "entra": "MARIN"
+    },
+    {
+      "tipo": "falta",
+      "equipo": "RIVAL",
+      "jugador": "CALVO",
+      "zonaCampo": "D8",
+      "id": "1ye6607wmvmmbnj9",
+      "parte": "2T",
+      "segundosParte": 680.136,
+      "segundosPartido": 680.136,
+      "timestampReal": 1792859613669,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      }
+    },
+    {
+      "id": "t05svtz6mvmmc22k",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 693.09,
+      "segundosPartido": 693.09,
+      "timestampReal": 1792859632508,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "SOTO",
+      "accion": "pf",
+      "zonaCampo": "A9"
+    },
+    {
+      "id": "0a3dpqpbmvmmc2nf",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 693.09,
+      "segundosPartido": 693.09,
+      "timestampReal": 1792859633259,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "SOTO",
+      "accion": "ultCob",
+      "zonaCampo": "D1"
+    },
+    {
+      "id": "g88riejamvmmc8xk",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 699.334,
+      "segundosPartido": 699.334,
+      "timestampReal": 1792859641400,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "MARIN",
+      "entra": "NEGRO"
+    },
+    {
+      "id": "ab8wexj3mvmmcjak",
+      "parte": "2T",
+      "segundosParte": 708.846,
+      "segundosPartido": 708.846,
+      "timestampReal": 1792859654828,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "NEGRO",
+      "resultado": "PUERTA",
+      "zonaCampo": "A5",
+      "zonaPorteria": "P4"
+    },
+    {
+      "id": "5vxune13mvmmd85b",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 730.694,
+      "segundosPartido": 730.694,
+      "timestampReal": 1792859687039,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "SOTO",
+      "accion": "cortes",
+      "zonaCampo": "D1"
+    },
+    {
+      "id": "oejl0c0omvmmfhuq",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 803.61,
+      "segundosPartido": 803.61,
+      "timestampReal": 1792859792930,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "NEGRO",
+      "accion": "unoDef_g",
+      "zonaCampo": "D3"
+    },
+    {
+      "id": "4x19dtvgmvmmg29c",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 822.296,
+      "segundosPartido": 822.296,
+      "timestampReal": 1792859819376,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "ARANDA",
+      "accion": "unoDef_g",
+      "zonaCampo": "D4"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "CALVO",
+      "resultado": "FUERA",
+      "zonaCampo": "A5",
+      "id": "sbmtb60umvmmg3la",
+      "parte": "2T",
+      "segundosParte": 822.296,
+      "segundosPartido": 822.296,
+      "timestampReal": 1792859821102,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      }
+    },
+    {
+      "id": "2vb5pzezmvmmgbtv",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 830.505,
+      "segundosPartido": 830.505,
+      "timestampReal": 1792859831779,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "SOTO",
+      "entra": "MOLINA"
+    },
+    {
+      "id": "dyrx8nq1mvmmgcoy",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 830.505,
+      "segundosPartido": 830.505,
+      "timestampReal": 1792859832898,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "ARANDA",
+      "entra": "PRIETO"
+    },
+    {
+      "id": "4572ax79mvmmgjzr",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 837.929,
+      "segundosPartido": 837.929,
+      "timestampReal": 1792859842359,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "PRIETO",
+      "entra": "VEGA"
+    },
+    {
+      "id": "uwikw3uemvmmhg5v",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 866.392,
+      "segundosPartido": 866.392,
+      "timestampReal": 1792859884051,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "NEGRO",
+      "accion": "unoDef_g",
+      "zonaCampo": "D6"
+    },
+    {
+      "id": "7pn1z340mvmmhlsq",
+      "parte": "2T",
+      "segundosParte": 871.697,
+      "segundosPartido": 871.697,
+      "timestampReal": 1792859891354,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A4"
+    },
+    {
+      "id": "s2mr9ntsmvmmi07c",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 884.517,
+      "segundosPartido": 884.517,
+      "timestampReal": 1792859910024,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "sale": "CALVO",
+      "entra": "LARA"
+    },
+    {
+      "id": "kzrivjgdmvmmighp",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 899.391,
+      "segundosPartido": 899.391,
+      "timestampReal": 1792859931133,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "LARA",
+      "accion": "cortes",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "x2znc0ksmvmminsj",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 905.559,
+      "segundosPartido": 905.559,
+      "timestampReal": 1792859940595,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "jugador": "LARA",
+      "accion": "pf",
+      "zonaCampo": "D9"
+    },
+    {
+      "id": "l1zye99dmvmmip2y",
+      "parte": "2T",
+      "segundosParte": 905.559,
+      "segundosPartido": 905.559,
+      "timestampReal": 1792859942266,
+      "marcador": {
+        "inter": 5,
+        "rival": 2
+      },
+      "tipo": "gol",
+      "equipo": "RIVAL",
+      "accion": "Pérdida en salida de presión",
+      "zonaCampo": "A5",
+      "zonaPorteria": "P4"
+    },
+    {
+      "id": "k5snwobzmvmmjl6k",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 935.341,
+      "segundosPartido": 935.341,
+      "timestampReal": 1792859983868,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "sale": "NEGRO",
+      "entra": "MARIN"
+    },
+    {
+      "id": "uo8gf22tmvmmjpi2",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 939.48,
+      "segundosPartido": 939.48,
+      "timestampReal": 1792859989466,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "sale": "VEGA",
+      "entra": "TORRES"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "MOLINA",
+      "resultado": "PUERTA",
+      "zonaCampo": "A4",
+      "zonaPorteria": "P8",
+      "id": "mpi1d6enmvmmkd1m",
+      "parte": "2T",
+      "segundosParte": 960.487,
+      "segundosPartido": 960.487,
+      "timestampReal": 1792860019978,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      }
+    },
+    {
+      "id": "koaroahzmvmmko33",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 970.269,
+      "segundosPartido": 970.269,
+      "timestampReal": 1792860034287,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "jugador": "MARIN",
+      "accion": "pnf",
+      "zonaCampo": "A5"
+    },
+    {
+      "id": "42m8mslpmvmmkpdo",
+      "parte": "2T",
+      "segundosParte": 970.269,
+      "segundosPartido": 970.269,
+      "timestampReal": 1792860035964,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "PUERTA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A2",
+      "zonaPorteria": "P9"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "TORRES",
+      "resultado": "PUERTA",
+      "zonaCampo": "D5",
+      "zonaPorteria": "P4",
+      "id": "0qqv31w4mvmmluxb",
+      "parte": "2T",
+      "segundosParte": 1008.537,
+      "segundosPartido": 1008.537,
+      "timestampReal": 1792860089807,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      }
+    },
+    {
+      "tipo": "falta",
+      "equipo": "INTER",
+      "jugador": "LARA",
+      "zonaCampo": "A9",
+      "id": "oyauh6fmmvmmlw4w",
+      "parte": "2T",
+      "segundosParte": 1009.374,
+      "segundosPartido": 1009.374,
+      "timestampReal": 1792860091376,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      }
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "RIVAL",
+      "resultado": "PUERTA",
+      "portero": "MENDEZ",
+      "zonaCampo": "A8",
+      "zonaPorteria": "P3",
+      "id": "tercsls1mvmmm192",
+      "parte": "2T",
+      "segundosParte": 1014.472,
+      "segundosPartido": 1014.472,
+      "timestampReal": 1792860098006,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      }
+    },
+    {
+      "id": "e0rpr813mvmmn5kx",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 1050.36,
+      "segundosPartido": 1050.36,
+      "timestampReal": 1792860150273,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "jugador": "TORRES",
+      "accion": "pf",
+      "zonaCampo": "A8"
+    },
+    {
+      "id": "j7csmsb2mvmmn71i",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 1050.36,
+      "segundosPartido": 1050.36,
+      "timestampReal": 1792860152166,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "jugador": "LARA",
+      "accion": "cortes",
+      "zonaCampo": "D8"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LARA",
+      "resultado": "PALO",
+      "zonaCampo": "A5",
+      "id": "zt4juftcmvmmn8rx",
+      "parte": "2T",
+      "segundosParte": 1050.36,
+      "segundosPartido": 1050.36,
+      "timestampReal": 1792860154413,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      }
+    },
+    {
+      "id": "yd2oe6stmvmmnjve",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 1062.833,
+      "segundosPartido": 1062.833,
+      "timestampReal": 1792860168794,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "jugador": "TORRES",
+      "accion": "cortes",
+      "zonaCampo": "D5"
+    },
+    {
+      "id": "al9r4cbymvmmnkn0",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 1063.423,
+      "segundosPartido": 1063.423,
+      "timestampReal": 1792860169788,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "jugador": "TORRES",
+      "accion": "pf",
+      "zonaCampo": "D8"
+    },
+    {
+      "id": "l4oiwm5bmvmmnl6q",
+      "tipo": "cambio",
+      "parte": "2T",
+      "segundosParte": 1063.423,
+      "segundosPartido": 1063.423,
+      "timestampReal": 1792860170498,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "sale": "MOLINA",
+      "entra": "ARANDA"
+    },
+    {
+      "tipo": "disparo",
+      "equipo": "INTER",
+      "jugador": "LARA",
+      "resultado": "BLOQUEADO",
+      "zonaCampo": "A4",
+      "id": "3iprwfc6mvmmoen7",
+      "parte": "2T",
+      "segundosParte": 1090.65,
+      "segundosPartido": 1090.65,
+      "timestampReal": 1792860208675,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      }
+    },
+    {
+      "id": "ubv81fd3mvmmoxzb",
+      "tipo": "accion_individual",
+      "parte": "2T",
+      "segundosParte": 1107.943,
+      "segundosPartido": 1107.943,
+      "timestampReal": 1792860233735,
+      "marcador": {
+        "inter": 5,
+        "rival": 3
+      },
+      "jugador": "ARANDA",
+      "accion": "cortes",
+      "zonaCampo": "D7"
+    }
+  ],
+  "acciones": {
+    "porJugador": {
+      "NEGRO": {
+        "pf": 0,
+        "pnf": 3,
+        "robos": 4,
+        "cortes": 1,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 5,
+        "dpf": 3,
+        "dpa": 0,
+        "dpb": 1,
+        "golesEncajados": 0,
+        "paradas": 0,
+        "unoAtq_p": 1,
+        "unoAtq_g": 2,
+        "unoDef_g": 2
+      },
+      "LEON": {
+        "pf": 1,
+        "pnf": 0,
+        "robos": 1,
+        "cortes": 2,
+        "bdg": 0,
+        "bdp": 1,
+        "dpp": 0,
+        "dpf": 3,
+        "dpa": 2,
+        "dpb": 3,
+        "golesEncajados": 0,
+        "paradas": 0,
+        "unoAtq_g": 1
+      },
+      "MENDEZ": {
+        "pf": 0,
+        "pnf": 0,
+        "robos": 0,
+        "cortes": 0,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 0,
+        "dpf": 0,
+        "dpa": 0,
+        "dpb": 0,
+        "golesEncajados": 3,
+        "paradas": 8,
+        "cobBR": 2,
+        "saqueB": 3,
+        "cobBN": 2,
+        "achique": 3,
+        "paseB": 3
+      },
+      "CALVO": {
+        "pf": 0,
+        "pnf": 1,
+        "robos": 2,
+        "cortes": 1,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 1,
+        "dpf": 2,
+        "dpa": 0,
+        "dpb": 3,
+        "golesEncajados": 0,
+        "paradas": 0,
+        "unoDef_p": 2
+      },
+      "SOTO": {
+        "pf": 2,
+        "pnf": 0,
+        "robos": 3,
+        "cortes": 4,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 0,
+        "dpf": 0,
+        "dpa": 0,
+        "dpb": 1,
+        "golesEncajados": 0,
+        "paradas": 0,
+        "ultCob": 3
+      },
+      "ARANDA": {
+        "pf": 0,
+        "pnf": 0,
+        "robos": 2,
+        "cortes": 1,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 2,
+        "dpf": 2,
+        "dpa": 0,
+        "dpb": 0,
+        "golesEncajados": 0,
+        "paradas": 0,
+        "unoDef_p": 1,
+        "unoDef_g": 1
+      },
+      "MOLINA": {
+        "pf": 4,
+        "pnf": 0,
+        "robos": 2,
+        "cortes": 3,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 4,
+        "dpf": 1,
+        "dpa": 1,
+        "dpb": 4,
+        "golesEncajados": 0,
+        "paradas": 0
+      },
+      "MARIN": {
+        "pf": 1,
+        "pnf": 2,
+        "robos": 2,
+        "cortes": 2,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 3,
+        "dpf": 1,
+        "dpa": 0,
+        "dpb": 2,
+        "golesEncajados": 0,
+        "paradas": 0
+      },
+      "LARA": {
+        "pf": 1,
+        "pnf": 0,
+        "robos": 1,
+        "cortes": 2,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 0,
+        "dpf": 3,
+        "dpa": 1,
+        "dpb": 1,
+        "golesEncajados": 0,
+        "paradas": 0
+      },
+      "ORTEGA": {
+        "pf": 0,
+        "pnf": 0,
+        "robos": 1,
+        "cortes": 0,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 0,
+        "dpf": 0,
+        "dpa": 0,
+        "dpb": 1,
+        "golesEncajados": 0,
+        "paradas": 0
+      },
+      "VEGA": {
+        "pf": 2,
+        "pnf": 0,
+        "robos": 0,
+        "cortes": 1,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 0,
+        "dpf": 1,
+        "dpa": 0,
+        "dpb": 0,
+        "golesEncajados": 0,
+        "paradas": 0
+      },
+      "#EQUIPO": {
+        "pf": 1,
+        "pnf": 0,
+        "robos": 4,
+        "cortes": 0,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 0,
+        "dpf": 0,
+        "dpa": 0,
+        "dpb": 0,
+        "golesEncajados": 0,
+        "paradas": 0
+      },
+      "PRIETO": {
+        "pf": 1,
+        "pnf": 0,
+        "robos": 0,
+        "cortes": 0,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 1,
+        "dpf": 1,
+        "dpa": 0,
+        "dpb": 0,
+        "golesEncajados": 0,
+        "paradas": 0,
+        "unoDef_p": 1
+      },
+      "TORRES": {
+        "pf": 3,
+        "pnf": 0,
+        "robos": 2,
+        "cortes": 2,
+        "bdg": 0,
+        "bdp": 0,
+        "dpp": 1,
+        "dpf": 0,
+        "dpa": 0,
+        "dpb": 0,
+        "golesEncajados": 0,
+        "paradas": 0
+      }
+    }
+  },
+  "disparosRival": {
+    "puerta": 11,
+    "fuera": 5,
+    "palo": 0,
+    "bloqueado": 1
+  },
+  "tanda": {
+    "activa": false,
+    "tiros": [],
+    "marcador": {
+      "inter": 0,
+      "rival": 0
+    }
+  },
+  "actualizado": 1792860335735,
+  "incorporacionesRival": {
+    "total": 0,
+    "conDisparo": 0,
+    "sinDisparo": 0
+  }
+}
