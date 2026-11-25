@@ -28,8 +28,8 @@ const bloque = clientes.slice(clientes.indexOf("const CLIENTES"), clientes.index
 const ids = [...bloque.matchAll(/^  (\w+): \{$/gm)].map((m) => m[1]);
 ok(ids.length >= 4, `clientes encontrados: ${ids.join(", ")}`);
 const esperado: Record<string, string> = {
-  inter: "escudos/inter.png", filial: "escudos/inter.png",
-  juvenil: "escudos/inter.png", pulso: "escudos/pulso.png",
+  inter: "escudos/inter-verde.png", filial: "escudos/inter-verde.png",
+  juvenil: "escudos/inter-verde.png", pulso: "escudos/pulso.png",
 };
 for (const id of ids) {
   const ent = bloque.slice(bloque.indexOf(`  ${id}: {`));

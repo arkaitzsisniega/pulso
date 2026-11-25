@@ -68,7 +68,7 @@ export interface ConfigCliente {
    *  lo cambia desde la pantalla de inicio y se le queda guardado. */
   aspectoPorDefecto: "nuevo" | "clasico";
   /** Escudo del club en las cabeceras del aspecto NUEVO (arriba a la
-   *  izquierda), relativo a `public/`: p. ej. "escudos/inter.png". UNA imagen
+   *  izquierda), relativo a `public/`: p. ej. "escudos/inter-verde.png". UNA imagen
    *  para los dos modos (Pabellón y Sol), así que tiene que leerse sobre fondo
    *  oscuro y sobre claro. PNG con transparencia, ~200 px de alto como mucho.
    *  El aspecto clásico no lo usa. El informe del partido SÍ (21/11/2026),
@@ -76,8 +76,9 @@ export interface ConfigCliente {
   escudo: string;
   /** Opcional: otro escudo SOLO para el informe del partido (papel blanco),
    *  si el de las cabeceras no es el que mejor queda impreso. Sin esta línea,
-   *  el informe usa `escudo`. El Inter la usa: su escudo verde no se lee en el
-   *  modo Pabellón (oscuro), pero es el de sus documentos en papel. */
+   *  el informe usa `escudo`. Hoy ningún club la usa: desde el 25/11/2026 el
+   *  Inter lleva su escudo oficial VERDE en todas partes, con el interior
+   *  relleno de blanco para que se lea también en el modo Pabellón (oscuro). */
   escudoInforme?: string;
   /** Servidor de partidos del club (fase 2, 21/11/2026; lib/servidor.ts):
    *  true = cada partido se sube solo a `URL_SERVIDOR` en cuanto hay red y
@@ -130,8 +131,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     partidoEjemplo: false,
     colorPropio: VERDE_INTER,
     aspectoPorDefecto: "clasico",
-    escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
-    escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
+    escudo: "escudos/inter-verde.png", // el oficial VERDE, el mismo en los tres equipos del club
     servidor: false,
   },
   // Filial (28/8/2026). MISMO código que el Inter, otro build: su roster, su
@@ -150,8 +150,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     partidoEjemplo: false,
     colorPropio: VERDE_INTER,
     aspectoPorDefecto: "clasico",
-    escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
-    escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
+    escudo: "escudos/inter-verde.png", // el oficial VERDE, el mismo en los tres equipos del club
     servidor: false,
   },
   // Juvenil División de Honor (11/11/2026). Igual que el filial: mismo código,
@@ -170,8 +169,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     partidoEjemplo: false,
     colorPropio: VERDE_INTER,
     aspectoPorDefecto: "clasico",
-    escudo: "escudos/inter.png", // los tres equipos del club, el mismo escudo
-    escudoInforme: "escudos/inter-informe.png", // el verde, en el informe (papel)
+    escudo: "escudos/inter-verde.png", // el oficial VERDE, el mismo en los tres equipos del club
     servidor: false,
   },
   pulso: {
