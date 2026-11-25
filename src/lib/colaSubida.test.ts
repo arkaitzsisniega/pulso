@@ -432,20 +432,22 @@ console.log("── 10 · Sesión y «Partidos del club» ──");
   }
 }
 
-console.log("── 11 · Configuración: solo la demo encendida y la base sin perder nada ──");
+console.log("── 11 · Configuración: demo e Inter encendidos y la base sin perder nada ──");
 {
   const cl = leer("./clientes.ts");
   // Cada club con su línea `servidor:`. Desde el 25/11/2026 la demo (`pulso`)
-  // sube al servidor; Inter, filial y juvenil siguen como siempre.
+  // y el Inter (decisión de Arkaitz) suben al servidor; filial y juvenil siguen
+  // como siempre.
   const servidorDe = (id: string): string | null => {
     const m = cl.match(new RegExp(`\\n  ${id}: \\{[\\s\\S]*?\\n  \\},`));
     const v = m?.[0].match(/servidor: (true|false),/);
     return v ? v[1] : null;
   };
-  for (const id of ["inter", "filial", "juvenil"]) igual(servidorDe(id), "false", `${id}: servidor apagado`);
+  for (const id of ["filial", "juvenil"]) igual(servidorDe(id), "false", `${id}: servidor apagado`);
+  igual(servidorDe("inter"), "true", "el Inter: servidor encendido (25/11/2026)");
   igual(servidorDe("pulso"), "true", "la demo (pulso): servidor encendido");
   igual((cl.match(/servidor: (true|false),/g) ?? []).length, 4, "los cuatro clubes declaran `servidor`");
-  igual((cl.match(/servidor: true/g) ?? []).length, 1, "solo uno encendido");
+  igual((cl.match(/servidor: true/g) ?? []).length, 2, "solo dos encendidos (demo e Inter)");
   ok(cl.includes('"https://datos.pulso-futsal.com"'), "la dirección del servidor: https://datos.pulso-futsal.com");
   const db = leer("./db.ts");
   ok(/version\(1\)\.stores\(\{\s*partidos: "id, estado, actualizado",\s*\}\)/.test(db), "la versión 1 sigue tal cual");

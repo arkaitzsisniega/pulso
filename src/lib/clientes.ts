@@ -84,7 +84,8 @@ export interface ConfigCliente {
    *  true = cada partido se sube solo a `URL_SERVIDOR` en cuanto hay red y
    *  sale «Partidos del club» en el inicio. false = el crono de siempre, sin
    *  una sola petición al servidor. Se enciende club a club (demo → juvenil →
-   *  filial → Inter, y el Inter con permiso): desde el 25/11/2026, SOLO la demo. */
+   *  filial → Inter, y el Inter con permiso): desde el 25/11/2026, la demo y el
+   *  Inter (decisión de Arkaitz); filial y juvenil siguen sin servidor. */
   servidor: boolean;
 }
 
@@ -132,7 +133,7 @@ const CLIENTES: Record<string, ConfigCliente> = {
     colorPropio: VERDE_INTER,
     aspectoPorDefecto: "clasico",
     escudo: "escudos/inter-verde.png", // el oficial VERDE, el mismo en los tres equipos del club
-    servidor: false,
+    servidor: true, // 25/11/2026: decisión de Arkaitz, el Inter sube al servidor (filial y juvenil, NO)
   },
   // Filial (28/8/2026). MISMO código que el Inter, otro build: su roster, su
   // contraseña, su URL (/crono-filial/) y su base local. No comparte NADA con
