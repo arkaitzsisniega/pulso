@@ -210,9 +210,9 @@ export function tramosSituaciones(p: Partido, porteros: Set<string>):
 }
 
 /** Un disparo para estas cuentas: equipo, momento, a puerta y si fue gol. */
-interface Tiro { equipo: "INTER" | "RIVAL"; t: number; aPuerta: boolean; gol: boolean }
+export interface Tiro { equipo: "INTER" | "RIVAL"; t: number; aPuerta: boolean; gol: boolean }
 
-function tiros(p: Partido): Tiro[] {
+export function tiros(p: Partido): Tiro[] {
   const off = offsetsDeParte(p);
   const out: Tiro[] = [];
   for (const ev of (p.eventos ?? []) as Evento[]) {
