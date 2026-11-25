@@ -22,6 +22,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { type Partido } from "@/lib/db";
 import { CLIENTE } from "@/lib/clientes";
+import { ordenarPartidosClub } from "@/lib/ordenPartidos";
 import { t } from "@/lib/i18n";
 import {
   SERVIDOR_ACTIVO, arrancarSincronizacion, useServidor, conectar, desconectar, partidosDelClub,
@@ -119,7 +120,8 @@ export function useServidorClub(opts: {
     setCargando(true); setError(null);
     const r = await partidosDelClub();
     setCargando(false);
-    if (r.ok) setLista(r.datos);
+    // El más reciente arriba y el vídeo encima de su directo (lib/ordenPartidos.ts).
+    if (r.ok) setLista(ordenarPartidosClub(r.datos));
     else { setLista(null); setError(t("sv_err_lista", { motivo: textoMotivo(r.codigo) })); }
   };
 
