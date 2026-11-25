@@ -53,6 +53,7 @@ import { aplicarDecision } from "./importarPartido";
 import { GuardadoDiferido } from "./guardadoDiferido";
 import { conCandado } from "./candado";
 import { ordenarPartidos } from "./ordenPartidos";
+import { cuantosDeshacer, deshacerCambio } from "./deshacer";
 import { estadoFin, marcarFinalizado, repasarSinCerrar, type ComoCierre, type RepasoCierre } from "./finPartido";
 
 const ID_PARTIDO = "current";           // id legacy (partido en curso de la v1)
@@ -1015,6 +1016,19 @@ export function usePartido() {
   /** Deshacer último evento — REVIERTE también los efectos automáticos. */
   function deshacerUltimoEvento() {
     setPartido((prev) => {
+      // Una acción puede haber dejado VARIOS apuntes (roja + cambio que saca al
+      // expulsado; 2ª amarilla + roja + cambio): se quitan todos de una vez,
+      // del último al primero (lib/deshacer.ts).
+      const n = cuantosDeshacer(prev.eventos);
+      let next: Partido = prev;
+      for (let k = 0; k < n; k++) next = deshacerUno(next);
+      return next;
+    });
+  }
+
+  /** Quita el último apunte y revierte sus efectos automáticos. */
+  function deshacerUno(prev: Partido): Partido {
+    {
       const ev = prev.eventos[prev.eventos.length - 1];
       if (!ev) return prev;
       let next: Partido = { ...prev, eventos: prev.eventos.slice(0, -1) };
@@ -1039,22 +1053,36 @@ export function usePartido() {
           next.eventos = next.eventos.filter((e) => e.id !== ev.penaltiId);
         }
       } else if (ev.tipo === "falta") {
+        // Sin mutar: el estado anterior es de React (y en modo estricto el
+        // actualizador corre dos veces → restaba dos).
         const cur = next.stats.faltas[ev.parte];
-        next.stats.faltas[ev.parte] = ev.equipo === "INTER"
-          ? { ...cur, inter: Math.max(0, cur.inter - 1) }
-          : { ...cur, rival: Math.max(0, cur.rival - 1) };
+        next.stats = { ...next.stats, faltas: { ...next.stats.faltas,
+          [ev.parte]: ev.equipo === "INTER"
+            ? { ...cur, inter: Math.max(0, cur.inter - 1) }
+            : { ...cur, rival: Math.max(0, cur.rival - 1) } } };
       } else if (ev.tipo === "amarilla") {
+        // Sin mutar: el estado anterior es de React (y en modo estricto el
+        // actualizador corre dos veces → restaba dos).
         const cur = next.stats.amarillas[ev.parte];
-        next.stats.amarillas[ev.parte] = ev.equipo === "INTER"
-          ? { ...cur, inter: Math.max(0, cur.inter - 1) }
-          : { ...cur, rival: Math.max(0, cur.rival - 1) };
+        next.stats = { ...next.stats, amarillas: { ...next.stats.amarillas,
+          [ev.parte]: ev.equipo === "INTER"
+            ? { ...cur, inter: Math.max(0, cur.inter - 1) }
+            : { ...cur, rival: Math.max(0, cur.rival - 1) } } };
       } else if (ev.tipo === "tiempo_muerto") {
+        // Sin mutar: el estado anterior es de React (y en modo estricto el
+        // actualizador corre dos veces → restaba dos).
         const cur = next.stats.tiemposMuerto[ev.parte];
-        next.stats.tiemposMuerto[ev.parte] = ev.equipo === "INTER"
-          ? { ...cur, inter: Math.max(0, cur.inter - 1) }
-          : { ...cur, rival: Math.max(0, cur.rival - 1) };
+        next.stats = { ...next.stats, tiemposMuerto: { ...next.stats.tiemposMuerto,
+          [ev.parte]: ev.equipo === "INTER"
+            ? { ...cur, inter: Math.max(0, cur.inter - 1) }
+            : { ...cur, rival: Math.max(0, cur.rival - 1) } } };
       } else if (ev.tipo === "cambio") {
-        next.enPista = next.enPista.map((n) => (n === ev.entra ? ev.sale : n));
+        // Pista Y relojes como antes del cambio. Antes solo cambiaba `entra`
+        // por `sale` en la pista: con la expulsión (entra "") no encontraba a
+        // nadie y el expulsado se quedaba fuera (lib/deshacer.ts).
+        const r = deshacerCambio(next, ev);
+        next.enPista = r.enPista;
+        next.tiempos = r.tiempos;
       } else if (ev.tipo === "incorporacion_rival") {
         const inc = next.incorporacionesRival
           ?? { total: 0, conDisparo: 0, sinDisparo: 0 };
@@ -1129,7 +1157,7 @@ export function usePartido() {
         }
       }
       return next;
-    });
+    }
   }
 
   /** Bump genérico de contador individual (PF/PNF/Robos/Cortes/BDG/BDP/etc.). */

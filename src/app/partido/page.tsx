@@ -25,6 +25,7 @@ import { elegirRival, rgba } from "@/lib/tema";
 import { estadoFin } from "@/lib/finPartido";
 import { pjRivalActivo } from "@/lib/situacionesNumericas";
 import { vueltaExpulsion } from "@/lib/vueltaExpulsion";
+import { cuantosDeshacer } from "@/lib/deshacer";
 import { useSoloMirar, useSeguirEnDirecto, BannerSoloMirar } from "@/components/ServidorClub";
 import {
   CabeceraNueva, BotonTiempoNuevo, HerramientasNueva, PistaNueva, BanquilloNuevo,
@@ -964,8 +965,7 @@ export default function PartidoPage() {
                              mostrarAviso(t("aviso_perdida_equipo")); }} />
           <BotonNuevo label={t("btn_deshacer")} color="var(--texto-2)" tipo="nav" icono={<Ico.deshacer />}
             onClick={() => {
-              const ultimo = partido.eventos[partido.eventos.length - 1];
-              const desc = describirEvento(ultimo, cfg.rival);
+              const desc = describirEvento(eventoADeshacer(partido.eventos), cfg.rival);
               deshacerUltimoEvento();
               mostrarAviso(desc ? t("aviso_deshecho", { que: desc })
                                  : t("aviso_nada_deshacer"));
@@ -1148,8 +1148,7 @@ export default function PartidoPage() {
           {ic(t("btn_perdida_equipo"))}
         </button>
         <button onClick={() => {
-                  const ultimo = partido.eventos[partido.eventos.length - 1];
-                  const desc = describirEvento(ultimo, cfg.rival);
+                  const desc = describirEvento(eventoADeshacer(partido.eventos), cfg.rival);
                   deshacerUltimoEvento();
                   mostrarAviso(desc ? t("aviso_deshecho", { que: desc })
                                      : t("aviso_nada_deshacer"));
@@ -1751,6 +1750,14 @@ function RelojGrande(props: { segundosParte: number; ultimoStart: number | null;
  *  Deshacer era un salto de fe: pulsabas y no sabías si te habías cargado el
  *  gol o la falta de antes. Ahora el aviso lo dice (Arkaitz 22/8/2026).
  */
+/** El apunte que da nombre a lo que quita «Deshacer». Una expulsión son varios
+ *  (roja + el cambio que saca al expulsado, y la 2ª amarilla delante): se
+ *  quitan todos y el aviso habla de la roja, no del cambio (lib/deshacer.ts). */
+function eventoADeshacer(eventos: Evento[]): Evento | undefined {
+  const grupo = eventos.slice(eventos.length - cuantosDeshacer(eventos));
+  return grupo.find((e) => e.tipo === "roja") ?? grupo[grupo.length - 1];
+}
+
 function describirEvento(ev: Evento | undefined, rival: string): string {
   if (!ev) return "";
   const e: any = ev;
