@@ -10,11 +10,17 @@
  *
  * Si el partido no tuvo ninguna situación especial no se llama: el informe de
  * un partido viejo sale igual que antes.
+ *
+ * 25/11/2026: bajo cada situación, una línea «Cuándo» a todo el ancho (no se
+ * añade columna: la tabla sigue cabiendo en A4), como en el PDF del club: la
+ * 1.ª vez que se sacó el portero-jugador en cada parte y el momento de cada
+ * expulsión, en lo que QUEDABA en la parte (reloj en cuenta atrás).
  */
 import React from "react";
-import { t } from "@/lib/i18n";
+import { t, useIdioma } from "@/lib/i18n";
 import {
-  CLAVE_SITUACION, minutosSituacion, type CuadroSituaciones, type FilaSituacion,
+  CLAVE_SITUACION, etiquetaCuando, minutosSituacion, textoCuando,
+  type CuadroSituaciones, type FilaSituacion,
 } from "@/lib/situacionesNumericas";
 
 export function TablaSituaciones(props: {
@@ -23,7 +29,10 @@ export function TablaSituaciones(props: {
   clase?: string;
 }) {
   const { cuadro, nos, rival, color } = props;
+  const idioma = useIdioma();
   const filas: FilaSituacion[] = [...cuadro.filas, cuadro.resto];
+  const cuando = (f: FilaSituacion) => textoCuando(f.clave, f.momentos, idioma);
+  const hayCuando = filas.some((f) => cuando(f));
   const th = "py-1 px-1 font-semibold text-right";
   const td = "py-[3px] px-1 text-right tabular-nums";
   return (
@@ -54,9 +63,10 @@ export function TablaSituaciones(props: {
         <tbody>
           {filas.map((f) => {
             const resto = f.clave === "resto";
+            const linea = cuando(f);
             return (
-              <tr key={f.clave}
-                  className={`border-b border-zinc-100${resto ? " text-zinc-500" : ""}`}>
+              <React.Fragment key={f.clave}>
+              <tr className={`${linea ? "" : "border-b border-zinc-100"}${resto ? " text-zinc-500" : ""}`}>
                 <td className={`py-[3px] text-left${resto ? "" : " font-semibold"}`}>
                   {t(CLAVE_SITUACION[f.clave])}
                 </td>
@@ -68,12 +78,21 @@ export function TablaSituaciones(props: {
                 <td className={td}>{f.contra.aPuerta}</td>
                 <td className={td}>{f.contra.goles}</td>
               </tr>
+              {linea && (
+                <tr className="border-b border-zinc-100">
+                  <td colSpan={8} className="pb-[3px] pl-2 text-left text-[8.5px] leading-tight text-zinc-600">
+                    <span className="font-semibold">{etiquetaCuando(idioma)}:</span> {linea}
+                  </td>
+                </tr>
+              )}
+              </React.Fragment>
             );
           })}
         </tbody>
       </table>
       <p className="mt-1 text-[8px] text-zinc-500">
         {t("sit_nota")}{cuadro.haySolape ? ` ${t("sit_nota_solape")}` : ""}
+        {hayCuando ? ` ${t("sit_nota_cuando")}` : ""}
       </p>
     </>
   );

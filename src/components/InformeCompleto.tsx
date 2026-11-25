@@ -1350,7 +1350,9 @@ export default function InformeCompleto(props: { nuevo?: boolean }) {
 
   const porteros = new Set(ROSTER.filter((j) => j.posicion === "PORTERO").map((j) => j.nombre));
   if (partido?.config?.pista_inicial?.portero) porteros.add(partido.config.pista_inicial.portero);
-  const situaciones = partido ? disparosPorSituacion(partido, porteros) : null;
+  // {nombre: dorsal}: el «Cuándo» de una expulsión nuestra dice «NOMBRE (#7)».
+  const dorsales = Object.fromEntries(ROSTER.map((j) => [j.nombre, j.dorsal]));
+  const situaciones = partido ? disparosPorSituacion(partido, porteros, dorsales) : null;
   const ahora = new Date();
   const dosCifras = (x: number) => String(x).padStart(2, "0");
   // ── Aspecto nuevo: goles y mapas como en el PDF del club ─────────────────

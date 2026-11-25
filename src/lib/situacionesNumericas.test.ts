@@ -22,7 +22,7 @@ registerHooks({
 });
 const {
   disparosPorSituacion, tramosSituaciones, pjRivalActivo, unirTramos, minutosSituacion,
-  SEG_EXPULSION, CLAVE_SITUACION,
+  SEG_EXPULSION, CLAVE_SITUACION, textoCuando, etiquetaCuando, falta,
 } = await import("./situacionesNumericas.ts");
 
 let fallos = 0;
@@ -146,6 +146,68 @@ console.log("── Las cuatro situaciones ──");
   igual(c.resto.contra.disparos, 2, "resto · en contra: los dos de juego normal");
   igual(c.resto.segundos, 2400 - 110 - 60 - 270, "resto · el tiempo que no es de ninguna");
   igual(minutosSituacion(270), "4:30", "minutos con m:ss");
+
+  // ── CUÁNDO (25/11/2026): los MISMOS números que test_situaciones_partido.py
+  //    (clase Cuando, test_caso_completo) del club.
+  const cd = disparosPorSituacion(p, PORTEROS, { A: "7" })!;
+  const fc = (k: string) => cd.filas.find((f) => f.clave === k)!;
+  igual(fc("pj_rival").momentos, [{ parte: "1T", falta: 900 }],
+        "Cuándo · PJ rival: la 1.ª vez del 1T (la del 19:10 no repite)");
+  igual(fc("pj_nuestro").momentos, [{ parte: "2T", falta: 300 }],
+        "Cuándo · nuestro PJ: a falta de 5:00 del 2T (no lo efectivo)");
+  igual(fc("expulsion_nuestra").momentos,
+        [{ parte: "1T", falta: 600, jugador: "A", dorsal: "7", dura: 60, fin: "gol" }],
+        "Cuándo · nuestra roja: quién, dorsal, cuánto duró y cómo acabó");
+  igual(fc("expulsion_rival").momentos,
+        [{ parte: "2T", falta: 90, jugador: "#5", dorsal: "", dura: 60, fin: "gol" }],
+        "Cuándo · su roja: el dorsal que apuntó el crono");
+  igual(textoCuando("pj_rival", fc("pj_rival").momentos), "1.ª vez: a falta de 15:00 (1T)",
+        "texto · PJ rival (igual que el club)");
+  igual(textoCuando("pj_nuestro", fc("pj_nuestro").momentos), "1.ª vez: a falta de 5:00 (2T)",
+        "texto · nuestro PJ (igual que la celda `cuando` del club)");
+  igual(textoCuando("expulsion_nuestra", fc("expulsion_nuestra").momentos),
+        "A (#7): a falta de 10:00 (1T), gol a los 1:00", "texto · nuestra roja");
+  igual(textoCuando("expulsion_rival", fc("expulsion_rival").momentos),
+        "#5: a falta de 1:30 (2T), gol a los 1:00", "texto · su roja");
+  igual(textoCuando("resto", c.resto.momentos), "", "el resto no lleva «Cuándo»");
+  igual(textoCuando("pj_rival", fc("pj_rival").momentos, "it"),
+        "1ª volta: a 15:00 dalla fine (1T)", "texto en italiano");
+  igual(etiquetaCuando("en"), "When", "etiqueta en inglés");
+  // Sin dorsales (el informe sin roster): sale el nombre solo.
+  igual(textoCuando("expulsion_nuestra", fila("expulsion_nuestra").momentos),
+        "A: a falta de 10:00 (1T), gol a los 1:00", "sin dorsal, solo el nombre");
+}
+
+console.log("── Cuándo: 1.ª vez de cada parte, reloj hacia arriba, cómo acaba ──");
+{
+  // 1T: sale a los 1080,4 (quedan 119,6 → el reloj marca 2:00), vuelve y sale
+  // otra vez; 2T: sale a los 600. Solo la 1.ª de cada parte.
+  const p = base([
+    ev("1T", 1080.4, "cambio", { sale: "POR", entra: "F" }),
+    ev("1T", 1100, "cambio", { sale: "F", entra: "POR" }),
+    ev("1T", 1150, "cambio", { sale: "POR", entra: "F" }),
+    ev("1T", 1190, "cambio", { sale: "F", entra: "POR" }),
+    ev("2T", 600, "cambio", { sale: "POR", entra: "F" }),
+  ]);
+  const f = disparosPorSituacion(p, PORTEROS)!.filas.find((x) => x.clave === "pj_nuestro")!;
+  igual(f.momentos, [{ parte: "1T", falta: 120 }, { parte: "2T", falta: 600 }],
+        "una por parte, y 119,6 s que quedan se leen 2:00 como el reloj");
+  igual(textoCuando("pj_nuestro", f.momentos),
+        "1.ª vez: a falta de 2:00 (1T) · a falta de 10:00 (2T)", "texto con las dos partes");
+  igual(textoCuando("pj_nuestro", f.momentos, "en"),
+        "1st time: 2:00 left (1T) · 10:00 left (2T)", "y en inglés");
+  igual(falta(1199.999), 1200, "falta(): 1199,999 → 20:00, como formatCuentaAtras");
+
+  const q = base([
+    ev("1T", 100, "roja", { equipo: "INTER", jugador: "B" }),
+    ev("2T", 1150, "roja", { equipo: "RIVAL", jugador: "#9" }),
+  ]);
+  const cq = disparosPorSituacion(q, PORTEROS)!;
+  const g = (k: string) => cq.filas.find((x) => x.clave === k)!;
+  igual(textoCuando("expulsion_nuestra", g("expulsion_nuestra").momentos),
+        "B: a falta de 18:20 (1T), los 2:00 enteros", "expulsión que dura sus 2:00");
+  igual(textoCuando("expulsion_rival", g("expulsion_rival").momentos),
+        "#9: a falta de 0:50 (2T), acabó el partido a los 0:50", "expulsión que acaba con el partido");
 }
 
 console.log("── Expulsión que cambia de parte ──");
@@ -196,6 +258,13 @@ console.log("── Textos y pantalla ──");
   ok(/disparosPorSituacion/.test(informe), "el informe del Inter pinta la tabla");
   const completo = readFileSync(new URL("../components/InformeCompleto.tsx", import.meta.url), "utf8");
   ok(/disparosPorSituacion/.test(completo), "y el informe completo (PULSO) también");
+  const tabla = readFileSync(new URL("../components/SituacionesInforme.tsx", import.meta.url), "utf8");
+  ok(/textoCuando\(/.test(tabla), "la tabla del informe pinta el «Cuándo»");
+  ok(/disparosPorSituacion\(partido, porterosDelRoster\(partido\), dorsalesDelRoster\(\)\)/.test(informe),
+     "el informe del Inter pasa los dorsales (para «A (#7)»)");
+  ok(/disparosPorSituacion\(partido, porteros, dorsales\)/.test(completo),
+     "y el completo también");
+  for (const k of ["sit_nota_cuando"]) ok(new RegExp(`\\b${k}: \\{`).test(i18n), `i18n tiene «${k}»`);
 }
 
 console.log(fallos ? `\n❌ ${fallos} fallo(s)` : "\n✅ Todo en verde");

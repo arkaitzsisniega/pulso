@@ -49,6 +49,20 @@
  * club) para la hoja EST_SITUACIONES, el PDF y la web: si se toca una regla
  * aquí, se toca allí.
  *
+ * CUÁNDO (25/11/2026) — Arkaitz: «empezamos a falta de 6 minutos, ese dato es
+ * importante, pero luego el tiempo real es 4:30 porque el portero va cambiando
+ * cuando defendemos». El «Tiempo» de la tabla es el efectivo; el «Cuándo» dice
+ * en qué momento se dio, en lenguaje de banquillo: lo que QUEDABA en la parte,
+ * como lo marca el reloj (cuenta atrás con el redondeo hacia arriba de
+ * `formatCuentaAtras`: 20:00 durante el primer segundo).
+ *   · portero-jugador (nuestro y suyo): la 1.ª vez de cada parte en que se
+ *     sacó, «1.ª vez: a falta de 4:52 (2T)»;
+ *   · expulsiones: cada roja con su momento, quién (nuestro: nombre y dorsal;
+ *     el suyo: el dorsal que se apuntó) y cómo acabó: los 2:00 enteros, gol
+ *     del que tenía uno más (y a los cuántos) o final del partido.
+ * Va en `momentos` de cada fila y lo escribe `textoCuando`. Es el MISMO texto
+ * que el club guarda en EST_SITUACIONES (`cuando`) y pinta en su PDF.
+ *
  * Sin React ni Dexie:
  *   node --experimental-strip-types src/lib/situacionesNumericas.test.ts
  */
@@ -75,12 +89,27 @@ export interface Tramo { desde: number; hasta: number }
 
 export interface Lado { disparos: number; aPuerta: number; goles: number }
 
+/** CUÁNDO se dio una situación (ver «CUÁNDO» arriba). `falta` = segundos que
+ *  marcaba el reloj en cuenta atrás. Las expulsiones traen además quién y
+ *  cómo acabó. */
+export interface Momento {
+  parte: string;
+  falta: number;
+  jugador?: string;
+  dorsal?: string;
+  /** Segundos que duró la inferioridad. */
+  dura?: number;
+  fin?: "2min" | "gol" | "final";
+}
+
 export interface FilaSituacion {
   clave: SituacionEspecial | "resto";
   tramos: Tramo[];
   segundos: number;
   favor: Lado;
   contra: Lado;
+  /** Vacío en `resto`. */
+  momentos: Momento[];
 }
 
 export interface CuadroSituaciones {
@@ -129,18 +158,25 @@ const dentro = (ts: Tramo[], t: number) =>
 
 /** Las expulsiones de un equipo como tramos: 2 min o hasta gol del contrario
  *  (cada gol libera la más antigua aún viva). Misma regla que los banners. */
+interface Roja extends Tramo { fin: "2min" | "gol" | "final"; jugador: string }
+
 function tramosExpulsion(eventos: Evento[], equipo: "INTER" | "RIVAL",
-                         abs: (e: Evento) => number, fin: number): Tramo[] {
-  const rojas = eventos
-    .filter((e) => e.tipo === "roja" && e.equipo === equipo && up(e.jugador) !== "#CT")
-    .map((e) => ({ desde: abs(e), hasta: Math.min(abs(e) + SEG_EXPULSION, fin) }))
+                         abs: (e: Evento) => number, fin: number): Roja[] {
+  const rojas: Roja[] = eventos
+    .filter((e): e is Extract<Evento, { tipo: "roja" }> =>
+      e.tipo === "roja" && e.equipo === equipo && up(e.jugador) !== "#CT")
+    .map((e) => ({
+      desde: abs(e), hasta: Math.min(abs(e) + SEG_EXPULSION, fin),
+      fin: abs(e) + SEG_EXPULSION <= fin + 1e-6 ? "2min" as const : "final" as const,
+      jugador: String(e.jugador ?? "").trim(),
+    }))
     .sort((a, b) => a.desde - b.desde);
   const otro = equipo === "INTER" ? "RIVAL" : "INTER";
   const goles = eventos
     .filter((e) => equipoDelGol(e) === otro).map(abs).sort((a, b) => a - b);
   for (const g of goles) {
     const viva = rojas.find((r) => r.desde < g && g < r.hasta);
-    if (viva) viva.hasta = g;
+    if (viva) { viva.hasta = g; viva.fin = "gol"; }
   }
   return rojas;
 }
@@ -156,6 +192,22 @@ function equipoDelGol(e: Evento): "INTER" | "RIVAL" | null {
 /** Los tramos de las cuatro situaciones, en segundos absolutos de partido. */
 export function tramosSituaciones(p: Partido, porteros: Set<string>):
   Record<SituacionEspecial, Tramo[]> {
+  return detalle(p, porteros).tramos;
+}
+
+/** Segundos que marca el reloj en cuenta atrás: hacia arriba, como el crono
+ *  (`formatCuentaAtras`): 20:00 durante el primer segundo. */
+export function falta(restantes: number): number {
+  return Math.max(0, Math.ceil(n(restantes) - 1e-6));
+}
+
+/** Tramos y momentos («Cuándo») de las cuatro situaciones. `dorsales`
+ *  ({nombre: dorsal}) solo sirve para el dorsal de nuestro expulsado. */
+function detalle(p: Partido, porteros: Set<string>,
+                 dorsales: Record<string, string> = {}): {
+  tramos: Record<SituacionEspecial, Tramo[]>;
+  momentos: Record<SituacionEspecial, Momento[]>;
+} {
   const eventos = (p.eventos ?? []) as Evento[];
   const off = offsetsDeParte(p);
   const abs = (e: { parte: string; segundosParte: number }) =>
@@ -201,12 +253,90 @@ export function tramosSituaciones(p: Partido, porteros: Set<string>):
     cerrar(n(off[a.parte]) + finDeParte(p, a.parte));
   }
 
-  return {
+  const expN = tramosExpulsion(eventos, "INTER", abs, finPartido);
+  const expR = tramosExpulsion(eventos, "RIVAL", abs, finPartido);
+  const tramos = {
     pj_nuestro: unirTramos(pj),
     pj_rival: unirTramos(pjr),
-    expulsion_nuestra: unirTramos(tramosExpulsion(eventos, "INTER", abs, finPartido)),
-    expulsion_rival: unirTramos(tramosExpulsion(eventos, "RIVAL", abs, finPartido)),
+    expulsion_nuestra: unirTramos(expN.map(({ desde, hasta }) => ({ desde, hasta }))),
+    expulsion_rival: unirTramos(expR.map(({ desde, hasta }) => ({ desde, hasta }))),
   };
+
+  // ── CUÁNDO ──
+  /** [parte, segundos que QUEDAN en ella] de un segundo absoluto. */
+  const parteDe = (t: number): [string, number] => {
+    for (const pt of [...(jugadas.length ? jugadas : ["1T" as ParteId])].reverse()) {
+      if (t >= n(off[pt]) - 1e-6) {
+        return [pt, Math.max(0, finDeParte(p, pt) - (t - n(off[pt])))];
+      }
+    }
+    return ["1T", finDeParte(p, "1T") - t];
+  };
+  const primeras = (tr: Tramo[]): Momento[] => {
+    const vistas = new Map<string, Momento>();
+    for (const x of tr.slice().sort((a, b) => (a.desde - b.desde) || (a.hasta - b.hasta))) {
+      const [pt, q] = parteDe(x.desde);
+      if (!vistas.has(pt)) vistas.set(pt, { parte: pt, falta: falta(q) });
+    }
+    return [...vistas.values()].sort((a, b) => (ORDEN[a.parte] ?? 9) - (ORDEN[b.parte] ?? 9));
+  };
+  const dors = new Map<string, string>();
+  for (const [k, v] of Object.entries(dorsales)) {
+    const d = String(v ?? "").trim();
+    if (d) dors.set(up(k), d.endsWith(".0") ? d.slice(0, -2) : d);
+  }
+  const deRojas = (rojas: Roja[], nuestra: boolean): Momento[] => rojas.map((r) => {
+    const [pt, q] = parteDe(r.desde);
+    return {
+      parte: pt, falta: falta(q), jugador: r.jugador,
+      dorsal: nuestra ? dors.get(up(r.jugador)) ?? "" : "",
+      dura: Math.round(r.hasta - r.desde), fin: r.fin,
+    };
+  });
+  return {
+    tramos,
+    momentos: {
+      pj_nuestro: primeras(pj), pj_rival: primeras(pjr),
+      expulsion_nuestra: deRojas(expN, true), expulsion_rival: deRojas(expR, false),
+    },
+  };
+}
+
+export type IdiomaCuando = "es" | "en" | "it";
+
+/** Textos del «Cuándo»: los mismos que `situaciones_partido._TXT` del club. Van
+ *  aquí y no en i18n.ts para que este fichero siga sin React (el test). */
+const TXT_CUANDO: Record<IdiomaCuando, Record<string, string>> = {
+  es: { primera: "1.ª vez", falta: "a falta de {t} ({p})", "2min": "los 2:00 enteros",
+        gol: "gol a los {t}", final: "acabó el partido a los {t}", etiqueta: "Cuándo" },
+  en: { primera: "1st time", falta: "{t} left ({p})", "2min": "full 2:00",
+        gol: "goal after {t}", final: "match ended after {t}", etiqueta: "When" },
+  it: { primera: "1ª volta", falta: "a {t} dalla fine ({p})", "2min": "2:00 interi",
+        gol: "gol dopo {t}", final: "fine partita dopo {t}", etiqueta: "Quando" },
+};
+
+/** «Cuándo» / «When» / «Quando», para la etiqueta de la línea. */
+export function etiquetaCuando(idioma: IdiomaCuando = "es"): string {
+  return (TXT_CUANDO[idioma] ?? TXT_CUANDO.es).etiqueta;
+}
+
+/** «1.ª vez: a falta de 4:52 (2T)» / «A (#7): a falta de 10:00 (1T), gol a
+ *  los 1:00». "" si no hay momentos (el `resto`). Igual que `texto_cuando`
+ *  del club, para que el informe del crono y el PDF del club digan lo mismo. */
+export function textoCuando(clave: string, momentos: Momento[] | undefined,
+                            idioma: IdiomaCuando = "es"): string {
+  if (!momentos?.length) return "";
+  const T = TXT_CUANDO[idioma] ?? TXT_CUANDO.es;
+  const cuando = (m: Momento) =>
+    T.falta.replace("{t}", minutosSituacion(m.falta)).replace("{p}", m.parte);
+  if (clave.startsWith("pj_")) return `${T.primera}: ${momentos.map(cuando).join(" · ")}`;
+  return momentos.map((m) => {
+    let quien = String(m.jugador ?? "").trim();
+    if (quien && m.dorsal) quien = `${quien} (#${m.dorsal})`;
+    const como = m.fin === "2min" ? T["2min"]
+      : (T[m.fin ?? ""] ?? "{t}").replace("{t}", minutosSituacion(m.dura ?? 0));
+    return `${quien ? `${quien}: ` : ""}${cuando(m)}, ${como}`;
+  }).join(" · ");
 }
 
 /** Un disparo para estas cuentas: equipo, momento, a puerta y si fue gol. */
@@ -242,14 +372,15 @@ export function tiros(p: Partido): Tiro[] {
 const ladoVacio = (): Lado => ({ disparos: 0, aPuerta: 0, goles: 0 });
 
 /** El cuadro «Disparos por situación», o `null` si no se dio ninguna. */
-export function disparosPorSituacion(p: Partido, porteros: Set<string>):
+export function disparosPorSituacion(p: Partido, porteros: Set<string>,
+                                     dorsales: Record<string, string> = {}):
   CuadroSituaciones | null {
   if (!p?.config) return null;
-  const tr = tramosSituaciones(p, porteros);
+  const { tramos: tr, momentos } = detalle(p, porteros, dorsales);
   const lista = tiros(p);
   const filas: FilaSituacion[] = SITUACIONES_ESPECIALES.map((clave) => ({
     clave, tramos: tr[clave], segundos: dura(tr[clave]),
-    favor: ladoVacio(), contra: ladoVacio(),
+    favor: ladoVacio(), contra: ladoVacio(), momentos: momentos[clave],
   }));
   const off = offsetsDeParte(p);
   const eventos = p.eventos ?? [];
@@ -259,7 +390,7 @@ export function disparosPorSituacion(p: Partido, porteros: Set<string>):
   const resto: FilaSituacion = {
     clave: "resto", tramos: [],
     segundos: Math.max(0, duracion - dura(unirTramos(filas.flatMap((f) => f.tramos)))),
-    favor: ladoVacio(), contra: ladoVacio(),
+    favor: ladoVacio(), contra: ladoVacio(), momentos: [],
   };
   let haySolape = false;
   const sumar = (l: Lado, x: Tiro) => {

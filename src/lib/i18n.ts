@@ -335,6 +335,11 @@ export const CATALOGO: Record<string, Entrada> = {
     en: "Some situations overlapped: a shot in that spell counts in both rows.",
     it: "Alcune situazioni si sono sovrapposte: un tiro in quel momento conta in entrambe le righe.",
   },
+  sit_nota_cuando: {
+    es: "Cuándo: lo que quedaba en la parte (reloj en cuenta atrás); del portero-jugador, la 1.ª vez que se sacó en cada parte.",
+    en: "When: time left in the half (countdown clock); for the flying goalkeeper, the first time it was used in each half.",
+    it: "Quando: il tempo che mancava nel tempo di gioco (cronometro alla rovescia); per il portiere di movimento, la 1ª volta in ogni tempo.",
+  },
   inf_nota_tramos: {
     es: "Goles por tramos de cinco minutos. En verde los nuestros, en rojo los del rival.",
     en: "Goals in five-minute blocks. Ours in green, the opponent's in red.",

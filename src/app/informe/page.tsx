@@ -297,6 +297,12 @@ function porterosDelRoster(p: { config?: { pista_inicial?: { portero?: string } 
   return s;
 }
 
+/** {nombre: dorsal} del roster: el «Cuándo» de una expulsión nuestra dice
+ *  «NOMBRE (#7)» (25/11/2026). */
+function dorsalesDelRoster(): Record<string, string> {
+  return Object.fromEntries(ROSTER.map((j) => [j.nombre, j.dorsal]));
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 /** Qué informe enseña este build lo decide `clientes.ts`. Inter y filial: el de
  *  siempre, el de aquí abajo, sin tocar. PULSO: el completo, en su componente. */
@@ -342,7 +348,7 @@ function InformeClasico(props: { nuevo: boolean }) {
   }
 
   const c = inf.cabecera;
-  const situaciones = partido ? disparosPorSituacion(partido, porterosDelRoster(partido)) : null;
+  const situaciones = partido ? disparosPorSituacion(partido, porterosDelRoster(partido), dorsalesDelRoster()) : null;
   const totalDivididos = (inf.nosotros.divididosGanados ?? 0)
     + (inf.nosotros.divididosPerdidos ?? 0);
   const local = c.local;
