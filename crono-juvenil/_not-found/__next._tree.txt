@@ -1,5 +1,4 @@
 :HL["/pulso/crono-juvenil/_next/static/chunks/14hklcg252uh4.css","style"]
 :HL["/pulso/crono-juvenil/_next/static/chunks/0~o3eqow7zh9e.css","style"]
-:HL["/pulso/crono-juvenil/escudos/inter.png","image"]
-:HL["/pulso/crono-juvenil/escudos/inter-informe.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"HsmybmdcZU9nLZziFVUTH"}
+:HL["/pulso/crono-juvenil/escudos/inter-verde.png","image"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"3xlIJN2dkf7OgRaVMLO3N"}
