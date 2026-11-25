@@ -7,6 +7,5 @@
 :HL["/pulso/crono-filial/_next/static/media/barlow_condensed_latin_800_normal-s.p.11p8zscwbxu4j.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/pulso/crono-filial/_next/static/media/caa3a2e1cccd8315-s.p.09~u27dqhyhd6.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/pulso/crono-filial/_next/static/media/inter_latin_wght_normal-s.p.055ydel_y7o6i.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
-:HL["/pulso/crono-filial/escudos/inter.png","image"]
-:HL["/pulso/crono-filial/escudos/inter-informe.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"informe","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"CPYr8uC8C-aAzUTY6HCdH"}
+:HL["/pulso/crono-filial/escudos/inter-verde.png","image"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"informe","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"Gurg00aSFlHiy_RN94qiL"}
