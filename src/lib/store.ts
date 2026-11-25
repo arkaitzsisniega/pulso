@@ -49,6 +49,7 @@ import { reconstruirAgregados, recomputarMinutos } from "./reconstruir";
 import { segundosVivos } from "./reloj";
 import { esLanzamiento, tipoLanzamientoDeAccion, type TipoLanzamiento } from "./lanzamientos";
 import { configParaRehacer, type CambiosRehacer } from "./rehacer";
+import { aplicarCabecera, hayCambiosCabecera, type CambiosCabecera } from "./editarCabecera";
 import { aplicarDecision } from "./importarPartido";
 import { GuardadoDiferido } from "./guardadoDiferido";
 import { conCandado } from "./candado";
@@ -1526,6 +1527,16 @@ export function usePartido() {
     setPartido((prev) => ({ ...prev, saqueInicial1T: quien }));
   }
 
+  /** Corrige los DATOS del partido (rival, fecha, hora, competición, casa/fuera,
+   *  duraciones, modo…) sin tocar eventos ni minutos (lib/editarCabecera.ts,
+   *  25/11/2026). El id no cambia. Sin cambios reales no se guarda nada (y así
+   *  la cola de subida no lo da por pendiente). */
+  function editarCabecera(cambios: CambiosCabecera) {
+    setPartido((prev) => (prev.config && hayCambiosCabecera(prev, cambios)
+      ? aplicarCabecera(prev, cambios)
+      : prev));
+  }
+
   function setDireccionAtaque(dir: "izq" | "der") {
     setPartido((prev) => (prev.config
       ? { ...prev, config: { ...prev.config, direccionInter1T: dir } }
@@ -1542,7 +1553,7 @@ export function usePartido() {
       editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
       iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
       setDuracionesParte, finalizarPartido, retrocederParte, setModo,
-      setDireccionAtaque, setSaqueInicial,
+      setDireccionAtaque, setSaqueInicial, editarCabecera,
     };
     return conCandado(crudas, () => soloLectura.current);
   }, [iniciarPartido, play, pausa, ajustarReloj, avanzarParte, cambiarJugador, reincorporar,
@@ -1550,7 +1561,7 @@ export function usePartido() {
       quitarAccionIndividual, editarEvento, borrarEvento, anadirEvento, recalcularMinutos,
       setMinutosJugador, iniciarTanda, apuntarTiroTanda, deshacerUltimoTiroTanda, cerrarTanda,
       setDuracionesParte, finalizarPartido, retrocederParte, setModo, setDireccionAtaque,
-      setSaqueInicial]);
+      setSaqueInicial, editarCabecera]);
 
   return {
     partido, cargado,

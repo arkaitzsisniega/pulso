@@ -9,6 +9,7 @@ import { paraExportar } from "@/lib/importarPartido";
 import { formatMMSS } from "@/lib/utils";
 import { CampoConteos } from "@/components/CampoConteos";
 import { EditorEventos } from "@/components/EditorEventos";
+import { EditarCabecera } from "@/components/EditarCabecera";
 import type { Evento, ParteId, Partido } from "@/lib/db";
 import { direccionAtaque, JUGADOR_EQUIPO } from "@/lib/db";
 import { t, useIdioma, labelAccionGol, labelResultadoDisparo, labelParte, labelCompeticionCorta, labelEstadoPartido } from "@/lib/i18n";
@@ -19,7 +20,7 @@ import {
   PostCtx, icPP, useIcPP, useTPP, estiloPP, CabeceraResumen, PestanasResumen,
   DisparosNuevo, BalonNuevo, prefijo,
 } from "@/components/ResumenNuevo";
-import { Ico } from "@/components/DirectoNuevo";
+import { Ico, sinEmojis } from "@/components/DirectoNuevo";
 
 const PARTES: ParteId[] = ["1T", "2T", "PR1", "PR2"];
 
@@ -165,7 +166,9 @@ export default function ResumenPage() {
   useIdioma();
   const router = useRouter();
   const { partido, cargado, editarEvento, borrarEvento, anadirEvento, recalcularMinutos, setMinutosJugador,
-          finalizarPartido } = usePartido();
+          finalizarPartido, editarCabecera } = usePartido();
+  // «Editar datos del partido» (cabecera, 25/11/2026): ventana abierta o no.
+  const [editandoCab, setEditandoCab] = useState(false);
   const [tab, setTab] = useState<"general" | "tiempos" | "individual" | "cronograma" | "disparos" | "analisis" | "editar">("general");
   // Aspecto NUEVO (tanda 4 · 18/11/2026): mismas cuentas y mismos botones,
   // otro dibujo (components/ResumenNuevo.tsx + tema-nuevo.css, clases pz-pp).
@@ -314,6 +317,11 @@ export default function ResumenPage() {
           ) : (
             <Link href="/" className="pz-ib"><Ico.casa />{sinFlecha(t("inicio"))}</Link>
           )}
+          editar={(
+            <button type="button" onClick={() => setEditandoCab(true)} className="pz-ib" data-edc-abrir="">
+              <Ico.lapiz />{sinEmojis(t("edc_boton"))}
+            </button>
+          )}
           derecha={partido.estado === "en_curso" ? (
             <Link href="/" className="pz-ib"><Ico.casa />{sinFlecha(t("res_inicio_flecha"))}</Link>
           ) : undefined}
@@ -339,8 +347,12 @@ export default function ResumenPage() {
           </Link>
         </div>
         <div className="bg-zinc-900 rounded-xl p-4">
-          <div className="text-base text-zinc-400 mb-1">
-            {cfg.partido_id} · {labelCompeticionCorta(cfg.competicion)} · {cfg.fecha} {cfg.hora} · {cfg.lugar || "—"}
+          <div className="text-base text-zinc-400 mb-1 flex items-center justify-between gap-2">
+            <span>{cfg.partido_id} · {labelCompeticionCorta(cfg.competicion)} · {cfg.fecha} {cfg.hora} · {cfg.lugar || "—"}</span>
+            <button type="button" onClick={() => setEditandoCab(true)} data-edc-abrir=""
+              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm text-zinc-200 whitespace-nowrap">
+              {T("edc_boton")}
+            </button>
           </div>
           <div className="text-4xl font-bold tabular-nums flex items-center justify-center gap-3">
             <span className="text-emerald-400">{CLIENTE.nombreCorto}</span>
@@ -1052,6 +1064,11 @@ export default function ResumenPage() {
         <EditorEventos partido={partido} partesJugadas={partesJugadas}
           editarEvento={editarEvento} borrarEvento={borrarEvento} anadirEvento={anadirEvento}
           recalcularMinutos={recalcularMinutos} setMinutosJugador={setMinutosJugador} />
+      )}
+
+      {editandoCab && (
+        <EditarCabecera partido={partido} onGuardar={editarCabecera}
+          onCerrar={() => setEditandoCab(false)} />
       )}
 
       {/* CERRAR EL PARTIDO. Aquí y no solo en el modal de «⏭ parte»: el botón

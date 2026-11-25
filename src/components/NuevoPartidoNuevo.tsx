@@ -17,6 +17,7 @@ import { CONVOCATORIA_HABITUAL } from "@/lib/convocatoria";
 import { type ReactNode } from "react";
 import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
 import { PRESETS_COMPETICION } from "@/lib/db";
+import { COMPETICIONES } from "@/lib/competiciones";
 import { t, labelCompeticion, labelCompeticionCorta } from "@/lib/i18n";
 import { variablesEquipos } from "@/lib/tema";
 import { Ico, sinEmojis, partirTitulo } from "@/components/DirectoNuevo";
@@ -51,7 +52,6 @@ export interface FormNuevoPartido {
   irInicio: () => void;
 }
 
-const COMPETICIONES = ["LIGA", "COPA_REY", "COPA_ESPANA", "COPA_MUNDO", "COPA_MADRID", "AMISTOSO", "PLAYOFF", "SUPERCOPA"];
 
 /** «← Izquierda» / «Derecha →» sin la flecha (va dibujada). */
 const sinFlecha = (txt: string) => txt.replace(/[←→]/g, "").trim();

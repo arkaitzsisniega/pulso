@@ -120,6 +120,8 @@ export function CabeceraResumen(props: {
   izquierda: ReactNode;
   /** «Inicio →» de la derecha (solo en curso: si no, ya está a la izquierda). */
   derecha?: ReactNode;
+  /** «Editar datos del partido» (25/11/2026), junto al Sol. */
+  editar?: ReactNode;
 }) {
   return (
     <div className="pz-res-cab">
@@ -127,6 +129,7 @@ export function CabeceraResumen(props: {
         {props.izquierda}
         <span className="pz-etq pz-res-titulo">{sinEmojis(t("res_titulo"))}</span>
         <div className="der">
+          {props.editar}
           <BotonSol sol={props.sol} onCambiar={props.onSol} />
           {props.derecha}
         </div>

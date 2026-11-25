@@ -121,7 +121,7 @@ function Campo2<T extends string>(p: {
 /** Cabecera de una ventana del editor con el aspecto NUEVO (tanda 5): la misma
  *  de las ventanas del partido (tanda 2) — cerrar a la izquierda, el icono en
  *  su cuadro de color y el título en letra deportiva. */
-function CabVentana(p: { icono: ReactNode; color?: string; titulo: ReactNode; onCerrar: () => void }) {
+export function CabVentana(p: { icono: ReactNode; color?: string; titulo: ReactNode; onCerrar: () => void }) {
   return (
     <div className="pz-panel-cab">
       <button onClick={p.onCerrar} className="pz-btn ico pz-panel-x" aria-label="×">

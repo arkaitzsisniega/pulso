@@ -7,6 +7,7 @@ import { usePartido } from "@/lib/store";
 import { ROSTER, PORTEROS, CAMPO, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
 import { hoyISO } from "@/lib/utils";
 import { PRESETS_COMPETICION } from "@/lib/db";
+import { COMPETICIONES } from "@/lib/competiciones";
 import { t, useIdioma, labelCompeticion, labelCompeticionCorta } from "@/lib/i18n";
 import { useAspecto, useModoSol, setModoSol } from "@/lib/aspecto";
 import { NuevoPartidoNuevo } from "@/components/NuevoPartidoNuevo";
@@ -247,7 +248,7 @@ export default function NuevoPartido() {
           <span className="text-sm text-zinc-400 mb-1">{t("nuevo_competicion")}</span>
           <select className="bg-zinc-900 rounded px-3 py-2 text-lg" value={competicion}
             onChange={(e) => onCompChange(e.target.value)}>
-            {["LIGA", "COPA_REY", "COPA_ESPANA", "COPA_MUNDO", "COPA_MADRID", "AMISTOSO", "PLAYOFF", "SUPERCOPA"].map((c) => (
+            {COMPETICIONES.map((c) => (
               <option key={c} value={CLIENTE.demo ? c : undefined}>{labelCompeticionCorta(c)}</option>
             ))}
           </select>
