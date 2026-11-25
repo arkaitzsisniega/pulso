@@ -8,4 +8,4 @@
 :HL["/pulso/crono-demo/_next/static/media/caa3a2e1cccd8315-s.p.09~u27dqhyhd6.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/pulso/crono-demo/_next/static/media/inter_latin_wght_normal-s.p.055ydel_y7o6i.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/pulso/crono-demo/escudos/pulso.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"resumen","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"KiwBT6CIcEtWm4eifSYom"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"resumen","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"heSh_g-rCDlAQW11-SuUi"}
