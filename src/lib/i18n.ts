@@ -610,6 +610,10 @@ export const CATALOGO: Record<string, Entrada> = {
     en: "Ends after 2 min or if we score.",
     it: "Termina dopo 2 min o se segniamo noi.",
   },
+  // Minuto del reloj en que puede volver el expulsado (25/11/2026). {min} es
+  // lo que marcará el reloj grande; {parte}, cuando ya es la parte siguiente.
+  part_vuelve: { es: "vuelve en el {min}", en: "back at {min}", it: "rientra al {min}" },
+  part_vuelve_parte: { es: "vuelve en el {min} del {parte}", en: "back at {min} ({parte})", it: "rientra al {min} ({parte})" },
   part_inf_terminada: {
     es: "Inferioridad terminada — mete a un jugador",
     en: "Back to even — put a player on",

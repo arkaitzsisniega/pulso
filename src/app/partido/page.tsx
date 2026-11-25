@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { usePartido } from "@/lib/store";
 import { ROSTER, NOMBRE_CORTO_TC, CLIENTE } from "@/lib/clientes";
-import { formatMMSS, colorTiempoPista, colorTiempoBanquillo, nivelTiempoPista, nivelTiempoBanquillo } from "@/lib/utils";
+import { formatMMSS, formatMSS, colorTiempoPista, colorTiempoBanquillo, nivelTiempoPista, nivelTiempoBanquillo } from "@/lib/utils";
 import { segundosVivos, formatCuentaAtras, msHastaSiguienteCambio } from "@/lib/reloj";
 import { Campo } from "@/components/Campo";
 import { CampoFlecha } from "@/components/CampoFlecha";
@@ -24,6 +24,7 @@ import { huecoFlotante, MARGEN_CAPA } from "@/lib/huecoFlotante";
 import { elegirRival, rgba } from "@/lib/tema";
 import { estadoFin } from "@/lib/finPartido";
 import { pjRivalActivo } from "@/lib/situacionesNumericas";
+import { vueltaExpulsion } from "@/lib/vueltaExpulsion";
 import { useSoloMirar, useSeguirEnDirecto, BannerSoloMirar } from "@/components/ServidorClub";
 import {
   CabeceraNueva, BotonTiempoNuevo, HerramientasNueva, PistaNueva, BanquilloNuevo,
@@ -680,45 +681,52 @@ export default function PartidoPage() {
           inferioridad MÁS ANTIGUO; cada gol nuestro cancela el de
           superioridad más antiguo. */}
       {(cronosInferioridad.length > 0 || cronosSuperioridad.length > 0) && (
-        <div className={`grid ${(cronosInferioridad.length + cronosSuperioridad.length) >= 2 ? "grid-cols-2" : "grid-cols-1"} gap-2 flex-none`}>
-          {cronosInferioridad.map((c, i) => (
-            <div key={`inf-${c.tInicio}-${i}`}
-              className="bg-red-700/90 border-2 border-red-400 rounded-lg p-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{ic("🟥")}</span>
-                <div>
-                  <div className="text-base font-bold leading-tight">
-                    {ic(t("part_inferioridad", { jugador: c.jugador }))}
-                  </div>
-                  <div className="text-xs text-red-100 mt-0.5">
-                    {ic(t("part_inferioridad_nota"))}
+        // BAJITAS y en fila (25/11/2026): con su nota en una 2ª línea y la
+        // cuenta atrás en text-4xl cada barra se comía ~70 px de alto, que
+        // salían del banquillo — en el iPad (Safari, 1180×~740) los nombres de
+        // los suplentes dejaban de verse. Ahora una línea (~44 px) y tantas
+        // por fila como quepan (3 en apaisado, 2 en vertical). La nota va en
+        // el `title`; en su sitio, «vuelve en el X:XX» (lib/vueltaExpulsion).
+        <div className="grid gap-1.5 flex-none"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 330px), 1fr))" }}>
+          {[
+            ...cronosInferioridad.map((c) => ({ c, inf: true })),
+            ...cronosSuperioridad.map((c) => ({ c, inf: false })),
+          ].map(({ c, inf }, i) => {
+            const v = vueltaExpulsion({
+              tInicioAbs: c.tInicio,
+              parteActual: p,
+              offsetParteActual: _offsetParte(p),
+              duraciones: cfg.duracionParte,
+            });
+            const textoVuelta = !v ? null : v.mismaParte
+              ? t("part_vuelve", { min: formatMSS(v.reloj) })
+              : t("part_vuelve_parte", { min: formatMSS(v.reloj), parte: labelParte(v.parte) });
+            return (
+              <div key={`${inf ? "inf" : "sup"}-${c.tInicio}-${i}`}
+                data-barra-expulsion={inf ? "inferioridad" : "superioridad"}
+                title={t(inf ? "part_inferioridad_nota" : "part_superioridad_nota")}
+                className={`${inf ? "bg-red-700/90 border-red-400" : "bg-emerald-700/90 border-emerald-400"}
+                  border-2 rounded-lg px-2.5 py-1 flex items-center justify-between gap-2 min-w-0`}>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xl leading-none">{ic(inf ? "🟥" : "🟩")}</span>
+                  <div className="flex flex-wrap items-baseline gap-x-2 min-w-0 leading-tight">
+                    <span className="text-sm font-bold">
+                      {ic(t(inf ? "part_inferioridad" : "part_superioridad", { jugador: c.jugador }))}
+                    </span>
+                    {textoVuelta && (
+                      <span className={`text-base font-bold whitespace-nowrap ${inf ? "text-red-100" : "text-emerald-100"}`}>
+                        {textoVuelta}
+                      </span>
+                    )}
                   </div>
                 </div>
-              </div>
-              <div className="text-4xl font-mono font-bold tabular-nums">
-                {formatMMSS(Math.ceil(c.segRestantes))}
-              </div>
-            </div>
-          ))}
-          {cronosSuperioridad.map((c, i) => (
-            <div key={`sup-${c.tInicio}-${i}`}
-              className="bg-emerald-700/90 border-2 border-emerald-400 rounded-lg p-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{ic("🟩")}</span>
-                <div>
-                  <div className="text-base font-bold leading-tight">
-                    {ic(t("part_superioridad", { jugador: c.jugador }))}
-                  </div>
-                  <div className="text-xs text-emerald-100 mt-0.5">
-                    {ic(t("part_superioridad_nota"))}
-                  </div>
+                <div className="text-3xl font-mono font-bold tabular-nums leading-none">
+                  {formatMMSS(Math.ceil(c.segRestantes))}
                 </div>
               </div>
-              <div className="text-4xl font-mono font-bold tabular-nums">
-                {formatMMSS(Math.ceil(c.segRestantes))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -1055,6 +1063,11 @@ export default function PartidoPage() {
             const esPortero = ROSTER.find((j) => j.nombre === nombre)?.posicion === "PORTERO";
             const tieneAmarilla = jugadoresAmarilla.has(nombre);
             const estaExpulsado = jugadoresExpulsados.has(nombre);
+            // Con poco alto (barras de expulsión, Safari con su barra) la
+            // ficha no cabe entera: el NOMBRE (truncate) se encogía a 0 px y
+            // desaparecía (25/11/2026). Ahora el nombre no encoge
+            // (flex-none) y, si sobra contenido, se recorta por ABAJO
+            // (justify-center-safe + overflow-hidden), nunca el nombre.
             return (
               <button key={nombre}
                 onClick={() => {
@@ -1062,7 +1075,7 @@ export default function PartidoPage() {
                   setModalAccionBanquillo({ jugador: nombre });
                 }}
                 disabled={estaExpulsado}
-                className={`relative px-1 py-1.5 min-h-[44px] rounded-lg text-center flex flex-col justify-center ${
+                className={`relative px-1 py-1.5 min-h-[44px] rounded-lg text-center flex flex-col justify-center-safe overflow-hidden ${
                   estaExpulsado
                     ? "bg-red-900/70 border border-red-500 opacity-80 cursor-not-allowed"
                     : esPortero
@@ -1075,7 +1088,7 @@ export default function PartidoPage() {
                 {!estaExpulsado && tieneAmarilla && (
                   <span className="absolute top-0.5 right-1 text-sm leading-none">🟨</span>
                 )}
-                <div className={`text-sm font-bold leading-tight truncate ${estaExpulsado ? "line-through" : ""}`}>
+                <div className={`flex-none text-sm font-bold leading-tight truncate ${estaExpulsado ? "line-through" : ""}`}>
                   <span className="opacity-60 font-normal text-xs mr-1">{dorsal ? `#${dorsal}` : ""}</span>{nombre}
                 </div>
                 {estaExpulsado ? (

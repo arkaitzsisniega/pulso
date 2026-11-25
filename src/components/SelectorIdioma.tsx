@@ -12,6 +12,7 @@
  * suscritos vía useIdioma() y re-renderizan con el texto del nuevo idioma.
  */
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { IDIOMAS_DISPONIBLES, restaurarIdioma, setIdioma, useIdioma, type Idioma } from "@/lib/i18n";
 import { CLIENTE } from "@/lib/clientes";
 
@@ -28,8 +29,14 @@ export default function SelectorIdioma() {
   // y el primer render tiene que coincidir con él. En el Inter no hace nada.
   useEffect(() => { restaurarIdioma(); }, []);
 
+  // En la pantalla del PARTIDO no se pinta (25/11/2026): flotaba encima de
+  // «Resumen» e «Inicio», abajo a la derecha. El idioma se elige antes de
+  // empezar (inicio, nuevo partido) y al volver sigue el mismo.
+  const ruta = usePathname() ?? "";
+  const enPartido = /\/partido\/?$/.test(ruta);
+
   // Cliente con idioma fijo (Inter): no mostramos nada.
-  if (!MOSTRAR_SELECTOR) return null;
+  if (!MOSTRAR_SELECTOR || enPartido) return null;
 
   return (
     <div className="print:hidden fixed bottom-3 right-3 z-[60] flex items-center gap-1 bg-zinc-900/90 border border-zinc-700 rounded-full px-2 py-1 shadow-lg backdrop-blur">
